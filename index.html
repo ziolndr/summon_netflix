@@ -2621,6 +2621,12 @@ html.has-results-page body.has-results .discovery-strip{
   }
 }
 
+
+/* Duplicate lower trailer action removed; hero keeps the trailer control. */
+.info-actions #trailerBtn{
+  display:none !important;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -2722,7 +2728,7 @@ html.has-results-page body.has-results .discovery-strip{
   <!-- Prompt Dock -->
   <div class="reveal-query-dock">
     <form id="resultForm" class="reveal-query-form">
-      <div class="reveal-query-label">your prompt</div>
+      <div class="reveal-query-label">your summon</div>
       <textarea id="resultQuery" autocomplete="off" spellcheck="false" rows="1" placeholder="edit the search"></textarea>
       <button type="submit" id="resultGo" aria-label="Search">→</button>
     </form>
@@ -2748,7 +2754,6 @@ html.has-results-page body.has-results .discovery-strip{
 
       <div class="info-actions">
         <button class="action primary" id="watchBtn">open on netflix ↗</button>
-        <button class="action" id="trailerBtn">play trailer</button>
         <button class="action" id="copyLink">copy link</button>
         <button class="action" id="shareBtn">share</button>
       </div>
@@ -3193,8 +3198,11 @@ function renderResults(){
 
   // Actions
   $('#watchBtn').onclick=()=>window.open(`https://www.netflix.com/search?q=${encodeURIComponent(m.title)}`,'_blank');
-  $('#trailerBtn').onclick=openTrailer;
-  $('#trailerBtn').hidden=!m.tmdbId;
+  const trailerBtn=$('#trailerBtn');
+  if(trailerBtn){
+    trailerBtn.onclick=openTrailer;
+    trailerBtn.hidden=!m.tmdbId;
+  }
   $('#heroPlayBtn').classList.toggle('visible',!!m.tmdbId);
   $('#heroPlayBtn').onclick=openTrailer;
 
