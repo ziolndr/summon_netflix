@@ -6846,6 +6846,101 @@ body[data-mode="mixed"]:not(.has-results) .wall-cell-tv-fallback{
     overflow-y:auto !important;
   }
 }
+
+
+/* inline trailer: embedded in the result page, not a popup */
+.inline-trailer{
+  display:none;
+  margin-top:18px;
+  width:min(430px,100%);
+  border:1px solid rgba(246,241,232,.28);
+  background:rgba(0,0,0,.38);
+  box-shadow:0 18px 48px rgba(0,0,0,.24);
+}
+.inline-trailer.open{display:block}
+.inline-trailer-head{
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 10px 0 12px;
+  border-bottom:1px solid rgba(246,241,232,.16);
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(246,241,232,.74);
+}
+.inline-trailer-head span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#inlineTrailerClose{font-size:18px;line-height:1;color:rgba(246,241,232,.90)}
+.inline-trailer-frame{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+#inlineTrailerFrame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+body.inline-trailer-playing .feature-main{max-width:540px}
+@media(max-width:980px){.inline-trailer{width:100%;max-width:100%}}
+
+.trailer-panel{width:100vw;border-left:0;border-right:0;border-bottom:0}}
+/* Cover-art enforcement: Netflix uses posters/covers, not random backdrop scene stills. */
+.wall-cell img{object-fit:cover !important;object-position:center top !important}
+.feature.posterish .feature-media{display:flex;align-items:center;justify-content:center;background:#050505}
+.feature.posterish .feature-img,.feature-img.is-posterish{width:auto !important;max-width:min(58vw,560px) !important;height:100% !important;left:50% !important;right:auto !important;transform:translateX(-50%) !important;object-fit:cover !important;object-position:center top !important}
+@media(max-width:980px){.feature.posterish .feature-img,.feature-img.is-posterish{max-width:100vw !important;width:auto !important;height:100% !important}}
+
+
+/* embedded trailer inside the main feature image area */
+.feature-trailer{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  display:none;
+  background:#000;
+}
+.feature-trailer.open{
+  display:block;
+}
+.feature-trailer-head{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  z-index:2;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 12px;
+  background:linear-gradient(180deg, rgba(0,0,0,.72), rgba(0,0,0,.18));
+  color:rgba(246,241,232,.86);
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.feature-trailer-head span{
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+#featureTrailerClose{
+  color:#f6f1e8;
+  font-size:18px;
+  line-height:1;
+}
+#featureTrailerFrame{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#000;
+}
+.feature.trailer-playing .feature-img{
+  opacity:0;
+  pointer-events:none;
+}
+
 </style>
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
@@ -6931,6 +7026,13 @@ body[data-mode="mixed"]:not(.has-results) .wall-cell-tv-fallback{
   <div class="feature">
     <div class="feature-media">
       <img class="feature-img" id="featureImg" alt="" decoding="async" loading="eager" fetchpriority="high" referrerpolicy="no-referrer">
+      <div class="feature-trailer" id="featureTrailer" aria-hidden="true">
+        <div class="feature-trailer-head">
+          <span id="featureTrailerTitle">Trailer</span>
+          <button type="button" id="featureTrailerClose" aria-label="Close trailer">×</button>
+        </div>
+        <iframe id="featureTrailerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
     </div>
     <div class="feature-content">
       <button class="back" id="newSearch">← new search</button>
@@ -6946,10 +7048,12 @@ body[data-mode="mixed"]:not(.has-results) .wall-cell-tv-fallback{
         <p id="overview"></p>
 
         <div class="actions">
-          <button class="action" id="imdb">open source ↗</button>
+          <button class="action" id="imdb">open on netflix ↗</button>
+          <button class="action" id="trailerBtn" type="button" hidden>play trailer</button>
           <button class="action link" id="copyLink">copy link</button>
         </div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -7020,8 +7124,12 @@ function gameImage(m){return m?.image || m?.cover || ''}
 function externalImage(m){return m?.image || m?.cover || ''}
 function isExternalImageCorpus(m){return m?.type==='game' || m?.type==='book' || m?.type==='tv'}
 function backdrop(m,size='w780'){return isExternalImageCorpus(m) ? externalImage(m) : img(m?.backdropPath || m?.posterPath,size)}
-function poster(m,size='w342'){return isExternalImageCorpus(m) ? (m.cover || m.image || '') : img(m?.posterPath,size)}
-function still(m,size='w500'){return isExternalImageCorpus(m) ? (m.image || m.cover || '') : img(m?.backdropPath || m?.posterPath,size)}
+function poster(m,size='w500'){return isExternalImageCorpus(m) ? (m.cover || m.image || '') : img(m?.posterPath,size)}
+function still(m,size='w500'){
+  // Netflix / film surfaces use cover art, not random scene stills.
+  if(m?.type === 'film' || m?.netflixKind) return poster(m,size);
+  return isExternalImageCorpus(m) ? (m.cover || m.image || '') : img(m?.posterPath || m?.backdropPath,size);
+}
 function candidate(m){return `${m.title}. ${(m.authors||[]).join(', ')}. ${(m.genres||[]).join(', ')}. ${(m.subjects||[]).slice(0,6).join(', ')}. ${(m.platforms||[]).join(', ')}. ${m.overview.substring(0,360)}`}
 function setStatus(t){if(statusEl)statusEl.textContent=t}
 function toast(t){
@@ -7097,7 +7205,8 @@ async function fetchTmdbNetflixPage(kind,page){
 function tmdbNetflixToRecord(s,kind){
   const title=String(s.title||s.name||'').trim();
   if(!title)return null;
-  if(!s.poster_path && !s.backdrop_path)return null;
+  // Cover art only: skip backdrop-only scene records.
+  if(!s.poster_path)return null;
   const year=String(s.release_date||s.first_air_date||'').slice(0,4);
   const baseOverview=String(s.overview||'').trim()||`${title}. Netflix ${kind==='tv'?'series':'film'}.`;
   return {
@@ -7424,7 +7533,7 @@ async function loadCorpus(){
 function renderWall(movies){
   const sample=[...movies].filter(m=>m.backdropPath || m.posterPath || m.image || m.cover || m.type==='tv').sort(()=>Math.random()-.5).slice(0,150);
   $('#wall').innerHTML=sample.map((m,i)=>{
-    const src=poster(m,'w500') || still(m,'w780');
+    const src=poster(m,'w780') || poster(m,'w500');
     return `<div class="wall-cell media-${esc(m.type || 'item')} ${m.type==='tv' && !src ? 'wall-cell-tv-fallback' : ''}" data-title="${esc(m.title)}">
       ${src?`<img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove(); this.parentElement.classList.add('wall-cell-tv-fallback'); this.parentElement.innerHTML='<span>'+this.parentElement.dataset.title+'</span>';">`:`<span>${esc(m.title)}</span>`}
     </div>`;
@@ -7531,30 +7640,26 @@ function heroImage(m){
   if(!m) return '';
 
   if(m.type === 'game'){
-    // RAWG background images are usually better for large hero treatment than Steam/library covers.
     return m.image || m.cover || '';
   }
 
   if(m.type === 'book'){
-    // Open Library covers: -L is the largest stable size.
     return m.cover || m.image || '';
   }
 
-  if(m.type === 'tv'){
-    // TVMaze original is preferable for the hero if present.
+  if(m.type === 'tv' && !m.netflixKind){
     return m.cover || m.image || '';
   }
 
-  // Film: use TMDB original backdrop first. Avoid poster fallback when backdrop exists.
-  if(m.backdropPath) return img(m.backdropPath, 'original') || img(m.backdropPath, 'w1280');
-  if(m.posterPath) return img(m.posterPath, 'original') || img(m.posterPath, 'w780');
-  return '';
+  // Netflix / film: use official cover/poster art, not backdrop scene stills.
+  return poster(m,'original') || poster(m,'w780') || '';
 }
 
 function thumbImage(m){
   if(!m) return '';
-  if(m.type === 'game' || m.type === 'book' || m.type === 'tv') return m.image || m.cover || '';
-  return img(m.backdropPath || m.posterPath, 'w342') || img(m.posterPath, 'w185');
+  if(m.type === 'game' || m.type === 'book') return m.image || m.cover || '';
+  if(m.type === 'tv' && !m.netflixKind) return m.cover || m.image || '';
+  return poster(m,'w342') || poster(m,'w185') || '';
 }
 
 
@@ -7567,7 +7672,22 @@ function applyHeroMediaClass(m){
   media.classList.toggle('film-hero', m?.type === 'film');
 }
 
+
+const trailerCache=new Map();
+function tmdbMediaKind(m){return (m?.netflixKind === 'series' || m?.type === 'tv') ? 'tv' : 'movie'}
+function tmdbVideosUrl(m){if(!m?.tmdbId)return '';const kind=tmdbMediaKind(m);return `${TMDB_BASE}/${kind}/${encodeURIComponent(m.tmdbId)}/videos?api_key=${TMDB_API_KEY}&language=en-US`}
+function rankTrailer(video){const name=String(video?.name||'').toLowerCase();const type=String(video?.type||'').toLowerCase();let score=0;if(video?.site === 'YouTube')score+=10;if(type === 'trailer')score+=8;if(type === 'teaser')score+=4;if(video?.official)score+=4;if(name.includes('official trailer'))score+=5;if(name.includes('trailer'))score+=3;if(name.includes('teaser'))score+=1;if(String(video?.iso_639_1||'').toLowerCase()==='en')score+=2;return score}
+async function fetchTrailerFor(m){if(!m?.tmdbId)return null;const key=`${tmdbMediaKind(m)}:${m.tmdbId}`;if(trailerCache.has(key))return trailerCache.get(key);const url=tmdbVideosUrl(m);const data=await fetch(url).then(r=>{if(!r.ok)throw new Error(`tmdb videos ${r.status}`);return r.json()});const videos=(data.results||[]).filter(v=>v&&v.site==='YouTube'&&v.key).sort((a,b)=>rankTrailer(b)-rankTrailer(a));const picked=videos[0]||null;trailerCache.set(key,picked);return picked}
+function trailerEmbedUrl(video){if(!video?.key)return '';return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.key)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1`}
+function closeFeatureTrailer(){const wrap=document.querySelector('#featureTrailer');const frame=document.querySelector('#featureTrailerFrame');const feature=document.querySelector('#feature');if(frame)frame.src='';wrap?.classList.remove('open');wrap?.setAttribute('aria-hidden','true');feature?.classList.remove('trailer-playing')}
+async function openTrailerFor(m){const btn=document.querySelector('#trailerBtn');const oldText=btn?.textContent||'play trailer';try{if(btn){btn.textContent='finding trailer…';btn.disabled=true}const video=await fetchTrailerFor(m);if(!video){toast('no trailer found');return}const wrap=document.querySelector('#featureTrailer');const frame=document.querySelector('#featureTrailerFrame');const title=document.querySelector('#featureTrailerTitle');const feature=document.querySelector('#feature');if(title)title.textContent=`${m.title || 'Trailer'} · ${video.name || 'Trailer'}`;if(frame)frame.src=trailerEmbedUrl(video);wrap?.classList.add('open');wrap?.setAttribute('aria-hidden','false');feature?.classList.add('trailer-playing')}catch(err){console.error(err);toast('trailer unavailable')}finally{if(btn){btn.textContent=oldText;btn.disabled=false}}}
+function prepareTrailerButton(m){closeFeatureTrailer();const btn=document.querySelector('#trailerBtn');if(!btn)return;const playable=!!m?.tmdbId && (m?.type==='film' || m?.type==='tv' || !!m?.netflixKind);btn.hidden=!playable;btn.disabled=false;btn.textContent='play trailer';btn.onclick=()=>openTrailerFor(m)}
+document.addEventListener('click',e=>{if(e.target.closest?.('#featureTrailerClose'))closeFeatureTrailer()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFeatureTrailer()});
+
+
 function renderResult(){
+  closeFeatureTrailer();
   const m=results[active];
   if(!m)return;
   applyHeroMediaClass(m);
@@ -7613,6 +7733,7 @@ function renderResult(){
           : (m.externalUrl || `https://www.netflix.com/search?q=${encodeURIComponent(m.title)}`),
     '_blank'
   );
+  prepareTrailerButton(m);
   $('#copyLink').onclick=()=>{
     const url=`${location.href.split('#')[0]}#${encodeURIComponent(currentQuery)}`;
     navigator.clipboard?.writeText(url).then(()=>toast('link copied'));
@@ -8330,5 +8451,6 @@ if(typeof stopSummonDrift === 'undefined' && typeof stopOracleDrift !== 'undefin
 }
 
 </script>
+
 </body>
 </html>
