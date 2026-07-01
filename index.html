@@ -2924,6 +2924,104 @@ html.has-results-page body.has-results .hero-trailer iframe{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   Reveal voice mic: Your Summon can be spoken/edited too.
+   ───────────────────────────────────────────── */
+
+.reveal-query-form{
+  grid-template-columns:auto minmax(0,1fr) 42px 42px !important;
+  gap:12px !important;
+}
+
+#resultVoiceBtn.reveal-mic-btn,
+#resultVoiceBtn{
+  width:42px !important;
+  height:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid rgba(246,241,232,.14) !important;
+  background:rgba(246,241,232,.04) !important;
+  color:rgba(246,241,232,.62) !important;
+  font-size:0 !important;
+  overflow:hidden !important;
+  transition:all .2s ease !important;
+}
+
+#resultVoiceBtn svg{
+  width:17px !important;
+  height:17px !important;
+  display:block !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.8 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  pointer-events:none !important;
+}
+
+#resultVoiceBtn:hover{
+  background:rgba(246,241,232,.08) !important;
+  border-color:rgba(246,241,232,.28) !important;
+  color:#fff !important;
+}
+
+#resultVoiceBtn.listening{
+  color:#fff !important;
+  border-color:#e50914 !important;
+  background:rgba(229,9,20,.22) !important;
+  box-shadow:0 0 18px rgba(229,9,20,.26) !important;
+}
+
+#resultVoiceBtn.listening svg{
+  animation:micPulse 1s ease-in-out infinite alternate !important;
+}
+
+/* Keep the dock tight: label / summon / mic / arrow. */
+body.has-results .reveal-query-form #resultGo,
+html.has-results-page body.has-results .reveal-query-form #resultGo{
+  width:42px !important;
+  height:42px !important;
+  min-width:42px !important;
+}
+
+@media(max-width:760px){
+  body.has-results .reveal-query-form,
+  html.has-results-page body.has-results .reveal-query-form{
+    grid-template-columns:minmax(0,1fr) 46px 46px !important;
+    gap:8px 10px !important;
+  }
+
+  body.has-results .reveal-query-label,
+  html.has-results-page body.has-results .reveal-query-label{
+    grid-column:1 / -1 !important;
+  }
+
+  body.has-results .reveal-query-form #resultQuery,
+  html.has-results-page body.has-results .reveal-query-form #resultQuery{
+    grid-column:1 / 2 !important;
+  }
+
+  #resultVoiceBtn.reveal-mic-btn,
+  #resultVoiceBtn{
+    grid-column:2 / 3 !important;
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+  }
+
+  body.has-results .reveal-query-form #resultGo,
+  html.has-results-page body.has-results .reveal-query-form #resultGo{
+    grid-column:3 / 4 !important;
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -3027,6 +3125,14 @@ html.has-results-page body.has-results .hero-trailer iframe{
     <form id="resultForm" class="reveal-query-form">
       <div class="reveal-query-label">your summon</div>
       <textarea id="resultQuery" autocomplete="off" spellcheck="false" rows="1" placeholder="edit the search"></textarea>
+      <button type="button" id="resultVoiceBtn" class="mic-btn reveal-mic-btn" aria-label="Speak summon" title="Speak summon">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 14.25c1.85 0 3.2-1.35 3.2-3.2V6.2C15.2 4.35 13.85 3 12 3S8.8 4.35 8.8 6.2v4.85c0 1.85 1.35 3.2 3.2 3.2Z"></path>
+          <path d="M5.75 10.5c0 3.55 2.55 6.05 6.25 6.05s6.25-2.5 6.25-6.05"></path>
+          <path d="M12 16.55V21"></path>
+          <path d="M8.6 21h6.8"></path>
+        </svg>
+      </button>
       <button type="submit" id="resultGo" aria-label="Search">→</button>
     </form>
   </div>
@@ -3626,12 +3732,26 @@ $$('.depth-btn').forEach(btn=>{
 
 // Voice
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(SpeechRecognition){
-  $('#voiceBtn').addEventListener('click',()=>{
+
+function bindVoiceButton(buttonSelector,targetSelector,label='Speak search'){
+  const btn=$(buttonSelector);
+  const target=$(targetSelector);
+  if(!btn||!target)return;
+
+  if(!SpeechRecognition){
+    btn.hidden=true;
+    return;
+  }
+
+  btn.addEventListener('click',()=>{
     const rec=new SpeechRecognition();
-    rec.lang='en-US';rec.interimResults=true;rec.continuous=false;
-    $('#voiceBtn').classList.add('listening');
-    $('#voiceBtn').setAttribute('aria-label','Listening');
+    rec.lang='en-US';
+    rec.interimResults=true;
+    rec.continuous=false;
+
+    btn.classList.add('listening');
+    btn.setAttribute('aria-label','Listening');
+
     let final='';
     rec.onresult=e=>{
       let interim='';
@@ -3640,13 +3760,31 @@ if(SpeechRecognition){
         if(e.results[i].isFinal)final+=t;else interim+=t;
       }
       const spoken=(final||interim).trim();
-      if(spoken){$('#query').value=spoken;currentQuery=spoken;}
+      if(spoken){
+        target.value=spoken;
+        currentQuery=spoken;
+        autoResize(target);
+      }
     };
-    rec.onend=()=>{$('#voiceBtn').classList.remove('listening');$('#voiceBtn').setAttribute('aria-label','Speak search');};
-    rec.onerror=()=>{$('#voiceBtn').classList.remove('listening');$('#voiceBtn').setAttribute('aria-label','Speak search');toast('voice unavailable');};
+
+    rec.onend=()=>{
+      btn.classList.remove('listening');
+      btn.setAttribute('aria-label',label);
+    };
+
+    rec.onerror=()=>{
+      btn.classList.remove('listening');
+      btn.setAttribute('aria-label',label);
+      toast('voice unavailable');
+    };
+
     rec.start();
   });
-}else{$('#voiceBtn').hidden=true}
+}
+
+bindVoiceButton('#voiceBtn','#query','Speak search');
+bindVoiceButton('#resultVoiceBtn','#resultQuery','Speak summon');
+
 
 // Auto-resize textareas
 function autoResize(el){if(!el)return;el.style.height='auto';el.style.height=el.scrollHeight+'px'}
