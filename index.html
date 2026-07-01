@@ -1,9 +1,11 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<meta name="theme-color" content="#ffffff" />
+<meta name="theme-color" content="#050505" />
 <title>SUMMON — Search Netflix by meaning</title>
 <meta name="description" content="Say what you need. SUMMON finds what fits on Netflix." />
 <link rel="icon" href="./summon-favicon.ico" sizes="any" />
@@ -6954,6 +6956,598 @@ body.inline-trailer-playing .feature-main{max-width:540px}
   pointer-events:none;
 }
 
+
+/* ─────────────────────────────────────────────
+   SUMMON cinematic skin — matches favicon + OG
+   black / crimson / editorial Netflix discovery
+   ───────────────────────────────────────────── */
+
+:root{
+  --paper:#050505 !important;
+  --paper2:#080606 !important;
+  --ink:#f6f1e8 !important;
+  --muted:rgba(246,241,232,.62) !important;
+  --line:rgba(229,9,20,.26) !important;
+  --black:#030303 !important;
+  --white:#f6f1e8 !important;
+  --accent:#e50914 !important;
+  --accent2:#ff2a2f !important;
+  --smoke:rgba(246,241,232,.12);
+}
+
+html,body{
+  background:#050505 !important;
+  color:#f6f1e8 !important;
+}
+
+body::after{
+  opacity:.055 !important;
+  mix-blend-mode:screen !important;
+}
+
+/* Homepage becomes the same premium black/red world as the OG card. */
+body:not(.has-results) .top{
+  min-height:100svh !important;
+  display:grid !important;
+  grid-template-columns:minmax(430px,47vw) 1fr !important;
+  background:
+    radial-gradient(circle at 24% 28%, rgba(229,9,20,.12), transparent 30%),
+    radial-gradient(circle at 74% 42%, rgba(229,9,20,.10), transparent 24%),
+    linear-gradient(90deg,#050505 0%,#050505 44%,#090707 100%) !important;
+  border-bottom:1px solid rgba(229,9,20,.20) !important;
+  overflow:hidden !important;
+  position:relative !important;
+}
+
+body:not(.has-results) .top::before{
+  content:'' !important;
+  position:absolute !important;
+  left:5vw !important;
+  top:18svh !important;
+  width:32vw !important;
+  height:1px !important;
+  background:linear-gradient(90deg,transparent,rgba(229,9,20,.72),transparent) !important;
+  opacity:.8 !important;
+  z-index:2 !important;
+}
+
+body:not(.has-results) .top::after{
+  content:'' !important;
+  position:absolute !important;
+  left:28.5vw !important;
+  top:17.35svh !important;
+  width:12px !important;
+  height:12px !important;
+  border-radius:50% !important;
+  background:#e50914 !important;
+  box-shadow:0 0 28px rgba(229,9,20,.95),0 0 90px rgba(229,9,20,.38) !important;
+  z-index:3 !important;
+  pointer-events:none !important;
+}
+
+body:not(.has-results) .search-pane{
+  min-height:100svh !important;
+  position:relative !important;
+  z-index:4 !important;
+  padding:clamp(48px,6vw,92px) clamp(28px,5vw,96px) !important;
+  display:flex !important;
+  justify-content:center !important;
+  background:
+    linear-gradient(90deg,rgba(5,5,5,.98) 0%,rgba(5,5,5,.96) 70%,rgba(5,5,5,.62) 100%) !important;
+  color:#f6f1e8 !important;
+}
+
+body:not(.has-results) .search-pane > div:first-child{
+  width:min(760px,100%) !important;
+}
+
+/* OG-inspired wordmark */
+body:not(.has-results) .brand{
+  font-family:var(--serif) !important;
+  font-size:clamp(72px,9.4vw,154px) !important;
+  line-height:.78 !important;
+  letter-spacing:-.075em !important;
+  font-weight:700 !important;
+  color:#e50914 !important;
+  text-transform:uppercase !important;
+  text-shadow:
+    0 0 22px rgba(229,9,20,.24),
+    0 16px 58px rgba(0,0,0,.72) !important;
+  background:linear-gradient(180deg,#ff3439 0%,#e50914 45%,#7d050a 100%) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  width:max-content !important;
+  max-width:100% !important;
+  transform:translateX(-.03em) !important;
+}
+
+body:not(.has-results) .brand-wrap{
+  margin-bottom:clamp(34px,5vw,74px) !important;
+}
+
+body:not(.has-results) .prompt-label{
+  margin-top:0 !important;
+  font-family:var(--serif) !important;
+  text-transform:none !important;
+  letter-spacing:-.045em !important;
+  font-size:clamp(36px,4.8vw,76px) !important;
+  line-height:.98 !important;
+  color:#f6f1e8 !important;
+  text-shadow:0 8px 34px rgba(0,0,0,.55) !important;
+}
+
+body:not(.has-results) .prompt-label::after{
+  content:' by meaning' !important;
+  color:#e50914 !important;
+  font-style:italic !important;
+  margin-left:.18em !important;
+}
+
+body:not(.has-results) .search-form{
+  margin-top:clamp(28px,4vw,54px) !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 44px !important;
+  gap:16px !important;
+  padding:0 0 18px !important;
+  border-bottom:1px solid rgba(229,9,20,.58) !important;
+  position:relative !important;
+}
+
+body:not(.has-results) .search-form::before{
+  content:'' !important;
+  position:absolute !important;
+  left:0 !important;
+  bottom:-1px !important;
+  width:22% !important;
+  height:1px !important;
+  background:#e50914 !important;
+  box-shadow:0 0 22px rgba(229,9,20,.75) !important;
+}
+
+body:not(.has-results) #query{
+  font-family:var(--sans) !important;
+  font-size:clamp(19px,2.1vw,34px) !important;
+  line-height:1.18 !important;
+  letter-spacing:.01em !important;
+  color:#f6f1e8 !important;
+}
+
+body:not(.has-results) #query::placeholder{
+  color:rgba(246,241,232,.76) !important;
+}
+
+body:not(.has-results) #go{
+  width:44px !important;
+  height:44px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  align-self:end !important;
+  background:rgba(229,9,20,.92) !important;
+  color:#fff !important;
+  font-size:22px !important;
+  box-shadow:0 0 28px rgba(229,9,20,.28) !important;
+  transition:transform .16s ease, background .16s ease, box-shadow .16s ease !important;
+}
+
+body:not(.has-results) #go:hover{
+  transform:translateX(4px) !important;
+  background:#ff1d25 !important;
+  box-shadow:0 0 38px rgba(229,9,20,.48) !important;
+}
+
+body:not(.has-results) .search-hint{
+  margin-top:20px !important;
+  font-family:var(--mono) !important;
+  font-size:12px !important;
+  letter-spacing:.08em !important;
+  color:rgba(246,241,232,.66) !important;
+  text-transform:none !important;
+}
+
+body:not(.has-results) #modeHint{
+  position:relative !important;
+  padding-left:44px !important;
+}
+
+body:not(.has-results) #modeHint::before{
+  content:'•••' !important;
+  position:absolute !important;
+  left:0 !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  color:#e50914 !important;
+  letter-spacing:.1em !important;
+}
+
+/* Depth/theme controls become quiet red editorial controls. */
+body:not(.has-results) .mode-row{
+  margin-top:28px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:14px !important;
+  flex-wrap:wrap !important;
+}
+
+body:not(.has-results) .depth-toggle,
+body:not(.has-results) .depth-select{
+  display:inline-flex !important;
+  gap:0 !important;
+  border:1px solid rgba(229,9,20,.34) !important;
+  background:rgba(5,5,5,.28) !important;
+  box-shadow:inset 0 0 0 1px rgba(246,241,232,.035) !important;
+}
+
+body:not(.has-results) .depth-btn,
+body:not(.has-results) .depth-choice{
+  padding:8px 12px !important;
+  font-family:var(--mono) !important;
+  font-size:10px !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+  color:rgba(246,241,232,.56) !important;
+  border-right:1px solid rgba(229,9,20,.22) !important;
+}
+
+body:not(.has-results) .depth-btn:last-child,
+body:not(.has-results) .depth-choice:last-child{
+  border-right:0 !important;
+}
+
+body:not(.has-results) .depth-btn.active,
+body:not(.has-results) .depth-choice.active{
+  color:#fff !important;
+  background:#e50914 !important;
+}
+
+body:not(.has-results) .theme-toggle-refined,
+body:not(.has-results) .theme-switch{
+  border-color:rgba(229,9,20,.34) !important;
+  background:rgba(5,5,5,.34) !important;
+}
+
+/* Footer/link copy */
+body:not(.has-results) .lower-links{
+  color:rgba(246,241,232,.54) !important;
+  font-family:var(--mono) !important;
+  letter-spacing:.06em !important;
+}
+
+body:not(.has-results) .lower-links button,
+body:not(.has-results) .lower-links a{
+  color:rgba(246,241,232,.62) !important;
+}
+
+/* Poster wall: darker, red rim light, like OG */
+body:not(.has-results) .film-wall-pane{
+  min-height:100svh !important;
+  height:100svh !important;
+  position:relative !important;
+  background:#030303 !important;
+  overflow:hidden !important;
+  border-left:1px solid rgba(229,9,20,.13) !important;
+}
+
+body:not(.has-results) .film-wall-pane::before{
+  content:'' !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:2 !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(90deg,rgba(5,5,5,.92) 0%,rgba(5,5,5,.38) 32%,rgba(5,5,5,.05) 62%,rgba(5,5,5,.52) 100%),
+    radial-gradient(circle at 18% 55%,rgba(229,9,20,.22),transparent 28%),
+    linear-gradient(0deg,rgba(5,5,5,.50),transparent 28%,rgba(5,5,5,.62)) !important;
+}
+
+body:not(.has-results) .film-wall{
+  background:#030303 !important;
+  gap:3px !important;
+  grid-template-columns:repeat(4,minmax(160px,1fr)) !important;
+  transform:translateY(-4svh) rotate(-1.4deg) scale(1.05) !important;
+  min-height:140svh !important;
+}
+
+body:not(.searching):not(.has-results) .film-wall{
+  animation:summonOgWallDrift 86s linear infinite alternate !important;
+}
+
+@keyframes summonOgWallDrift{
+  from{transform:translateY(-3svh) rotate(-1.4deg) scale(1.05)}
+  to{transform:translateY(-18svh) rotate(-1.4deg) scale(1.05)}
+}
+
+body:not(.has-results) .wall-cell{
+  background:#080808 !important;
+  box-shadow:0 0 0 1px rgba(246,241,232,.025) inset !important;
+}
+
+body:not(.has-results) .wall-cell img{
+  filter:saturate(.74) contrast(1.08) brightness(.58) !important;
+  object-fit:cover !important;
+  object-position:center top !important;
+}
+
+body:not(.has-results) .wall-cell:nth-child(5n) img{
+  filter:saturate(.9) contrast(1.06) brightness(.72) !important;
+}
+
+body:not(.has-results) .wall-cell::after{
+  background:
+    linear-gradient(to bottom,rgba(0,0,0,.08),rgba(0,0,0,.22)),
+    linear-gradient(to top,rgba(0,0,0,.52),transparent 46%) !important;
+}
+
+/* Resolve/search keeps the cinematic texture instead of flashing white. */
+body.searching:not(.has-results) .film-wall{
+  animation-play-state:paused !important;
+  filter:blur(2px) brightness(.72) saturate(.78) !important;
+  opacity:.88 !important;
+}
+
+body.searching:not(.has-results) .search-pane{
+  opacity:.98 !important;
+}
+
+/* Results page: black/red cinematic finish, matching trailer + OG. */
+body.has-results{
+  background:#050505 !important;
+  color:#f6f1e8 !important;
+}
+
+body.has-results .results{
+  background:#050505 !important;
+}
+
+body.has-results .feature{
+  background:#030303 !important;
+}
+
+body.has-results .feature::after{
+  background:
+    linear-gradient(to right,rgba(0,0,0,.76) 0%,rgba(0,0,0,.34) 42%,rgba(0,0,0,.08) 100%),
+    radial-gradient(circle at 18% 70%,rgba(229,9,20,.20),transparent 32%),
+    linear-gradient(to bottom,rgba(0,0,0,.12) 0%,rgba(0,0,0,.10) 50%,rgba(0,0,0,.78) 100%) !important;
+}
+
+body.has-results .top-match{
+  color:rgba(229,9,20,.92) !important;
+  letter-spacing:.12em !important;
+}
+
+body.has-results #title{
+  font-family:var(--serif) !important;
+  color:#f6f1e8 !important;
+  font-weight:700 !important;
+  letter-spacing:-.055em !important;
+  text-shadow:0 2px 28px rgba(0,0,0,.78) !important;
+}
+
+body.has-results .score-row{
+  border-color:rgba(229,9,20,.50) !important;
+  color:#f6f1e8 !important;
+  background:rgba(5,5,5,.26) !important;
+}
+
+body.has-results .score-row span{
+  border-right-color:rgba(229,9,20,.34) !important;
+}
+
+body.has-results .actions .action{
+  color:#f6f1e8 !important;
+}
+
+body.has-results .actions .action#trailerBtn{
+  color:#ff2a2f !important;
+}
+
+/* Right ranking pane becomes dark glass instead of white report. */
+body.has-results .ranking{
+  background:
+    linear-gradient(90deg,rgba(5,5,5,.92),rgba(8,6,6,.98)),
+    radial-gradient(circle at 100% 0%,rgba(229,9,20,.14),transparent 34%) !important;
+  color:#f6f1e8 !important;
+  border-left:1px solid rgba(229,9,20,.22) !important;
+}
+
+body.has-results .result-mode,
+body.has-results .rank-kicker,
+body.has-results .rank-count,
+body.has-results .rank-meta,
+body.has-results .rank-num,
+body.has-results .rank-actions{
+  color:rgba(246,241,232,.46) !important;
+}
+
+body.has-results .result-search{
+  border-bottom-color:rgba(229,9,20,.48) !important;
+}
+
+body.has-results #resultQuery{
+  color:#f6f1e8 !important;
+}
+
+body.has-results #resultQuery::placeholder{
+  color:rgba(246,241,232,.40) !important;
+}
+
+body.has-results #resultGo{
+  color:#e50914 !important;
+}
+
+body.has-results .rank-row{
+  color:#f6f1e8 !important;
+  border-bottom-color:rgba(246,241,232,.10) !important;
+}
+
+body.has-results .rank-row:hover{
+  background:rgba(229,9,20,.055) !important;
+}
+
+body.has-results .rank-title{
+  color:rgba(246,241,232,.88) !important;
+}
+
+body.has-results .rank-row.active .rank-title{
+  color:#ff2a2f !important;
+}
+
+body.has-results .rank-score{
+  color:rgba(246,241,232,.74) !important;
+  border-color:rgba(246,241,232,.22) !important;
+  background:rgba(0,0,0,.22) !important;
+}
+
+body.has-results .rank-row.active .rank-score{
+  color:#fff !important;
+  border-color:#e50914 !important;
+  box-shadow:0 0 18px rgba(229,9,20,.20) !important;
+}
+
+body.has-results .rank-thumb{
+  filter:saturate(.78) contrast(1.08) brightness(.74) !important;
+}
+
+/* Feature trailer inherits the same red/black identity. */
+.feature-trailer-head{
+  background:linear-gradient(180deg,rgba(5,5,5,.86),rgba(5,5,5,.24)) !important;
+  border-bottom:1px solid rgba(229,9,20,.28) !important;
+  color:rgba(246,241,232,.88) !important;
+}
+
+#featureTrailerClose{
+  color:#ff2a2f !important;
+}
+
+/* Mobile: make it feel like the OG, but usable. */
+@media(max-width:980px){
+  body:not(.has-results) .top{
+    display:block !important;
+    min-height:100svh !important;
+    background:#050505 !important;
+  }
+
+  body:not(.has-results) .search-pane{
+    min-height:100svh !important;
+    padding:26px 18px max(24px,env(safe-area-inset-bottom)) !important;
+    background:
+      linear-gradient(to bottom,rgba(5,5,5,.72) 0%,rgba(5,5,5,.28) 34%,rgba(5,5,5,.88) 100%) !important;
+    justify-content:space-between !important;
+  }
+
+  body:not(.has-results) .film-wall-pane{
+    position:absolute !important;
+    inset:0 !important;
+    z-index:0 !important;
+    height:100svh !important;
+    min-height:100svh !important;
+    border-left:0 !important;
+  }
+
+  body:not(.has-results) .film-wall-pane::before{
+    background:
+      linear-gradient(to bottom,rgba(5,5,5,.72) 0%,rgba(5,5,5,.20) 28%,rgba(5,5,5,.38) 56%,rgba(5,5,5,.88) 100%),
+      radial-gradient(circle at 28% 65%,rgba(229,9,20,.20),transparent 36%) !important;
+  }
+
+  body:not(.has-results) .film-wall{
+    grid-template-columns:repeat(2,1fr) !important;
+    gap:1px !important;
+    transform:translateY(-4svh) scale(1.04) !important;
+    min-height:126svh !important;
+    rotate:0deg !important;
+  }
+
+  body:not(.searching):not(.has-results) .film-wall{
+    animation:summonMobileOgWallDrift 82s linear infinite alternate !important;
+  }
+
+  @keyframes summonMobileOgWallDrift{
+    from{transform:translateY(-4svh) scale(1.04)}
+    to{transform:translateY(-18svh) scale(1.04)}
+  }
+
+  body:not(.has-results) .brand{
+    font-size:clamp(54px,17vw,82px) !important;
+    line-height:.80 !important;
+    letter-spacing:-.07em !important;
+    text-shadow:0 0 20px rgba(229,9,20,.22),0 12px 38px rgba(0,0,0,.78) !important;
+  }
+
+  body:not(.has-results) .brand-wrap{
+    margin-bottom:0 !important;
+  }
+
+  body:not(.has-results) .prompt-label{
+    font-size:clamp(31px,9vw,48px) !important;
+    line-height:1 !important;
+    max-width:9ch !important;
+    text-shadow:0 6px 30px rgba(0,0,0,.76) !important;
+  }
+
+  body:not(.has-results) .prompt-label::after{
+    display:block !important;
+    margin-left:0 !important;
+  }
+
+  body:not(.has-results) .search-form{
+    margin-top:22px !important;
+  }
+
+  body:not(.has-results) #query{
+    font-size:17px !important;
+  }
+
+  body:not(.has-results) .search-hint{
+    font-size:10px !important;
+  }
+
+  body:not(.has-results) .mode-row{
+    margin-top:20px !important;
+  }
+
+  body:not(.has-results) .lower-links{
+    margin-top:20px !important;
+  }
+
+  body.has-results .results{
+    display:block !important;
+    background:#050505 !important;
+  }
+
+  body.has-results .feature{
+    min-height:72svh !important;
+  }
+
+  body.has-results .ranking{
+    min-height:auto !important;
+    border-left:0 !important;
+    border-top:1px solid rgba(229,9,20,.22) !important;
+  }
+}
+
+@media(max-width:560px){
+  body:not(.has-results) .brand{
+    font-size:clamp(48px,16vw,70px) !important;
+  }
+
+  body:not(.has-results) .prompt-label{
+    font-size:clamp(29px,8.5vw,42px) !important;
+  }
+
+  body:not(.has-results) .depth-btn,
+  body:not(.has-results) .depth-choice{
+    padding:7px 9px !important;
+    font-size:9px !important;
+  }
+
+  body:not(.has-results) #go{
+    width:40px !important;
+    height:40px !important;
+  }
+}
+
 </style>
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
@@ -6965,15 +7559,15 @@ body.inline-trailer-playing .feature-main{max-width:540px}
       <div class="brand-wrap">
         <div class="brand" aria-label="SUMMON">SUMMON</div>
       </div>
-      <div class="prompt-label">find something on Netflix</div>
+      <div class="prompt-label">search Netflix by meaning</div>
 
       <form id="searchForm" class="search-form">
-        <input id="query" autocomplete="off" spellcheck="false" inputmode="search" enterkeyhint="search" placeholder="say what you actually want to watch tonight">
+        <input id="query" autocomplete="off" spellcheck="false" inputmode="search" enterkeyhint="search" placeholder="Say what you need. SUMMON finds what fits.">
         <button id="go" aria-label="Search">→</button>
       </form>
 
       <div class="search-hint">
-        <span id="modeHint">search Netflix by meaning</span>
+        <span id="modeHint">say what you need · SUMMON finds what fits</span>
       </div>
 
       <div class="mode-row">
