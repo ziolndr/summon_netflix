@@ -1292,6 +1292,292 @@ body.searching:not(.has-results) .wall{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   Nearby matches redesign: clean poster deck.
+   No dated gray cards. Full cover art stays visible.
+   ───────────────────────────────────────────── */
+
+.discovery-strip{
+  background:#050505 !important;
+}
+
+.discovery-header{
+  max-width:1280px !important;
+  align-items:flex-end !important;
+}
+
+.discovery-header h2{
+  color:rgba(246,241,232,.42) !important;
+}
+
+.discovery-header .count{
+  color:rgba(246,241,232,.26) !important;
+}
+
+.search-echo{
+  max-width:1280px !important;
+  border-bottom:1px solid rgba(246,241,232,.09) !important;
+}
+
+.rank-grid{
+  max-width:1280px !important;
+  display:grid !important;
+  grid-template-columns:repeat(auto-fill,minmax(148px,1fr)) !important;
+  gap:26px 18px !important;
+  align-items:start !important;
+}
+
+.rank-card{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  border:0 !important;
+  background:transparent !important;
+  padding:0 !important;
+  margin:0 !important;
+  width:100% !important;
+  min-width:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  text-align:left !important;
+  cursor:pointer !important;
+  color:#f6f1e8 !important;
+  box-shadow:none !important;
+  transform:none !important;
+  overflow:visible !important;
+}
+
+.rank-card:hover{
+  transform:none !important;
+  box-shadow:none !important;
+  border:0 !important;
+}
+
+.rank-card-poster{
+  position:relative !important;
+  display:block !important;
+  width:100% !important;
+  aspect-ratio:2/3 !important;
+  overflow:hidden !important;
+  background:#080808 !important;
+  border:1px solid rgba(246,241,232,.10) !important;
+  box-shadow:0 20px 42px rgba(0,0,0,.30) !important;
+  transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease,filter .24s ease !important;
+}
+
+.rank-card-img{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  filter:saturate(.92) contrast(1.03) brightness(.86) !important;
+  transition:filter .24s ease,transform .36s ease !important;
+}
+
+.rank-card:hover .rank-card-poster{
+  transform:translateY(-4px) !important;
+  border-color:rgba(246,241,232,.24) !important;
+  box-shadow:0 26px 58px rgba(0,0,0,.44) !important;
+}
+
+.rank-card:hover .rank-card-img{
+  filter:saturate(1.02) contrast(1.04) brightness(.96) !important;
+  transform:scale(1.018) !important;
+}
+
+.rank-card.active .rank-card-poster{
+  border-color:rgba(229,9,20,.72) !important;
+  box-shadow:0 0 0 1px rgba(229,9,20,.30),0 24px 62px rgba(229,9,20,.16),0 22px 46px rgba(0,0,0,.42) !important;
+}
+
+.rank-card-index{
+  position:absolute !important;
+  left:10px !important;
+  top:10px !important;
+  z-index:2 !important;
+  min-width:28px !important;
+  height:24px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(0,0,0,.56) !important;
+  color:rgba(246,241,232,.86) !important;
+  border:1px solid rgba(246,241,232,.16) !important;
+  backdrop-filter:blur(8px) !important;
+  font-family:var(--mono) !important;
+  font-size:10px !important;
+  letter-spacing:.06em !important;
+}
+
+.rank-card-fallback{
+  width:100% !important;
+  height:100% !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  padding:14px !important;
+  color:rgba(246,241,232,.72) !important;
+  font-family:var(--sans) !important;
+  font-size:14px !important;
+  line-height:1.15 !important;
+  background:linear-gradient(160deg,#111,#050505) !important;
+}
+
+.rank-card-body{
+  display:block !important;
+  padding:12px 2px 0 !important;
+  background:transparent !important;
+  border:0 !important;
+}
+
+.rank-card-num{
+  display:none !important;
+}
+
+.rank-card-title{
+  display:block !important;
+  color:rgba(246,241,232,.92) !important;
+  font-family:var(--sans) !important;
+  font-size:14px !important;
+  font-weight:600 !important;
+  letter-spacing:-.018em !important;
+  line-height:1.18 !important;
+  white-space:normal !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  display:-webkit-box !important;
+  -webkit-line-clamp:2 !important;
+  -webkit-box-orient:vertical !important;
+}
+
+.rank-card-meta{
+  margin-top:6px !important;
+  display:flex !important;
+  gap:7px !important;
+  flex-wrap:wrap !important;
+  color:rgba(246,241,232,.34) !important;
+  font-family:var(--mono) !important;
+  font-size:9px !important;
+  letter-spacing:.06em !important;
+  text-transform:uppercase !important;
+}
+
+.rank-card-score{
+  display:block !important;
+  margin-top:9px !important;
+  padding-top:0 !important;
+  border-top:0 !important;
+  color:rgba(246,241,232,.42) !important;
+  font-family:var(--mono) !important;
+  font-size:10px !important;
+  letter-spacing:.04em !important;
+}
+
+.rank-card-score strong{
+  color:#e50914 !important;
+  font-weight:600 !important;
+}
+
+/* On wide screens, make the result rail feel like a premium poster shelf. */
+@media(min-width:1180px){
+  .rank-grid{
+    grid-template-columns:repeat(5,minmax(150px,1fr)) !important;
+  }
+}
+
+/* Mobile: two full-poster columns, still not gray boxes. */
+@media(max-width:980px){
+  .rank-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:22px 14px !important;
+  }
+
+  .rank-card-title{
+    font-size:13px !important;
+  }
+
+  .rank-card-meta{
+    font-size:8px !important;
+  }
+}
+
+@media(max-width:420px){
+  .rank-grid{
+    gap:20px 12px !important;
+  }
+}
+
+
+/* ─────────────────────────────────────────────
+   Reveal prompt capsule: visible without covering the cinema layout.
+   ───────────────────────────────────────────── */
+
+.hero-prompt{
+  position:absolute !important;
+  left:clamp(18px,4vw,54px) !important;
+  bottom:clamp(16px,3vw,38px) !important;
+  z-index:6 !important;
+  max-width:min(620px,calc(100vw - 120px)) !important;
+  display:flex !important;
+  align-items:baseline !important;
+  gap:10px !important;
+  padding:10px 13px !important;
+  border:1px solid rgba(246,241,232,.15) !important;
+  background:rgba(5,5,5,.36) !important;
+  color:rgba(246,241,232,.86) !important;
+  backdrop-filter:blur(12px) saturate(.9) !important;
+  -webkit-backdrop-filter:blur(12px) saturate(.9) !important;
+  box-shadow:0 14px 36px rgba(0,0,0,.24) !important;
+  pointer-events:none !important;
+}
+
+.hero-prompt span{
+  flex:0 0 auto !important;
+  font-family:var(--mono) !important;
+  font-size:9px !important;
+  letter-spacing:.14em !important;
+  text-transform:uppercase !important;
+  color:rgba(246,241,232,.42) !important;
+}
+
+.hero-prompt strong{
+  min-width:0 !important;
+  display:block !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-family:var(--sans) !important;
+  font-size:13px !important;
+  font-weight:500 !important;
+  letter-spacing:-.01em !important;
+  color:rgba(246,241,232,.90) !important;
+}
+
+/* Hide the prompt while trailer is playing so the video is clean. */
+.hero-trailer.active ~ .hero-prompt,
+.hero:has(.hero-trailer.active) .hero-prompt{
+  display:none !important;
+}
+
+@media(max-width:980px){
+  .hero-prompt{
+    left:14px !important;
+    right:14px !important;
+    bottom:14px !important;
+    max-width:none !important;
+    padding:9px 11px !important;
+  }
+
+  .hero-prompt span{
+    font-size:8px !important;
+  }
+
+  .hero-prompt strong{
+    font-size:12px !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -1376,6 +1662,7 @@ body.searching:not(.has-results) .wall{
       <button type="button" class="hero-play-btn" id="heroPlayBtn">play trailer</button>
       <button type="button" class="hero-nav hero-nav-prev" id="prevResult" aria-label="Previous">←</button>
       <button type="button" class="hero-nav hero-nav-next" id="nextResult" aria-label="Next">→</button>
+      <div class="hero-prompt" id="heroPrompt" aria-live="polite"><span>matched for</span><strong id="heroPromptText"></strong></div>
       <div class="hero-trailer" id="heroTrailer">
         <button type="button" class="hero-trailer-close" id="heroTrailerClose">×</button>
         <iframe id="heroTrailerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
@@ -1842,6 +2129,8 @@ function renderResults(){
   heroImg.alt=m.title||'';
 
   // Info
+  const heroPrompt=$('#heroPromptText');
+  if(heroPrompt)heroPrompt.textContent=currentQuery||'';
   $('#title').textContent=m.title;
   $('#score').textContent=Number(m.score).toFixed(3);
 
@@ -1885,18 +2174,20 @@ function renderResults(){
 
 function renderRankGrid(){
   $('#rankGrid').innerHTML=results.map((m,i)=>{
-    const src=poster(m,'w342');
+    const src=poster(m,'w500') || backdrop(m,'w780');
     const meta=[m.year||'',...(m.genres||[]).slice(0,2)].filter(Boolean);
     return `
-      <div class="rank-card ${i===active?'active':''}" data-i="${i}" style="animation-delay:${i*.05}s">
-        ${src?`<img class="rank-card-img" src="${src}" alt="" loading="lazy" decoding="async">`:''}
-        <div class="rank-card-body">
-          <div class="rank-card-num">${String(i+1).padStart(2,'0')}</div>
-          <div class="rank-card-title">${esc(m.title)}</div>
-          <div class="rank-card-meta">${meta.map(x=>`<span>${esc(x)}</span>`).join('')}</div>
-          <div class="rank-card-score">coherence <strong>${Number(m.score).toFixed(3)}</strong></div>
-        </div>
-      </div>
+      <button type="button" class="rank-card ${i===active?'active':''}" data-i="${i}" style="animation-delay:${i*.05}s">
+        <span class="rank-card-poster">
+          ${src?`<img class="rank-card-img" src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`:`<span class="rank-card-fallback">${esc(m.title)}</span>`}
+          <span class="rank-card-index">${String(i+1).padStart(2,'0')}</span>
+        </span>
+        <span class="rank-card-body">
+          <span class="rank-card-title">${esc(m.title)}</span>
+          <span class="rank-card-meta">${meta.map(x=>`<span>${esc(x)}</span>`).join('')}</span>
+          <span class="rank-card-score">coherence <strong>${Number(m.score).toFixed(3)}</strong></span>
+        </span>
+      </button>
     `;
   }).join('');
 
