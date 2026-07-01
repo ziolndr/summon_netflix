@@ -2865,6 +2865,65 @@ html.has-results-page body.has-results .info-actions{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   Reveal hero crop fix:
+   show more top of the film/trailer artwork across all results.
+   ───────────────────────────────────────────── */
+
+body.has-results .hero-media,
+html.has-results-page body.has-results .hero-media{
+  height:64svh !important;
+  min-height:500px !important;
+  max-height:820px !important;
+}
+
+body.has-results .hero-img,
+html.has-results-page body.has-results .hero-img{
+  object-fit:cover !important;
+  object-position:center 22% !important;
+}
+
+/* Poster fallback should remain contained/centered, not top-biased. */
+body.has-results .hero.posterish .hero-img,
+html.has-results-page body.has-results .hero.posterish .hero-img,
+body.has-results .hero-img.is-posterish,
+html.has-results-page body.has-results .hero-img.is-posterish{
+  object-fit:contain !important;
+  object-position:center center !important;
+  background:#050505 !important;
+}
+
+/* Actual trailer iframe still fills the same hero area cleanly. */
+body.has-results .hero-trailer iframe,
+html.has-results-page body.has-results .hero-trailer iframe{
+  width:100% !important;
+  height:100% !important;
+}
+
+/* Mobile keeps the tighter reveal, but still biases top enough to avoid forehead crop. */
+@media(max-width:980px){
+  body.has-results .hero-media,
+  html.has-results-page body.has-results .hero-media{
+    height:46svh !important;
+    min-height:300px !important;
+    max-height:460px !important;
+  }
+
+  body.has-results .hero-img,
+  html.has-results-page body.has-results .hero-img{
+    object-position:center 20% !important;
+  }
+}
+
+@media(max-width:420px){
+  body.has-results .hero-media,
+  html.has-results-page body.has-results .hero-media{
+    height:44svh !important;
+    min-height:285px !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
