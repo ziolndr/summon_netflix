@@ -1578,6 +1578,223 @@ body.searching:not(.has-results) .wall{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   Reveal query dock: editable prompt directly under the hero/trailer.
+   Replaces the lower search-echo field and removes the overlay capsule.
+   ───────────────────────────────────────────── */
+
+.hero-prompt{
+  display:none !important;
+}
+
+.reveal-query-dock{
+  position:relative !important;
+  z-index:7 !important;
+  width:100% !important;
+  background:#050505 !important;
+  border-top:1px solid rgba(246,241,232,.08) !important;
+  border-bottom:1px solid rgba(246,241,232,.10) !important;
+  padding:14px clamp(20px,5vw,80px) !important;
+}
+
+.reveal-query-form{
+  max-width:1200px !important;
+  margin:0 auto !important;
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) 40px !important;
+  align-items:center !important;
+  gap:16px !important;
+}
+
+.reveal-query-label{
+  font-family:var(--mono) !important;
+  font-size:9px !important;
+  letter-spacing:.14em !important;
+  text-transform:uppercase !important;
+  color:rgba(246,241,232,.34) !important;
+  white-space:nowrap !important;
+}
+
+.reveal-query-form #resultQuery{
+  width:100% !important;
+  min-width:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  resize:none !important;
+  overflow:hidden !important;
+  background:transparent !important;
+  color:rgba(246,241,232,.92) !important;
+  font-family:var(--sans) !important;
+  font-size:clamp(16px,1.8vw,23px) !important;
+  font-weight:600 !important;
+  letter-spacing:-.02em !important;
+  line-height:1.25 !important;
+  min-height:1.3em !important;
+  max-height:4.2em !important;
+  padding:5px 0 !important;
+}
+
+.reveal-query-form #resultQuery::placeholder{
+  color:rgba(246,241,232,.24) !important;
+}
+
+.reveal-query-form #resultGo{
+  width:40px !important;
+  height:40px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid rgba(246,241,232,.14) !important;
+  background:rgba(246,241,232,.04) !important;
+  color:rgba(246,241,232,.72) !important;
+  font-family:var(--mono) !important;
+  font-size:18px !important;
+  transition:all .2s ease !important;
+}
+
+.reveal-query-form #resultGo:hover{
+  background:#e50914 !important;
+  border-color:#e50914 !important;
+  color:#fff !important;
+  box-shadow:0 0 18px rgba(229,9,20,.28) !important;
+}
+
+/* The discovery section no longer owns the editable prompt field. */
+.search-echo{
+  display:none !important;
+}
+
+.discovery-strip{
+  padding-top:28px !important;
+}
+
+@media(max-width:760px){
+  .reveal-query-dock{
+    padding:12px 16px !important;
+  }
+
+  .reveal-query-form{
+    grid-template-columns:minmax(0,1fr) 38px !important;
+    gap:10px !important;
+  }
+
+  .reveal-query-label{
+    grid-column:1 / -1 !important;
+    font-size:8px !important;
+    margin-bottom:-4px !important;
+  }
+
+  .reveal-query-form #resultQuery{
+    font-size:16px !important;
+  }
+
+  .reveal-query-form #resultGo{
+    width:38px !important;
+    height:38px !important;
+  }
+}
+
+
+/* ─────────────────────────────────────────────
+   Voice control repair: compact mic icon, no placeholder overlap.
+   ───────────────────────────────────────────── */
+
+.search-input-wrap{
+  padding-right:0 !important;
+}
+
+#query{
+  padding-right:96px !important;
+}
+
+.search-actions{
+  right:0 !important;
+  bottom:9px !important;
+  gap:7px !important;
+}
+
+#voiceBtn.mic-btn,
+#voiceBtn{
+  width:34px !important;
+  height:34px !important;
+  min-width:34px !important;
+  padding:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid rgba(246,241,232,.14) !important;
+  background:rgba(246,241,232,.035) !important;
+  color:rgba(246,241,232,.58) !important;
+  font-size:0 !important;
+  letter-spacing:0 !important;
+  text-transform:none !important;
+  overflow:hidden !important;
+  transition:all .2s ease !important;
+}
+
+#voiceBtn svg{
+  width:16px !important;
+  height:16px !important;
+  display:block !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.8 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  pointer-events:none !important;
+}
+
+#voiceBtn:hover{
+  color:#fff !important;
+  border-color:rgba(246,241,232,.32) !important;
+  background:rgba(246,241,232,.08) !important;
+}
+
+#voiceBtn.listening{
+  color:#fff !important;
+  border-color:#e50914 !important;
+  background:rgba(229,9,20,.22) !important;
+  box-shadow:0 0 18px rgba(229,9,20,.26) !important;
+}
+
+#voiceBtn.listening svg{
+  animation:micPulse 1s ease-in-out infinite alternate !important;
+}
+
+@keyframes micPulse{
+  from{transform:scale(.94);opacity:.74}
+  to{transform:scale(1.08);opacity:1}
+}
+
+#go{
+  flex:0 0 auto !important;
+}
+
+/* Mobile gets a little extra text room. */
+@media(max-width:560px){
+  #query{
+    padding-right:88px !important;
+  }
+
+  #voiceBtn.mic-btn,
+  #voiceBtn{
+    width:32px !important;
+    height:32px !important;
+    min-width:32px !important;
+  }
+
+  #voiceBtn svg{
+    width:15px !important;
+    height:15px !important;
+  }
+
+  #go{
+    width:34px !important;
+    height:34px !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -1603,7 +1820,14 @@ body.searching:not(.has-results) .wall{
             rows="1"
           ></textarea>
           <div class="search-actions">
-            <button type="button" id="voiceBtn" aria-label="Speak search">voice</button>
+            <button type="button" id="voiceBtn" class="mic-btn" aria-label="Speak search" title="Speak search">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 14.25c1.85 0 3.2-1.35 3.2-3.2V6.2C15.2 4.35 13.85 3 12 3S8.8 4.35 8.8 6.2v4.85c0 1.85 1.35 3.2 3.2 3.2Z"></path>
+                <path d="M5.75 10.5c0 3.55 2.55 6.05 6.25 6.05s6.25-2.5 6.25-6.05"></path>
+                <path d="M12 16.55V21"></path>
+                <path d="M8.6 21h6.8"></path>
+              </svg>
+            </button>
             <button type="submit" id="go" aria-label="Search">→</button>
           </div>
         </div>
@@ -1662,12 +1886,20 @@ body.searching:not(.has-results) .wall{
       <button type="button" class="hero-play-btn" id="heroPlayBtn">play trailer</button>
       <button type="button" class="hero-nav hero-nav-prev" id="prevResult" aria-label="Previous">←</button>
       <button type="button" class="hero-nav hero-nav-next" id="nextResult" aria-label="Next">→</button>
-      <div class="hero-prompt" id="heroPrompt" aria-live="polite"><span>matched for</span><strong id="heroPromptText"></strong></div>
       <div class="hero-trailer" id="heroTrailer">
         <button type="button" class="hero-trailer-close" id="heroTrailerClose">×</button>
         <iframe id="heroTrailerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
+  </div>
+
+  <!-- Prompt Dock -->
+  <div class="reveal-query-dock">
+    <form id="resultForm" class="reveal-query-form">
+      <div class="reveal-query-label">your prompt</div>
+      <textarea id="resultQuery" autocomplete="off" spellcheck="false" rows="1" placeholder="edit the search"></textarea>
+      <button type="submit" id="resultGo" aria-label="Search">→</button>
+    </form>
   </div>
 
   <!-- Info Strip -->
@@ -1703,16 +1935,7 @@ body.searching:not(.has-results) .wall{
       <h2>nearby matches</h2>
       <span class="count" id="rankCount">10 returned</span>
     </div>
-
-    <div class="search-echo">
-      <div class="echo-label">your query</div>
-      <form id="resultForm" class="echo-form">
-        <textarea id="resultQuery" autocomplete="off" spellcheck="false" rows="1" placeholder="edit the search"></textarea>
-        <button type="submit" id="resultGo">→</button>
-      </form>
-    </div>
-
-    <div class="rank-grid" id="rankGrid"></div>
+<div class="rank-grid" id="rankGrid"></div>
   </div>
 
 </section>
@@ -2129,8 +2352,6 @@ function renderResults(){
   heroImg.alt=m.title||'';
 
   // Info
-  const heroPrompt=$('#heroPromptText');
-  if(heroPrompt)heroPrompt.textContent=currentQuery||'';
   $('#title').textContent=m.title;
   $('#score').textContent=Number(m.score).toFixed(3);
 
@@ -2266,7 +2487,7 @@ if(SpeechRecognition){
     const rec=new SpeechRecognition();
     rec.lang='en-US';rec.interimResults=true;rec.continuous=false;
     $('#voiceBtn').classList.add('listening');
-    $('#voiceBtn').textContent='listening';
+    $('#voiceBtn').setAttribute('aria-label','Listening');
     let final='';
     rec.onresult=e=>{
       let interim='';
@@ -2277,8 +2498,8 @@ if(SpeechRecognition){
       const spoken=(final||interim).trim();
       if(spoken){$('#query').value=spoken;currentQuery=spoken;}
     };
-    rec.onend=()=>{$('#voiceBtn').classList.remove('listening');$('#voiceBtn').textContent='voice';};
-    rec.onerror=()=>{$('#voiceBtn').classList.remove('listening');$('#voiceBtn').textContent='voice';toast('voice unavailable');};
+    rec.onend=()=>{$('#voiceBtn').classList.remove('listening');$('#voiceBtn').setAttribute('aria-label','Speak search');};
+    rec.onerror=()=>{$('#voiceBtn').classList.remove('listening');$('#voiceBtn').setAttribute('aria-label','Speak search');toast('voice unavailable');};
     rec.start();
   });
 }else{$('#voiceBtn').hidden=true}
