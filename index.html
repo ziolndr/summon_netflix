@@ -7548,6 +7548,23 @@ body.has-results .rank-thumb{
   }
 }
 
+
+/* Shuffle removed: loaded candidate field is the search surface now. */
+[data-action="shuffle-corpus"],
+#shuffleFilms,
+#shuffleFilmsResult{
+  display:none !important;
+}
+.rank-actions{
+  justify-content:flex-end !important;
+}
+body:not(.has-results) .lower-links{
+  justify-content:flex-end !important;
+}
+body:not(.has-results) .lower-links > span:empty{
+  display:none !important;
+}
+
 </style>
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
@@ -7604,7 +7621,6 @@ body.has-results .rank-thumb{
         <span class="site-signal site-signal-primary">© 2026 Actual General Intelligence Inc.</span>
         <span class="site-signal">ARBITER COHERENCE ENGINE</span>
       </div>
-      <button id="shuffleFilms" type="button" data-action="shuffle-corpus">shuffle films <span class="shuffle-icon">⌘</span></button>
     </div>
   </div>
 
@@ -7684,7 +7700,6 @@ body.has-results .rank-thumb{
     <div id="rankList" class="rank-list"></div>
 
     <div class="rank-actions">
-      <button id="shuffleFilmsResult" type="button" data-action="shuffle-corpus">shuffle films ⌘</button>
       <span id="status">loading films</span>
     </div>
   </div>
@@ -8375,18 +8390,8 @@ function renderRankList(){
 }
 
 async function shuffleFilms(){
-  corpusPageOffset=(corpusPageOffset+1+Math.floor(Math.random()*3))%4;
-  shuffleSeed++;
-  cache=null;
-  setStatus(corpusMode === 'games' ? 'shuffling games' : corpusMode === 'books' ? 'shuffling books' : corpusMode === 'tv' ? 'shuffling tv' : corpusMode === 'mixed' ? 'shuffling mix' : 'shuffling films');
-  try{
-    await loadCorpusWithRetry(2);
-    setCorpusLoading(false);
-    setStatus(`${cache.movies.length} films loaded`);
-  }catch(e){
-    console.error(e);
-    toast('shuffle failed');
-  }
+  // Shuffle removed: loaded candidates are the search field now.
+  return cache;
 }
 
 function newSearch(){
@@ -8419,8 +8424,8 @@ resultQuery.addEventListener('keydown', e=>{
 $('#resultSearchForm').addEventListener('submit',e=>{e.preventDefault();runResultSearch()});
 $('#resultGo').addEventListener('pointerdown',()=>acceptResultInput());
 $('#resultGo').addEventListener('click',e=>{e.preventDefault();runResultSearch()});
-$('#shuffleFilms').addEventListener('click',shuffleFilms);
-$('#shuffleFilmsResult').addEventListener('click',shuffleFilms);
+$('#shuffleFilms')?.addEventListener('click',shuffleFilms);
+$('#shuffleFilmsResult')?.addEventListener('click',shuffleFilms);
 $('#newSearch').addEventListener('click',newSearch);
 document.querySelectorAll('.mode-btn').forEach(btn=>btn.addEventListener('click',()=>setCorpusMode(btn.dataset.mode)));
 document.querySelectorAll('.depth-btn').forEach(btn=>btn.addEventListener('click',()=>setSearchDepth(btn.dataset.depth)));
@@ -9021,7 +9026,7 @@ function updateShuffleLabels(){
     'shuffle films';
 
   const homeBtn = document.querySelector('#shuffleFilms');
-  if(homeBtn) homeBtn.innerHTML = `${label} <span class="shuffle-icon">⌘</span>`;
+  if(homeBtn) homeBtn.innerHTML = `${label} `;
 
   const resultBtn = document.querySelector('#shuffleFilmsResult');
   if(resultBtn) resultBtn.textContent = label;
