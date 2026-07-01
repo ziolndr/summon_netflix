@@ -1595,6 +1595,7 @@ const PROCESSING_STAGES=[
   'locking archive',
   'reading candidate field',
   'measuring coherence',
+  'waiting for ARBITER',
   'isolating strongest signal',
   'preparing reveal'
 ];
@@ -1618,49 +1619,152 @@ function stopProcessing(){
   document.body.classList.remove('searching');
 }
 
+const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/compare';
+
+function extractArbiterRows(data){
+  if(Array.isArray(data?.all))return data.all;
+  if(Array.isArray(data?.top))return data.top;
+  if(Array.isArray(data?.results))return data.results;
+  if(Array.isArray(data?.matches))return data.matches;
+  if(Array.isArray(data))return data;
+  return [];
+}
+
+function rowText(row){
+  if(Array.isArray(row))return row[0] ?? '';
+  return row?.text ?? row?.candidate ?? row?.content ?? row?.document ?? row?.value ?? row?.input ?? '';
+}
+
+function rowScore(row){
+  if(Array.isArray(row))return Number(row[1] ?? 0);
+  return Number(row?.score ?? row?.coherence ?? row?.similarity ?? row?.value_score ?? 0);
+}
+
+function rowIndex(row){
+  const v=Array.isArray(row)?row[2]:(row?.index ?? row?.idx ?? row?.candidate_index);
+  const n=Number(v);
+  return Number.isInteger(n)&&n>=0?n:null;
+}
+
+function matchRowToMovie(row,corpus){
+  const idx=rowIndex(row);
+  if(idx!==null && corpus.movies[idx])return corpus.movies[idx];
+
+  const text=String(rowText(row)||'').trim();
+  if(!text)return null;
+
+  let movie=corpus.map.get(text);
+  if(movie)return movie;
+
+  const normalized=text.replace(/\s+/g,' ');
+  for(const c of corpus.candidates){
+    const cn=String(c).trim().replace(/\s+/g,' ');
+    if(cn===normalized || cn.startsWith(normalized) || normalized.startsWith(cn.slice(0,180))){
+      return corpus.map.get(c)||null;
+    }
+  }
+  return null;
+}
+
+async function fetchArbiterJson(payload,attempts=2){
+  let last;
+  for(let i=0;i<attempts;i++){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),90000);
+    try{
+      const res=await fetch(ARBITER_URL,{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Accept':'application/json',
+          'ngrok-skip-browser-warning':'true'
+        },
+        body:JSON.stringify(payload),
+        signal:controller.signal
+      });
+      const raw=await res.text();
+      if(!res.ok)throw new Error(`arbiter ${res.status}: ${raw.slice(0,180)}`);
+      try{return JSON.parse(raw)}
+      catch(e){throw new Error(`arbiter returned non-json: ${raw.slice(0,180)}`)}
+    }catch(e){
+      last=e;
+      if(i<attempts-1)await new Promise(r=>setTimeout(r,850));
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+  throw last;
+}
+
 async function search(text){
   const q=(text||'').trim();
   if(!q)return;
   currentQuery=q;
 
-  // Update inputs
-  $('#query').value=q;
-  $('#resultQuery').value=q;
+  const mainInput=$('#query');
+  const resultInput=$('#resultQuery');
+  if(mainInput)mainInput.value=q;
+  if(resultInput)resultInput.value=q;
 
   startProcessing(q);
 
   try{
-    const corpus=await loadCorpus();
+    let corpus;
+    try{
+      const stage=$('#processingStage');
+      if(stage)stage.textContent='loading Netflix field';
+      corpus=await loadCorpus();
+    }catch(e){
+      console.error('corpus load failed',e);
+      toast('Netflix field failed to load — reload');
+      return;
+    }
 
-    const res=await fetch('https://recast-reviver-outlook.ngrok-free.dev/v1/compare',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
+    let data;
+    try{
+      const stage=$('#processingStage');
+      if(stage)stage.textContent='measuring coherence';
+      const limit=DEPTHS[searchDepth]?.film||900;
+      data=await fetchArbiterJson({
         query:q,
-        candidates:corpus.candidates.slice(0,DEPTHS[searchDepth]?.film||900),
-        use_freq:true,top_k:RETURN_COUNT
-      })
-    });
-    if(!res.ok)throw new Error(`arbiter ${res.status}`);
+        candidates:corpus.candidates.slice(0,limit),
+        use_freq:true,
+        top_k:RETURN_COUNT
+      },2);
+    }catch(e){
+      console.error('arbiter request failed',e);
+      toast('arbiter connection failed — check ngrok/server');
+      return;
+    }
 
-    const data=await res.json();
-    const rows=Array.isArray(data?.all)?data.all:(Array.isArray(data?.top)?data.top:[]);
-    results=rows
-      .map(r=>{const m=corpus.map.get(r.text);return m?{...m,score:Number(r.score||0)}:null})
-      .filter(Boolean)
-      .sort((a,b)=>b.score-a.score)
-      .slice(0,RETURN_COUNT);
+    try{
+      const stage=$('#processingStage');
+      if(stage)stage.textContent='preparing reveal';
+      const rows=extractArbiterRows(data);
+      results=rows
+        .map(r=>{
+          const m=matchRowToMovie(r,corpus);
+          return m?{...m,score:rowScore(r)}:null;
+        })
+        .filter(Boolean)
+        .sort((a,b)=>b.score-a.score)
+        .slice(0,RETURN_COUNT);
 
-    active=0;
-    if(!results.length){toast('no matches found');stopProcessing();return;}
+      active=0;
+      if(!results.length){
+        console.warn('no rows matched movies',data);
+        toast('no matches found');
+        return;
+      }
 
-    renderResults();
-    document.body.classList.add('has-results');
-    window.scrollTo({top:0,behavior:'instant'});
-    history.replaceState(null,'',`#${encodeURIComponent(q)}`);
-  }catch(e){
-    console.error(e);
-    toast('connection failed — try again');
+      renderResults();
+      document.body.classList.add('has-results');
+      requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
+      history.replaceState(null,'',`#${encodeURIComponent(q)}`);
+    }catch(e){
+      console.error('result render failed',e);
+      toast('result render failed — check console');
+    }
   }finally{
     stopProcessing();
   }
