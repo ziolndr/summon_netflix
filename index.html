@@ -2349,6 +2349,46 @@ body.has-results .reveal-query-form #resultQuery{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   Submit control: arrow-only again, mobile alignment preserved.
+   ───────────────────────────────────────────── */
+
+.go-word{display:none !important}
+.go-arrow{display:inline-flex !important}
+
+@media(max-width:980px){
+  body:not(.has-results) #go{
+    width:52px !important;
+    max-width:52px !important;
+    min-width:52px !important;
+    height:46px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    font-size:18px !important;
+    letter-spacing:0 !important;
+    text-transform:none !important;
+  }
+
+  body:not(.has-results) .search-actions{
+    grid-template-columns:52px 52px !important;
+    justify-content:end !important;
+  }
+
+  body.has-results .reveal-query-form #resultGo{
+    width:48px !important;
+    min-width:48px !important;
+    height:48px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    font-size:18px !important;
+    letter-spacing:0 !important;
+    text-transform:none !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -2382,7 +2422,7 @@ body.has-results .reveal-query-form #resultQuery{
                 <path d="M8.6 21h6.8"></path>
               </svg>
             </button>
-            <button type="submit" id="go" aria-label="Search"><span class="go-word">search</span><span class="go-arrow">→</span></button>
+            <button type="submit" id="go" aria-label="Search">→</button>
           </div>
         </div>
       </form>
@@ -2452,7 +2492,7 @@ body.has-results .reveal-query-form #resultQuery{
     <form id="resultForm" class="reveal-query-form">
       <div class="reveal-query-label">your prompt</div>
       <textarea id="resultQuery" autocomplete="off" spellcheck="false" rows="1" placeholder="edit the search"></textarea>
-      <button type="submit" id="resultGo" aria-label="Search"><span class="go-word">search</span><span class="go-arrow">→</span></button>
+      <button type="submit" id="resultGo" aria-label="Search">→</button>
     </form>
   </div>
 
