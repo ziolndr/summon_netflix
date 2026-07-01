@@ -1323,7 +1323,7 @@ body.searching:not(.has-results) .wall{
         </div>
       </form>
 
-      <div class="search-hint" id="modeHint">Say the feeling. SUMMON finds the title.</div>
+      <div class="search-hint" id="modeHint">Say the feeling. Enter searches. Shift+Enter adds a line.</div>
 
       <div class="depth-bar" role="group" aria-label="Search depth">
         <button type="button" class="depth-btn active" data-depth="surface">surface</button>
@@ -1911,11 +1911,28 @@ function goToResult(d){
   renderResults();
 }
 
+
+function bindEnterToSubmit(textareaSelector,submitFn){
+  const el=$(textareaSelector);
+  if(!el)return;
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey){
+      e.preventDefault();
+      submitFn();
+    }
+  });
+}
+
 // ════════════════════════════════════════
 // EVENTS
 // ════════════════════════════════════════
-$('#searchForm').addEventListener('submit',e=>{e.preventDefault();search($('#query').value)});
-$('#resultForm').addEventListener('submit',e=>{e.preventDefault();search($('#resultQuery').value)});
+function submitMainSearch(){search($('#query').value)}
+function submitResultSearch(){search($('#resultQuery').value)}
+
+$('#searchForm').addEventListener('submit',e=>{e.preventDefault();submitMainSearch()});
+$('#resultForm').addEventListener('submit',e=>{e.preventDefault();submitResultSearch()});
+bindEnterToSubmit('#query',submitMainSearch);
+bindEnterToSubmit('#resultQuery',submitResultSearch);
 $('#newSearch').addEventListener('click',()=>{
   document.body.classList.remove('has-results');
   history.replaceState(null,'',location.pathname+location.search);
