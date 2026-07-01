@@ -2627,6 +2627,244 @@ html.has-results-page body.has-results .discovery-strip{
   display:none !important;
 }
 
+
+/* ─────────────────────────────────────────────
+   Reveal hierarchy repair:
+   hero → your summon → film details, all connected.
+   ───────────────────────────────────────────── */
+
+body.has-results .hero-media,
+html.has-results-page body.has-results .hero-media{
+  height:60svh !important;
+  min-height:420px !important;
+  max-height:760px !important;
+}
+
+/* Prompt dock stays visible, but stops eating the page. */
+body.has-results .reveal-query-dock,
+html.has-results-page body.has-results .reveal-query-dock{
+  padding:12px clamp(20px,5vw,80px) 13px !important;
+  background:#050505 !important;
+  border-top:1px solid rgba(246,241,232,.06) !important;
+  border-bottom:1px solid rgba(246,241,232,.08) !important;
+}
+
+body.has-results .reveal-query-form,
+html.has-results-page body.has-results .reveal-query-form{
+  max-width:1200px !important;
+  grid-template-columns:auto minmax(0,1fr) 44px !important;
+  gap:14px !important;
+  align-items:center !important;
+}
+
+body.has-results .reveal-query-label,
+html.has-results-page body.has-results .reveal-query-label{
+  color:rgba(246,241,232,.38) !important;
+}
+
+body.has-results .reveal-query-form #resultQuery,
+html.has-results-page body.has-results .reveal-query-form #resultQuery{
+  min-height:1.5em !important;
+  max-height:5.2em !important;
+  overflow:auto !important;
+  padding:3px 0 !important;
+  font-size:clamp(16px,1.8vw,22px) !important;
+  line-height:1.24 !important;
+}
+
+/* Film info should feel like the reveal, not a separate page far below. */
+body.has-results .info-strip,
+html.has-results-page body.has-results .info-strip{
+  padding:18px clamp(20px,5vw,80px) 28px !important;
+  background:#050505 !important;
+  border-top:0 !important;
+  border-bottom:1px solid rgba(246,241,232,.10) !important;
+}
+
+body.has-results .info-strip-inner,
+html.has-results-page body.has-results .info-strip-inner{
+  max-width:1200px !important;
+  grid-template-columns:minmax(0,1fr) minmax(280px,420px) !important;
+  gap:12px clamp(24px,4vw,52px) !important;
+  align-items:start !important;
+}
+
+/* Return home is now a quiet utility, not a whole section. */
+body.has-results .back-link,
+html.has-results-page body.has-results .back-link{
+  grid-column:1 / -1 !important;
+  margin:0 0 8px !important;
+  color:rgba(246,241,232,.34) !important;
+  font-size:9px !important;
+  letter-spacing:.12em !important;
+}
+
+body.has-results .title-block,
+html.has-results-page body.has-results .title-block{
+  grid-column:1 / 2 !important;
+}
+
+body.has-results #title,
+html.has-results-page body.has-results #title{
+  margin:0 !important;
+  font-size:clamp(38px,5.2vw,78px) !important;
+  line-height:.90 !important;
+  letter-spacing:-.055em !important;
+  color:#fff !important;
+}
+
+body.has-results #meta,
+html.has-results-page body.has-results #meta{
+  margin-top:10px !important;
+  color:rgba(246,241,232,.52) !important;
+}
+
+body.has-results .score-pill,
+html.has-results-page body.has-results .score-pill{
+  margin-top:13px !important;
+}
+
+body.has-results .overview-block,
+html.has-results-page body.has-results .overview-block{
+  grid-column:2 / 3 !important;
+  align-self:start !important;
+  max-width:430px !important;
+  padding-top:4px !important;
+}
+
+body.has-results #overview,
+html.has-results-page body.has-results #overview{
+  color:rgba(246,241,232,.62) !important;
+  font-size:14px !important;
+  line-height:1.55 !important;
+}
+
+/* Actions stay under the title block, tight. */
+body.has-results .info-actions,
+html.has-results-page body.has-results .info-actions{
+  grid-column:1 / -1 !important;
+  margin-top:16px !important;
+}
+
+/* Mobile: tighter hero + prompt + title stack. */
+@media(max-width:980px){
+  body.has-results .hero-media,
+  html.has-results-page body.has-results .hero-media{
+    height:44svh !important;
+    min-height:275px !important;
+    max-height:430px !important;
+  }
+
+  body.has-results .reveal-query-dock,
+  html.has-results-page body.has-results .reveal-query-dock{
+    padding:11px 16px 12px !important;
+  }
+
+  body.has-results .reveal-query-form,
+  html.has-results-page body.has-results .reveal-query-form{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 46px !important;
+    gap:6px 12px !important;
+    align-items:start !important;
+  }
+
+  body.has-results .reveal-query-label,
+  html.has-results-page body.has-results .reveal-query-label{
+    grid-column:1 / -1 !important;
+    margin:0 !important;
+    font-size:8px !important;
+    letter-spacing:.16em !important;
+  }
+
+  body.has-results .reveal-query-form #resultQuery,
+  html.has-results-page body.has-results .reveal-query-form #resultQuery{
+    grid-column:1 / 2 !important;
+    min-height:2.55em !important;
+    max-height:6.4em !important;
+    font-size:clamp(17px,5vw,22px) !important;
+    line-height:1.24 !important;
+    padding:0 !important;
+  }
+
+  body.has-results .reveal-query-form #resultGo,
+  html.has-results-page body.has-results .reveal-query-form #resultGo{
+    grid-column:2 / 3 !important;
+    width:46px !important;
+    height:46px !important;
+    align-self:start !important;
+  }
+
+  body.has-results .info-strip,
+  html.has-results-page body.has-results .info-strip{
+    padding:15px 18px 24px !important;
+  }
+
+  body.has-results .info-strip-inner,
+  html.has-results-page body.has-results .info-strip-inner{
+    display:block !important;
+  }
+
+  body.has-results .back-link,
+  html.has-results-page body.has-results .back-link{
+    margin-bottom:10px !important;
+  }
+
+  body.has-results #title,
+  html.has-results-page body.has-results #title{
+    font-size:clamp(42px,12vw,64px) !important;
+    line-height:.92 !important;
+  }
+
+  body.has-results #meta,
+  html.has-results-page body.has-results #meta{
+    margin-top:10px !important;
+    font-size:13px !important;
+    gap:6px 12px !important;
+  }
+
+  body.has-results .score-pill,
+  html.has-results-page body.has-results .score-pill{
+    margin-top:14px !important;
+  }
+
+  body.has-results .overview-block,
+  html.has-results-page body.has-results .overview-block{
+    margin-top:18px !important;
+    max-width:none !important;
+    padding-top:0 !important;
+  }
+
+  body.has-results #overview,
+  html.has-results-page body.has-results #overview{
+    font-size:16px !important;
+    line-height:1.48 !important;
+    color:rgba(246,241,232,.66) !important;
+  }
+
+  body.has-results .info-actions,
+  html.has-results-page body.has-results .info-actions{
+    margin-top:18px !important;
+  }
+
+  body.has-results .discovery-strip,
+  html.has-results-page body.has-results .discovery-strip{
+    padding-top:24px !important;
+  }
+}
+
+@media(max-width:420px){
+  body.has-results .hero-media,
+  html.has-results-page body.has-results .hero-media{
+    height:42svh !important;
+    min-height:260px !important;
+  }
+
+  body.has-results .reveal-query-form #resultQuery,
+  html.has-results-page body.has-results .reveal-query-form #resultQuery{
+    min-height:2.4em !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -3045,7 +3283,10 @@ async function search(text){
   const mainInput=$('#query');
   const resultInput=$('#resultQuery');
   if(mainInput)mainInput.value=q;
-  if(resultInput)resultInput.value=q;
+  if(resultInput){
+    resultInput.value=q;
+    requestAnimationFrame(()=>autoResize(resultInput));
+  }
 
   startProcessing(q);
 
@@ -3178,6 +3419,7 @@ function renderResults(){
   closeTrailer();
   const m=results[active];
   if(!m)return;
+  requestAnimationFrame(()=>autoResize($('#resultQuery')));
 
   // Hero image
   const heroImg=$('#heroImg');
