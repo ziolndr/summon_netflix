@@ -1036,6 +1036,262 @@ body.has-results .discovery-strip{
 .rank-card{
   animation:scaleIn .4s ease both;
 }
+
+/* ─────────────────────────────────────────────
+   Landing containment fix:
+   search visible immediately, wall clipped, no endless tile scroll.
+   ───────────────────────────────────────────── */
+
+body:not(.has-results){
+  height:100svh !important;
+  min-height:100svh !important;
+  overflow:hidden !important;
+}
+
+body:not(.has-results) .landing{
+  height:100svh !important;
+  min-height:100svh !important;
+  max-height:100svh !important;
+  overflow:hidden !important;
+  display:grid !important;
+  grid-template-columns:minmax(360px,42vw) minmax(0,1fr) !important;
+}
+
+body:not(.has-results) .search-station{
+  height:100svh !important;
+  min-height:100svh !important;
+  max-height:100svh !important;
+  overflow:hidden !important;
+  justify-content:center !important;
+  padding:clamp(24px,4vw,48px) clamp(22px,3.5vw,58px) !important;
+}
+
+body:not(.has-results) .search-station-inner{
+  max-width:520px !important;
+  max-height:calc(100svh - 48px) !important;
+  overflow:visible !important;
+}
+
+body:not(.has-results) .wordmark{
+  margin-bottom:6px !important;
+}
+
+body:not(.has-results) .wordmark-sub{
+  margin-bottom:clamp(22px,4vh,44px) !important;
+}
+
+body:not(.has-results) .search-ritual{
+  margin-bottom:14px !important;
+}
+
+body:not(.has-results) .depth-bar{
+  margin-bottom:18px !important;
+}
+
+body:not(.has-results) .corpus-track{
+  margin-bottom:18px !important;
+}
+
+body:not(.has-results) .traces{
+  min-height:44px !important;
+  margin-bottom:20px !important;
+}
+
+body:not(.has-results) .station-footer{
+  margin-top:18px !important;
+  padding-top:14px !important;
+}
+
+body:not(.has-results) .wall-pane{
+  position:relative !important;
+  height:100svh !important;
+  min-height:100svh !important;
+  max-height:100svh !important;
+  overflow:hidden !important;
+}
+
+body:not(.has-results) .wall{
+  height:auto !important;
+  min-height:100svh !important;
+  max-height:none !important;
+  overflow:hidden !important;
+  align-content:start !important;
+  animation:wallDrift 60s linear infinite alternate !important;
+}
+
+body:not(.has-results) .wall-cell{
+  min-height:0 !important;
+}
+
+/* Mobile: search panel is the first thing. Wall becomes background, clipped to viewport. */
+@media(max-width:980px){
+  html,body{
+    height:100svh !important;
+    min-height:100svh !important;
+    overflow:hidden !important;
+  }
+
+  body:not(.has-results) .landing{
+    display:block !important;
+    height:100svh !important;
+    min-height:100svh !important;
+    max-height:100svh !important;
+    overflow:hidden !important;
+  }
+
+  body:not(.has-results) .wall-pane{
+    position:absolute !important;
+    inset:0 !important;
+    z-index:0 !important;
+    width:100vw !important;
+    height:100svh !important;
+    min-height:100svh !important;
+    max-height:100svh !important;
+    overflow:hidden !important;
+  }
+
+  body:not(.has-results) .wall{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:1px !important;
+    height:auto !important;
+    min-height:118svh !important;
+    padding:0 !important;
+    opacity:.42 !important;
+    transform:none !important;
+  }
+
+  body:not(.has-results) .wall-pane::before{
+    z-index:2 !important;
+    background:
+      linear-gradient(180deg,rgba(5,5,5,.92) 0%,rgba(5,5,5,.82) 48%,rgba(5,5,5,.94) 100%),
+      linear-gradient(90deg,rgba(5,5,5,.92),rgba(5,5,5,.50)) !important;
+  }
+
+  body:not(.has-results) .search-station{
+    position:relative !important;
+    z-index:10 !important;
+    height:100svh !important;
+    min-height:100svh !important;
+    max-height:100svh !important;
+    overflow:hidden !important;
+    justify-content:flex-start !important;
+    padding:28px 20px 18px !important;
+    background:linear-gradient(180deg,rgba(5,5,5,.92),rgba(5,5,5,.76)) !important;
+  }
+
+  body:not(.has-results) .search-station-inner{
+    max-height:calc(100svh - 46px) !important;
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:flex-start !important;
+  }
+
+  body:not(.has-results) .wordmark{
+    font-size:clamp(44px,14vw,66px) !important;
+    margin-bottom:4px !important;
+  }
+
+  body:not(.has-results) .wordmark-sub{
+    font-size:14px !important;
+    margin-bottom:24px !important;
+  }
+
+  body:not(.has-results) #query{
+    font-size:clamp(17px,5vw,22px) !important;
+    min-height:2.2em !important;
+  }
+
+  body:not(.has-results) .search-actions{
+    bottom:9px !important;
+  }
+
+  body:not(.has-results) .search-hint{
+    margin-bottom:18px !important;
+  }
+
+  body:not(.has-results) .depth-bar{
+    margin-bottom:16px !important;
+  }
+
+  body:not(.has-results) .traces{
+    display:none !important;
+  }
+
+  body:not(.has-results) .station-footer{
+    margin-top:auto !important;
+    padding-top:12px !important;
+  }
+
+  body:not(.has-results) .station-footer span{
+    font-size:8px !important;
+  }
+}
+
+/* Results can scroll normally. */
+body.has-results{
+  height:auto !important;
+  min-height:100% !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+}
+body.has-results .results{
+  min-height:100svh !important;
+}
+
+
+/* ─────────────────────────────────────────────
+   Subtle poster-wall drift, without reintroducing page scroll.
+   ───────────────────────────────────────────── */
+
+body:not(.has-results) .wall-pane{
+  overflow:hidden !important;
+}
+
+body:not(.has-results) .wall{
+  will-change:transform !important;
+  min-height:132svh !important;
+  transform:translate3d(0,-3svh,0) !important;
+  animation:summonPosterDrift 72s ease-in-out infinite alternate !important;
+}
+
+@keyframes summonPosterDrift{
+  0%{
+    transform:translate3d(0,-2svh,0);
+  }
+  100%{
+    transform:translate3d(0,-18svh,0);
+  }
+}
+
+body.searching:not(.has-results) .wall{
+  animation-play-state:paused !important;
+}
+
+/* Mobile gets motion too, but remains clipped behind the search panel. */
+@media(max-width:980px){
+  body:not(.has-results) .wall{
+    min-height:142svh !important;
+    opacity:.46 !important;
+    animation:summonPosterDriftMobile 78s ease-in-out infinite alternate !important;
+  }
+
+  @keyframes summonPosterDriftMobile{
+    0%{
+      transform:translate3d(0,-3svh,0);
+    }
+    100%{
+      transform:translate3d(0,-20svh,0);
+    }
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  body:not(.has-results) .wall{
+    animation:none !important;
+    transform:translate3d(0,-6svh,0) !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -1075,7 +1331,7 @@ body.has-results .discovery-strip{
         <button type="button" class="depth-btn" data-depth="archive">archive</button>
       </div>
 
-      <div class="corpus-status" id="corpusStatus">ready · 900 titles</div>
+      <div class="corpus-status" id="corpusStatus">loading · 250 titles</div>
       <div class="corpus-track"><span id="corpusBar" style="width:100%"></span></div>
 
       <div class="traces" id="traces">
@@ -1186,6 +1442,7 @@ const IMG='https://image.tmdb.org/t/p/';
 const TMDB_KEY='1616a31a4f3bbcb387e74cbe0ae3c7b6';
 const TMDB_BASE='https://api.themoviedb.org/3';
 const NETFLIX_PROVIDER=8;
+const NETFLIX_PROVIDER_EXTRA_IDS=['1796'];
 const RETURN_COUNT=10;
 
 const DEPTHS={
@@ -1198,7 +1455,7 @@ const DEPTHS={
 // STATE
 // ════════════════════════════════════════
 let cache=null, results=[], active=0, currentQuery='';
-let searchDepth='field';
+let searchDepth='surface';
 let corpusPageOffset=0;
 
 const $=s=>document.querySelector(s);
@@ -1246,7 +1503,7 @@ async function fetchTmdbPage(kind,page){
   const params=new URLSearchParams({
     api_key:TMDB_KEY,language:'en-US',sort_by:'popularity.desc',
     page:String(Math.max(1,Math.min(500,page))),
-    with_watch_providers:String(NETFLIX_PROVIDER),watch_region:'US',include_adult:'false'
+    with_watch_providers:[String(NETFLIX_PROVIDER),...NETFLIX_PROVIDER_EXTRA_IDS].filter(Boolean).join('|'),watch_region:'US',include_adult:'false'
   });
   const res=await fetch(`${TMDB_BASE}${path}?${params.toString()}`);
   if(!res.ok)throw new Error(`tmdb ${res.status}`);
@@ -1259,12 +1516,15 @@ function tmdbToRecord(s,kind){
   const year=String(s.release_date||s.first_air_date||'').slice(0,4);
   return {
     title,year,
+    type:kind==='tv'?'tv':'film',
+    netflixKind:kind==='tv'?'series':'movie',
     genres:[],
     posterPath:norm(s.poster_path),
     backdropPath:norm(s.backdrop_path),
     overview:`${String(s.overview||'').trim()||title} Available on Netflix.`,
     rating:s.vote_average?Number(s.vote_average).toFixed(1):null,
     tmdbId:s.id,
+    externalUrl:`https://www.netflix.com/search?q=${encodeURIComponent(title)}`,
     _genreIds:s.genre_ids||[]
   };
 }
@@ -1277,7 +1537,7 @@ async function loadNetflixRecords(limit=900){
 
   const [movieRes,tvRes]=await Promise.all([
     Promise.all(Array.from({length:moviePages},(_,i)=>fetchTmdbPage('movie',base+i).catch(()=>({results:[]})))),
-    Promise.all(Array.from({length:tvPages},(_,i)=>fetchTmdbPage('tv',base+i).catch(()=>({results:[]})))
+    Promise.all(Array.from({length:tvPages},(_,i)=>fetchTmdbPage('tv',base+i).catch(()=>({results:[]}))))
   ]);
 
   const seen=new Set(),out=[];
@@ -1308,6 +1568,7 @@ async function loadCorpus(){
   if(cache)return cache;
   const limit=DEPTHS[searchDepth]?.film||900;
   const movies=await loadNetflixRecords(limit);
+  if(!movies.length)throw new Error('empty Netflix corpus');
   const candidates=movies.map(candidate).slice(0,limit);
   const map=new Map();
   candidates.forEach((c,i)=>map.set(c,movies[i]));
@@ -1318,7 +1579,7 @@ async function loadCorpus(){
 }
 
 function renderWall(movies){
-  const sample=[...movies].filter(m=>m.posterPath).sort(()=>Math.random()-.5).slice(0,80);
+  const sample=[...movies].filter(m=>m.posterPath).sort(()=>Math.random()-.5).slice(0,48);
   $('#wall').innerHTML=sample.map(m=>`
     <div class="wall-cell" data-title="${esc(m.title)}">
       <img src="${poster(m,'w780')}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"
@@ -1414,7 +1675,7 @@ async function fetchTrailer(m){
   if(!m?.tmdbId)return null;
   const key=`${m.tmdbId}`;
   if(trailerCache.has(key))return trailerCache.get(key);
-  const kind=m.netflixKind==='series'?'tv':'movie';
+  const kind=(m.netflixKind==='series'||m.type==='tv')?'tv':'movie';
   try{
     const data=await fetch(`${TMDB_BASE}/${kind}/${m.tmdbId}/videos?api_key=${TMDB_KEY}&language=en-US`).then(r=>r.json());
     const videos=(data.results||[]).filter(v=>v?.site==='YouTube'&&v?.key);
@@ -1677,6 +1938,7 @@ $('#query').addEventListener('blur',()=>{if(!document.body.classList.contains('h
     console.error(e);
     $('#corpusStatus').textContent='corpus not ready — reload';
     $('#corpusStatus').classList.remove('processing');
+    $('#corpusBar').style.width='0%';
     startTraces();
   }
 })();
