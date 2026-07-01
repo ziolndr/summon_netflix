@@ -3022,6 +3022,201 @@ html.has-results-page body.has-results .reveal-query-form #resultGo{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   Desktop reveal layout repair:
+   prompt controls stay inline; title/overview/score/actions visible on first reveal.
+   Mobile rules are intentionally untouched.
+   ───────────────────────────────────────────── */
+
+@media(min-width:981px){
+  /* Reduce hero enough that the actual result is visible without scrolling. */
+  body.has-results .hero-media,
+  html.has-results-page body.has-results .hero-media{
+    height:48svh !important;
+    min-height:360px !important;
+    max-height:560px !important;
+  }
+
+  body.has-results .hero-img,
+  html.has-results-page body.has-results .hero-img{
+    object-position:center 20% !important;
+  }
+
+  /* Dock: label + prompt + mic + arrow all stay on one line. */
+  body.has-results .reveal-query-dock,
+  html.has-results-page body.has-results .reveal-query-dock{
+    padding:10px clamp(28px,5vw,88px) 11px !important;
+  }
+
+  body.has-results .reveal-query-form,
+  html.has-results-page body.has-results .reveal-query-form{
+    max-width:1440px !important;
+    display:grid !important;
+    grid-template-columns:auto minmax(0,1fr) 42px 42px !important;
+    grid-template-rows:auto !important;
+    align-items:center !important;
+    gap:14px !important;
+  }
+
+  body.has-results .reveal-query-label,
+  html.has-results-page body.has-results .reveal-query-label{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    margin:0 !important;
+    white-space:nowrap !important;
+  }
+
+  body.has-results .reveal-query-form #resultQuery,
+  html.has-results-page body.has-results .reveal-query-form #resultQuery{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    min-width:0 !important;
+    min-height:1.35em !important;
+    max-height:3em !important;
+    overflow:hidden !important;
+    padding:3px 0 !important;
+    font-size:clamp(18px,1.8vw,24px) !important;
+    line-height:1.2 !important;
+  }
+
+  body.has-results .reveal-query-form #resultVoiceBtn,
+  html.has-results-page body.has-results .reveal-query-form #resultVoiceBtn,
+  body.has-results .reveal-query-form #resultGo,
+  html.has-results-page body.has-results .reveal-query-form #resultGo{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    align-self:center !important;
+    justify-self:stretch !important;
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    max-width:42px !important;
+  }
+
+  /* Result info: compact 3-column desktop layout so score and Open Netflix are visible immediately. */
+  body.has-results .info-strip,
+  html.has-results-page body.has-results .info-strip{
+    padding:15px clamp(28px,5vw,88px) 24px !important;
+    background:#050505 !important;
+  }
+
+  body.has-results .info-strip-inner,
+  html.has-results-page body.has-results .info-strip-inner{
+    max-width:1440px !important;
+    display:grid !important;
+    grid-template-columns:minmax(380px,1fr) minmax(320px,460px) minmax(190px,260px) !important;
+    grid-template-rows:auto auto !important;
+    gap:10px clamp(26px,4vw,64px) !important;
+    align-items:start !important;
+  }
+
+  body.has-results .back-link,
+  html.has-results-page body.has-results .back-link{
+    grid-column:1 / -1 !important;
+    grid-row:1 !important;
+    margin:0 0 4px !important;
+    font-size:9px !important;
+    color:rgba(246,241,232,.32) !important;
+  }
+
+  body.has-results .title-block,
+  html.has-results-page body.has-results .title-block{
+    grid-column:1 / 2 !important;
+    grid-row:2 !important;
+    min-width:0 !important;
+  }
+
+  body.has-results #title,
+  html.has-results-page body.has-results #title{
+    font-size:clamp(48px,5.8vw,88px) !important;
+    line-height:.88 !important;
+    letter-spacing:-.065em !important;
+    margin:0 !important;
+  }
+
+  body.has-results #meta,
+  html.has-results-page body.has-results #meta{
+    margin-top:12px !important;
+  }
+
+  body.has-results .score-pill,
+  html.has-results-page body.has-results .score-pill{
+    margin-top:14px !important;
+    display:inline-flex !important;
+  }
+
+  body.has-results .overview-block,
+  html.has-results-page body.has-results .overview-block{
+    grid-column:2 / 3 !important;
+    grid-row:2 !important;
+    max-width:460px !important;
+    padding-top:8px !important;
+  }
+
+  body.has-results #overview,
+  html.has-results-page body.has-results #overview{
+    font-size:15px !important;
+    line-height:1.55 !important;
+    color:rgba(246,241,232,.64) !important;
+  }
+
+  body.has-results .info-actions,
+  html.has-results-page body.has-results .info-actions{
+    grid-column:3 / 4 !important;
+    grid-row:2 !important;
+    margin:8px 0 0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
+    align-items:stretch !important;
+    gap:10px !important;
+  }
+
+  body.has-results .info-actions .action,
+  html.has-results-page body.has-results .info-actions .action{
+    width:100% !important;
+    min-width:0 !important;
+    text-align:center !important;
+    justify-content:center !important;
+    padding:10px 12px !important;
+    white-space:nowrap !important;
+  }
+
+  body.has-results .info-actions .action.primary,
+  html.has-results-page body.has-results .info-actions .action.primary{
+    display:inline-flex !important;
+  }
+
+  /* Nearby section starts right after the compact reveal, not after a huge empty black slab. */
+  body.has-results .discovery-strip,
+  html.has-results-page body.has-results .discovery-strip{
+    padding-top:28px !important;
+  }
+}
+
+/* Slightly narrower desktop/tablet: keep all key actions visible, but allow a 2-column info row. */
+@media(min-width:981px) and (max-width:1180px){
+  body.has-results .info-strip-inner,
+  html.has-results-page body.has-results .info-strip-inner{
+    grid-template-columns:minmax(0,1fr) minmax(220px,280px) !important;
+  }
+
+  body.has-results .overview-block,
+  html.has-results-page body.has-results .overview-block{
+    grid-column:1 / 2 !important;
+    grid-row:3 !important;
+    max-width:620px !important;
+    margin-top:8px !important;
+  }
+
+  body.has-results .info-actions,
+  html.has-results-page body.has-results .info-actions{
+    grid-column:2 / 3 !important;
+    grid-row:2 / span 2 !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
