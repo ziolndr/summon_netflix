@@ -4805,6 +4805,103 @@ body.trailer-active .player-overlay.controls-visible .player-summon{
   }
 }
 
+
+/* HERO + FULLSCREEN TRAILER CONTROL FIX */
+
+/* Inline hero trailer controls: restore arrows above the inline trailer iframe. */
+body.has-results:not(.trailer-active) .hero .hero-nav{
+  z-index:80 !important;
+  display:flex !important;
+  opacity:.92 !important;
+  pointer-events:auto !important;
+}
+
+body.has-results:not(.trailer-active) .hero-trailer.active ~ .hero-nav,
+body.has-results:not(.trailer-active) .hero:hover .hero-nav,
+body.has-results:not(.trailer-active) .hero:focus-within .hero-nav{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+body.has-results:not(.trailer-active) .hero-trailer.active{
+  z-index:20 !important;
+}
+
+body.has-results:not(.trailer-active) .hero-trailer-close{
+  z-index:90 !important;
+  display:flex !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+/* If the inline iframe is active, keep nav buttons above it. */
+body.has-results:not(.trailer-active) .hero-media > .hero-nav{
+  z-index:85 !important;
+}
+
+/* Fullscreen player shell appears immediately, before trailer iframe finishes loading. */
+body.trailer-active .player-overlay,
+.player-overlay.active,
+.player-overlay.loading{
+  display:block !important;
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100svh !important;
+  z-index:5000 !important;
+  background:#000 !important;
+}
+
+.player-overlay.loading::before{
+  content:'entering trailer';
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  z-index:5010;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(246,241,232,.48);
+}
+
+/* Fullscreen controls are still quiet, but actually appear on hover/touch. */
+.player-overlay:hover .player-close,
+.player-overlay:hover .player-nav,
+.player-overlay.controls-visible .player-close,
+.player-overlay.controls-visible .player-nav{
+  display:flex !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  z-index:5025 !important;
+}
+
+/* Move summon memory away from captions: top center, very quiet. */
+.player-summon{
+  top:18px !important;
+  bottom:auto !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  max-width:min(760px,64vw) !important;
+  opacity:.40 !important;
+  z-index:5018 !important;
+}
+
+body.trailer-active .player-overlay:hover .player-summon,
+body.trailer-active .player-overlay.controls-visible .player-summon{
+  opacity:.78 !important;
+  transform:translateX(-50%) translateY(2px) !important;
+}
+
+@media(max-width:760px){
+  .player-summon{
+    top:12px !important;
+    bottom:auto !important;
+    max-width:calc(100vw - 112px) !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -5549,6 +5646,19 @@ function closeFullscreenTrailer(){
   document.body.classList.remove('trailer-active');
 }
 
+function showFullscreenTrailerShell(){
+  const player=$('#playerOverlay');
+  const summon=$('#playerSummon');
+  if(summon){
+    const q=(currentQuery||$('#resultQuery')?.value||$('#query')?.value||'').trim();
+    summon.textContent=q.length>180?q.slice(0,177).trimEnd()+'…':q;
+  }
+  if(player)player.style.display='block';
+  player?.classList.add('loading');
+  player?.setAttribute('aria-hidden','false');
+  document.body.classList.add('trailer-active');
+}
+
 async function openTrailer({auto=false,fullscreen=false}={}){
   const m=results[active];
   if(!m?.tmdbId)return;
@@ -5584,7 +5694,7 @@ async function openTrailer({auto=false,fullscreen=false}={}){
       }
       if(player)player.style.display='block';
       player?.classList.add('active');
-      player?.classList.remove('loading','controls-visible');
+      player?.classList.remove('loading');
       player?.setAttribute('aria-hidden','false');
       document.body.classList.add('trailer-active');
     }else{
@@ -5611,17 +5721,17 @@ function scheduleAutoplayTrailer(){
   const m=results[active];
   if(!m?.tmdbId)return;
 
+  showFullscreenTrailerShell();
   autoplayTimer=setTimeout(()=>{
-    if(document.body.classList.contains('has-results')){
-      openTrailer({auto:true,fullscreen:true});
-    }
-  },120);
+    openTrailer({auto:true,fullscreen:true});
+  },10);
 }
 
 function renderResults({autoplayFullscreen=false}={}){
   closeTrailer();
   const m=results[active];
   if(!m)return;
+  if(autoplayFullscreen)showFullscreenTrailerShell();
   requestAnimationFrame(()=>autoResize($('#resultQuery')));
 
   // Hero image
