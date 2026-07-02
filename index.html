@@ -5104,6 +5104,112 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
 
 
 /* VOICE DROP + TRAILER WARMING LOOP: speech auto-submits, trailers prewarm, fullscreen exits into inline playback. */
+
+/* SQUID TRANSPORT PASS:
+   no title-flip waiting room; the measurement feels like a signal transport into the trailer. */
+body.searching .processing-ambient{
+  display:none !important;
+  opacity:0 !important;
+}
+
+body.searching:not(.processing-locked) .processing-layer{
+  opacity:0 !important;
+}
+
+body.searching .processing-cinema::after{
+  content:'';
+  position:absolute;
+  inset:-18%;
+  z-index:4;
+  pointer-events:none;
+  opacity:.72;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(229,9,20,.20) 0%, rgba(229,9,20,.07) 18%, transparent 42%),
+    conic-gradient(from 90deg at 50% 50%, transparent 0deg, rgba(229,9,20,.20) 68deg, transparent 118deg, rgba(255,255,255,.10) 180deg, transparent 236deg, rgba(229,9,20,.16) 296deg, transparent 360deg);
+  filter:blur(18px) saturate(1.2);
+  mix-blend-mode:screen;
+  animation:squidTransportVortex 4.8s cubic-bezier(.2,.8,.2,1) infinite;
+}
+
+body.searching .processing-backdrop::after{
+  opacity:.30 !important;
+  background:
+    repeating-linear-gradient(90deg, rgba(229,9,20,.22) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(180deg, rgba(246,241,232,.10) 0 1px, transparent 1px 18px),
+    radial-gradient(circle at 50% 50%, transparent 0 28%, rgba(229,9,20,.12) 29% 30%, transparent 31% 100%) !important;
+  transform:perspective(700px) rotateX(62deg) scale(1.4) translateY(8%);
+  transform-origin:center;
+  animation:squidGridRush 1.9s linear infinite !important;
+  mix-blend-mode:screen !important;
+}
+
+body.processing-locked .processing-cinema::after{
+  opacity:.46;
+  animation:squidTransportLock .92s cubic-bezier(.16,1,.3,1) forwards !important;
+}
+
+@keyframes squidTransportVortex{
+  0%{transform:scale(.94) rotate(0deg); opacity:.52}
+  38%{opacity:.80}
+  100%{transform:scale(1.12) rotate(28deg); opacity:.58}
+}
+
+@keyframes squidGridRush{
+  0%{background-position:0 0,0 0,50% 50%; opacity:.22}
+  100%{background-position:88px 0,0 72px,50% 50%; opacity:.36}
+}
+
+@keyframes squidTransportLock{
+  0%{transform:scale(1) rotate(0deg); filter:blur(18px); opacity:.62}
+  100%{transform:scale(1.34) rotate(18deg); filter:blur(32px); opacity:0}
+}
+
+/* Keep the user summon present, but make the transport feel like motion, not a loading screen. */
+body.searching .processing-query-wrap.processing-query-center{
+  transform:translate(-50%,-50%) scale(.98) !important;
+  transition:opacity .55s ease, transform .55s ease;
+}
+
+body.processing-locked .processing-query-wrap.processing-query-center{
+  opacity:.20 !important;
+  transform:translate(-50%,-50%) scale(.94) !important;
+}
+
+/* Trailer can be mounted/buffering under the transport flash without exposing a dead gap. */
+body.transport-priming .player-overlay{
+  display:block !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  transform:scale(1.018) !important;
+}
+
+body.transport-live .player-overlay{
+  animation:transportTrailerIn .24s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes transportTrailerIn{
+  0%{opacity:0; filter:brightness(1.7) contrast(1.25) blur(5px); transform:scale(1.018)}
+  100%{opacity:1; filter:brightness(1) contrast(1) blur(0); transform:scale(1)}
+}
+
+/* Decompression exit keeps the fullscreen player alive while the inline hero iframe mounts underneath. */
+body.decompressing .player-overlay{
+  display:block !important;
+  pointer-events:none !important;
+  animation:decompressPlayerOut .42s cubic-bezier(.16,1,.3,1) forwards !important;
+}
+
+body.decompressing .hero-trailer.active{
+  display:block !important;
+  z-index:20 !important;
+}
+
+@keyframes decompressPlayerOut{
+  0%{opacity:1; transform:scale(1); filter:brightness(1)}
+  42%{opacity:.92; transform:scale(.992); filter:brightness(1.35) contrast(1.08)}
+  100%{opacity:0; transform:scale(.985); filter:brightness(.65) blur(6px)}
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -5555,7 +5661,9 @@ function processingLayer(){
 function clearProcessingImage(){
   const a=$('#processingLayerA');
   const b=$('#processingLayerB');
-  [a,b].forEach(el=>{
+  const aa=$('#processingAmbientA');
+  const ab=$('#processingAmbientB');
+  [a,b,aa,ab].forEach(el=>{
     if(!el)return;
     el.removeAttribute('src');
     el.classList.remove('visible','sharp');
@@ -5585,8 +5693,8 @@ function startProcessing(q){
   clearProcessingImage();
   stopAmbientRotation();
   $('#processingQuery').textContent=q;
-  $('#processingMeta').textContent=`${DEPTHS[searchDepth]?.film||900} candidates · ${searchDepth} depth`;
-  startAmbientRotation();
+  $('#processingMeta').textContent='routing signal';
+  // SQUID mode: no title/poster roulette while measuring.
   startProgressSimulation();
 }
 
@@ -5751,13 +5859,18 @@ async function search(text){
         return;
       }
 
-      fetchTrailer(results[0]).catch(()=>{});
-      await settleProcessingWithResult(results[0]);
-      renderResults({autoplayFullscreen:true});
       document.body.classList.add('has-results');
       document.documentElement.classList.add('has-results-page');
       syncScrollMode();
+      renderResults({autoplayFullscreen:false});
       requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
+
+      const firstTrailerPrime=primeFullscreenTrailerFor(results[0]).catch(()=>false);
+      await settleProcessingWithResult(results[0]);
+      const primed=await firstTrailerPrime;
+      if(primed)releaseTransportTrailer();
+      else openTrailer({auto:true,fullscreen:true});
+
       history.replaceState(null,'',`#${encodeURIComponent(q)}`);
     }catch(e){
       console.error('result render failed',e);
@@ -5827,7 +5940,7 @@ function closeTrailer(){
   if(player)player.style.display='none';
   player?.setAttribute('aria-hidden','true');
 
-  document.body.classList.remove('trailer-active');
+  document.body.classList.remove('trailer-active','transport-priming','transport-live','decompressing');
 }
 
 function closeInlineTrailer(){
@@ -5846,7 +5959,7 @@ function closeFullscreenTrailer(){
   player?.classList.remove('active','loading','controls-visible');
   if(player)player.style.display='none';
   player?.setAttribute('aria-hidden','true');
-  document.body.classList.remove('trailer-active');
+  document.body.classList.remove('trailer-active','transport-priming','transport-live','decompressing');
 }
 
 function showFullscreenTrailerShell(){
@@ -5860,6 +5973,40 @@ function showFullscreenTrailerShell(){
   player?.classList.add('loading','controls-visible');
   player?.setAttribute('aria-hidden','false');
   document.body.classList.add('trailer-active');
+}
+
+async function primeFullscreenTrailerFor(movie){
+  if(!movie?.tmdbId)return false;
+  const requestId=++trailerRequestId;
+  document.body.classList.add('transport-priming');
+  showFullscreenTrailerShell();
+
+  const video=await fetchTrailer(movie);
+  if(requestId!==trailerRequestId)return false;
+  if(!video){
+    document.body.classList.remove('transport-priming');
+    closeFullscreenTrailer();
+    return false;
+  }
+
+  const frame=$('#playerFrame');
+  const player=$('#playerOverlay');
+  const url=trailerUrl(video);
+  if(frame && frame.src!==url)frame.src=url;
+  player?.classList.add('active','controls-visible');
+  player?.classList.remove('loading');
+  player?.setAttribute('aria-hidden','false');
+  document.body.classList.add('trailer-active');
+  return true;
+}
+
+function releaseTransportTrailer(){
+  const player=$('#playerOverlay');
+  document.body.classList.remove('transport-priming');
+  if(player?.classList.contains('active')){
+    document.body.classList.add('transport-live');
+    setTimeout(()=>document.body.classList.remove('transport-live'),700);
+  }
 }
 
 async function openTrailer({auto=false,fullscreen=false}={}){
@@ -6071,12 +6218,24 @@ function exitToBrowse(){
   const heroFrame=$('#heroTrailerFrame');
   const heroWrap=$('#heroTrailer');
   const src=playerFrame?.src||'';
-  closeFullscreenTrailer();
+
   if(src&&heroFrame&&heroWrap){
     heroFrame.src=src;
     heroWrap.classList.add('active');
   }
+
+  document.body.classList.add('decompressing');
   window.scrollTo({top:0,behavior:'smooth'});
+
+  setTimeout(()=>{
+    closeFullscreenTrailer();
+    document.body.classList.remove('decompressing');
+    if(src&&heroFrame&&heroWrap){
+      heroFrame.src=src;
+      heroWrap.classList.add('active');
+    }
+    window.scrollTo({top:0,behavior:'auto'});
+  },420);
 }
 $('#playerClose')?.addEventListener('click',exitToBrowse);
 $('#playerPrev')?.addEventListener('click',()=>goToResult(-1,{fullscreen:true}));
