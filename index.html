@@ -3689,6 +3689,40 @@ html.has-results-page body.has-results #newSearch.results-home-link:hover{
   }
 }
 
+
+/* Landing placeholder vertical alignment:
+   keep the typewriter in the actual underline field, not floating high above it. */
+body:not(.has-results) .search-input-wrap{
+  padding-bottom:8px !important;
+}
+
+body:not(.has-results) #query{
+  min-height:2.9em !important;
+  max-height:4.4em !important;
+  padding-top:0 !important;
+  padding-bottom:4px !important;
+  line-height:1.24 !important;
+  overflow:visible !important;
+}
+
+body:not(.has-results) .search-actions{
+  bottom:9px !important;
+}
+
+@media(max-width:760px){
+  body:not(.has-results) #query{
+    min-height:3.1em !important;
+    max-height:4.8em !important;
+    padding-top:0 !important;
+    padding-bottom:6px !important;
+    line-height:1.26 !important;
+  }
+
+  body:not(.has-results) .search-actions{
+    bottom:10px !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
