@@ -390,100 +390,161 @@ body.searching .wall-cell:nth-child(7n){animation-delay:1.5s}
   50%{opacity:1}
 }
 
-/* ── Processing Overlay ── */
+/* ── Processing Overlay: trailer forming experience ── */
 .processing-veil{
   position:fixed;
   inset:0;
-  z-index:100;
+  z-index:140;
   display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(5,5,5,.7);
-  backdrop-filter:blur(20px) saturate(.8);
-  -webkit-backdrop-filter:blur(20px) saturate(.8);
+  background:#050505;
+  overflow:hidden;
 }
 body.searching .processing-veil{
-  display:flex;
+  display:block;
 }
-.processing-core{
-  text-align:center;
-  max-width:480px;
-  padding:40px;
+.processing-cinema,
+.processing-backdrop,
+.processing-layer{
+  position:absolute;
+  inset:0;
 }
-.processing-pulse{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  border:2px solid var(--accent);
-  margin:0 auto 28px;
-  position:relative;
+.processing-layer{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 20%;
+  opacity:0;
+  transform:scale(1.08);
+  filter:blur(34px) brightness(.48) saturate(.85);
+  transition:opacity .48s ease, transform 1s ease, filter 1s ease;
 }
-.processing-pulse::before,.processing-pulse::after{
+.processing-layer.visible{
+  opacity:1;
+}
+.processing-layer.sharp{
+  opacity:1;
+  transform:scale(1.01);
+  filter:blur(0px) brightness(.92) saturate(1.02);
+}
+.processing-backdrop::before{
   content:'';
   position:absolute;
-  inset:-2px;
-  border-radius:50%;
-  border:2px solid var(--accent);
-  opacity:0;
+  inset:0;
+  z-index:2;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 34%),
+    linear-gradient(180deg, rgba(5,5,5,.74) 0%, rgba(5,5,5,.28) 34%, rgba(5,5,5,.66) 100%),
+    linear-gradient(90deg, rgba(5,5,5,.72) 0%, rgba(5,5,5,.18) 28%, rgba(5,5,5,.18) 72%, rgba(5,5,5,.72) 100%);
 }
-body.searching .processing-pulse::before{
-  animation:ripple 2s ease-out infinite;
+.processing-backdrop::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  background:repeating-linear-gradient(
+    180deg,
+    rgba(255,255,255,.016) 0px,
+    rgba(255,255,255,.016) 1px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,0) 4px
+  );
+  mix-blend-mode:screen;
+  opacity:.18;
 }
-body.searching .processing-pulse::after{
-  animation:ripple 2s ease-out .6s infinite;
-}
-@keyframes ripple{
-  0%{transform:scale(1);opacity:.6}
-  100%{transform:scale(2.5);opacity:0}
-}
-.processing-query{
-  font-family:var(--sans);
-  font-size:clamp(20px,2.5vw,32px);
-  font-weight:600;
-  letter-spacing:-.03em;
-  color:var(--ink);
-  margin-bottom:12px;
-  line-height:1.2;
+.processing-head{
+  position:absolute;
+  left:clamp(18px,3vw,44px);
+  top:clamp(18px,3vw,30px);
+  z-index:6;
+  display:flex;
+  align-items:center;
+  gap:12px;
 }
 .processing-stage{
   font-family:var(--mono);
-  font-size:11px;
-  letter-spacing:.12em;
+  font-size:10px;
+  letter-spacing:.2em;
   text-transform:uppercase;
-  color:var(--accent);
-  margin-bottom:32px;
-  min-height:1.4em;
+  color:rgba(246,241,232,.72);
 }
+.processing-signal-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 0 0 rgba(229,9,20,.4);
+  animation:signalPulse 1.5s ease-out infinite;
+}
+@keyframes signalPulse{
+  0%{box-shadow:0 0 0 0 rgba(229,9,20,.45)}
+  100%{box-shadow:0 0 0 18px rgba(229,9,20,0)}
+}
+.processing-query-wrap{
+  position:absolute;
+  left:clamp(18px,3vw,44px);
+  right:clamp(18px,3vw,44px);
+  bottom:clamp(26px,5vw,48px);
+  z-index:6;
+  display:grid;
+  gap:10px;
+}
+.processing-query-label,
 .processing-meta{
   font-family:var(--mono);
   font-size:10px;
-  color:var(--ink-faint);
-  letter-spacing:.04em;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(246,241,232,.42);
+}
+.processing-query{
+  max-width:min(1120px,92vw);
+  font-family:var(--sans);
+  font-size:clamp(22px,3.2vw,52px);
+  line-height:1.02;
+  font-weight:600;
+  letter-spacing:-.04em;
+  color:rgba(246,241,232,.96);
+  text-wrap:balance;
 }
 .processing-bar{
-  width:200px;
-  height:1px;
-  background:var(--ink-ghost);
-  margin:20px auto 0;
+  width:min(320px,38vw);
+  height:2px;
+  background:rgba(246,241,232,.14);
   overflow:hidden;
   position:relative;
 }
 .processing-bar::after{
   content:'';
   position:absolute;
-  top:0;
-  left:-40%;
-  width:40%;
-  height:100%;
-  background:var(--accent);
-  box-shadow:0 0 10px var(--accent-glow);
+  inset:0 auto 0 -42%;
+  width:42%;
+  background:linear-gradient(90deg, rgba(229,9,20,0) 0%, rgba(229,9,20,.88) 45%, rgba(255,255,255,.78) 100%);
+  box-shadow:0 0 14px rgba(229,9,20,.4);
 }
 body.searching .processing-bar::after{
-  animation:barSweep 1.8s cubic-bezier(.4,0,.2,1) infinite;
+  animation:barSweep 1.2s cubic-bezier(.4,0,.2,1) infinite;
 }
 @keyframes barSweep{
-  0%{left:-40%}
+  0%{left:-42%}
   100%{left:100%}
+}
+body.processing-locked .processing-stage{color:rgba(246,241,232,.9)}
+body.processing-locked .processing-signal-dot{background:#fff}
+body.processing-locked .processing-layer.visible{
+  filter:blur(0px) brightness(.92) saturate(1.02);
+  transform:scale(1.01);
+}
+body.processing-locked .processing-bar::after{
+  animation-duration:.8s;
+}
+@media(max-width:760px){
+  .processing-layer{object-position:center 32%;}
+  .processing-query-wrap{bottom:18px;gap:8px}
+  .processing-query{font-size:clamp(20px,7vw,34px);line-height:1.06;max-width:100%}
+  .processing-head{top:14px;left:14px}
+  .processing-stage,.processing-query-label,.processing-meta{font-size:9px}
+  .processing-bar{width:min(210px,62vw)}
 }
 
 /* ════════════════════════════════════════
@@ -3224,13 +3285,13 @@ html.has-results-page body.has-results .reveal-query-form #resultGo{
     display:block !important;
     width:100% !important;
     min-width:0 !important;
-    min-height:4.3em !important;
-    max-height:7em !important;
-    padding:0 104px 8px 0 !important;
+    min-height:4.55em !important;
+    max-height:7.4em !important;
+    padding:4px 104px 12px 0 !important;
     background:transparent !important;
     color:#fff !important;
     font-size:clamp(19px,5.5vw,24px) !important;
-    line-height:1.23 !important;
+    line-height:1.28 !important;
     letter-spacing:-.018em !important;
     overflow:hidden !important;
   }
@@ -3244,7 +3305,7 @@ html.has-results-page body.has-results .reveal-query-form #resultGo{
   body:not(.has-results) .search-actions{
     position:absolute !important;
     right:0 !important;
-    bottom:11px !important;
+    bottom:14px !important;
     width:auto !important;
     display:flex !important;
     grid-template-columns:none !important;
@@ -3447,6 +3508,102 @@ body.trailer-active .hero-trailer-close{
   z-index:15 !important;
 }
 
+
+/* ─────────────────────────────────────────────
+   Results placement repair:
+   - Return Home floats top-left, not above the film title.
+   - Long film titles scale and wrap instead of blowing out the layout.
+   ───────────────────────────────────────────── */
+
+body.has-results #newSearch,
+html.has-results-page body.has-results #newSearch{
+  position:fixed !important;
+  top:18px !important;
+  left:22px !important;
+  z-index:90 !important;
+  width:auto !important;
+  margin:0 !important;
+  padding:9px 12px !important;
+  border:1px solid rgba(246,241,232,.16) !important;
+  background:rgba(0,0,0,.42) !important;
+  color:rgba(246,241,232,.72) !important;
+  backdrop-filter:blur(14px) !important;
+  -webkit-backdrop-filter:blur(14px) !important;
+}
+
+body.has-results #newSearch:hover,
+html.has-results-page body.has-results #newSearch:hover{
+  color:#fff !important;
+  border-color:rgba(229,9,20,.55) !important;
+  background:rgba(0,0,0,.62) !important;
+}
+
+body.has-results .info-strip-inner,
+html.has-results-page body.has-results .info-strip-inner{
+  align-items:start !important;
+}
+
+body.has-results .title-block,
+html.has-results-page body.has-results .title-block{
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+
+body.has-results .title-block h1,
+html.has-results-page body.has-results .title-block h1{
+  max-width:100% !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  hyphens:auto !important;
+  font-size:clamp(40px,5.15vw,86px) !important;
+  line-height:.91 !important;
+  letter-spacing:-.065em !important;
+}
+
+@media (min-width:981px){
+  body.has-results .info-strip-inner,
+  html.has-results-page body.has-results .info-strip-inner{
+    grid-template-columns:minmax(0,1fr) minmax(300px,440px) minmax(190px,300px) !important;
+    column-gap:clamp(24px,4vw,72px) !important;
+  }
+
+  body.has-results .title-block h1,
+  html.has-results-page body.has-results .title-block h1{
+    font-size:clamp(44px,4.7vw,82px) !important;
+  }
+
+  body.has-results .overview-block,
+  html.has-results-page body.has-results .overview-block{
+    min-width:0 !important;
+    max-width:440px !important;
+  }
+}
+
+@media (max-width:980px){
+  body.has-results #newSearch,
+  html.has-results-page body.has-results #newSearch{
+    top:14px !important;
+    left:14px !important;
+    padding:8px 10px !important;
+    font-size:9px !important;
+  }
+
+  body.has-results .title-block h1,
+  html.has-results-page body.has-results .title-block h1{
+    font-size:clamp(42px,13vw,72px) !important;
+    line-height:.9 !important;
+  }
+}
+
+@media (max-width:520px){
+  body.has-results .title-block h1,
+  html.has-results-page body.has-results .title-block h1{
+    font-size:clamp(38px,12vw,60px) !important;
+    letter-spacing:-.058em !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -3511,12 +3668,21 @@ body.trailer-active .hero-trailer-close{
      PROCESSING OVERLAY
      ════════════════════════════════════════ -->
 <div class="processing-veil" id="processingVeil" aria-hidden="true">
-  <div class="processing-core">
-    <div class="processing-pulse"></div>
-    <div class="processing-query" id="processingQuery"></div>
-    <div class="processing-stage" id="processingStage">locking archive</div>
-    <div class="processing-meta" id="processingMeta">coherence field active</div>
-    <div class="processing-bar"></div>
+  <div class="processing-cinema">
+    <div class="processing-backdrop">
+      <img class="processing-layer visible" id="processingLayerA" alt="" aria-hidden="true">
+      <img class="processing-layer" id="processingLayerB" alt="" aria-hidden="true">
+      <div class="processing-head">
+        <span class="processing-signal-dot" aria-hidden="true"></span>
+        <div class="processing-stage" id="processingStage">forming</div>
+      </div>
+      <div class="processing-query-wrap">
+        <div class="processing-query-label">your summon</div>
+        <div class="processing-query" id="processingQuery"></div>
+        <div class="processing-bar"></div>
+        <div class="processing-meta" id="processingMeta">reading the field</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3754,32 +3920,89 @@ function renderWall(movies){
 // ════════════════════════════════════════
 // SEARCH
 // ════════════════════════════════════════
-const PROCESSING_STAGES=[
-  'locking archive',
-  'reading candidate field',
-  'measuring coherence',
-  'waiting for ARBITER',
-  'isolating strongest signal',
-  'preparing reveal'
-];
-
+const PROCESSING_STAGES=['forming','measuring','narrowing','locking','entering'];
 let stageTimer=null;
+let processingImageTimer=null;
+let processingStageIndex=0;
+let processingActiveLayer='A';
+
+function processingLayers(){
+  return {
+    A:$('#processingLayerA'),
+    B:$('#processingLayerB')
+  };
+}
+
+function getProcessingImagePool(corpus){
+  const source=(corpus?.movies?.length?corpus.movies:(cache?.movies||[]));
+  const pool=source
+    .map(m=>backdrop(m,'original')||poster(m,'w780'))
+    .filter(Boolean);
+  if(pool.length)return pool;
+  return Array.from($$('#wall img')).map(img=>img.currentSrc||img.src).filter(Boolean);
+}
+
+function setProcessingImage(src,{sharp=false}={}){
+  if(!src)return;
+  const {A,B}=processingLayers();
+  const showA=processingActiveLayer!=='A';
+  const next=showA?A:B;
+  const prev=showA?B:A;
+  if(!next||!prev)return;
+  next.src=src;
+  next.classList.add('visible');
+  next.classList.toggle('sharp',!!sharp);
+  prev.classList.remove('sharp');
+  requestAnimationFrame(()=>{
+    prev.classList.remove('visible');
+  });
+  processingActiveLayer=showA?'A':'B';
+}
+
+function cycleProcessingImages(pool){
+  clearInterval(processingImageTimer);
+  if(!pool?.length)return;
+  let idx=Math.floor(Math.random()*pool.length);
+  setProcessingImage(pool[idx]);
+  processingImageTimer=setInterval(()=>{
+    idx=(idx+1+Math.floor(Math.random()*4))%pool.length;
+    setProcessingImage(pool[idx]);
+  },260);
+}
+
 function startProcessing(q){
   document.body.classList.add('searching');
+  document.body.classList.remove('processing-locked');
   $('#processingQuery').textContent=q;
-  $('#processingStage').textContent=PROCESSING_STAGES[0];
+  processingStageIndex=0;
+  $('#processingStage').textContent=PROCESSING_STAGES[processingStageIndex];
   $('#processingMeta').textContent=`${DEPTHS[searchDepth]?.film||900} candidates · ${searchDepth} depth`;
+  cycleProcessingImages(getProcessingImagePool());
 
-  let i=0;
+  clearInterval(stageTimer);
   stageTimer=setInterval(()=>{
-    i=Math.min(i+1,PROCESSING_STAGES.length-1);
-    $('#processingStage').textContent=PROCESSING_STAGES[i];
-    if(i>=PROCESSING_STAGES.length-1)clearInterval(stageTimer);
-  },1100);
+    processingStageIndex=Math.min(processingStageIndex+1,PROCESSING_STAGES.length-2);
+    $('#processingStage').textContent=PROCESSING_STAGES[processingStageIndex];
+  },950);
 }
+
+async function settleProcessingWithResult(movie){
+  clearInterval(stageTimer);
+  clearInterval(processingImageTimer);
+  document.body.classList.add('processing-locked');
+  $('#processingStage').textContent='locking';
+  $('#processingMeta').textContent='signal resolved · preparing reveal';
+  const src=backdrop(movie,'original')||poster(movie,'original')||'';
+  if(src)setProcessingImage(src,{sharp:true});
+  await new Promise(r=>setTimeout(r,880));
+  $('#processingStage').textContent='entering';
+  await new Promise(r=>setTimeout(r,260));
+}
+
 function stopProcessing(){
   clearInterval(stageTimer);
-  document.body.classList.remove('searching');
+  clearInterval(processingImageTimer);
+  document.body.classList.remove('searching','processing-locked');
 }
 
 const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/compare';
@@ -3878,8 +4101,10 @@ async function search(text){
     let corpus;
     try{
       const stage=$('#processingStage');
-      if(stage)stage.textContent='loading Netflix field';
+      if(stage)stage.textContent='forming';
       corpus=await loadCorpus();
+      cycleProcessingImages(getProcessingImagePool(corpus));
+      $('#processingMeta').textContent=`${corpus.movies.length} candidates · ${searchDepth} depth`;
     }catch(e){
       console.error('corpus load failed',e);
       toast('Netflix field failed to load — reload');
@@ -3889,7 +4114,7 @@ async function search(text){
     let data;
     try{
       const stage=$('#processingStage');
-      if(stage)stage.textContent='measuring coherence';
+      if(stage)stage.textContent='measuring';
       const limit=DEPTHS[searchDepth]?.film||900;
       data=await fetchArbiterJson({
         query:q,
@@ -3905,7 +4130,7 @@ async function search(text){
 
     try{
       const stage=$('#processingStage');
-      if(stage)stage.textContent='preparing reveal';
+      if(stage)stage.textContent='locking';
       const rows=extractArbiterRows(data);
       results=rows
         .map(r=>{
@@ -3923,6 +4148,7 @@ async function search(text){
         return;
       }
 
+      await settleProcessingWithResult(results[0]);
       renderResults();
       document.body.classList.add('has-results');
       document.documentElement.classList.add('has-results-page');
