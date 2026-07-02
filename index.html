@@ -390,7 +390,7 @@ body.searching .wall-cell:nth-child(7n){animation-delay:1.5s}
   50%{opacity:1}
 }
 
-/* ── Processing Overlay: trailer forming experience ── */
+/* ── Processing Overlay: pixel-forming trailer reveal ── */
 .processing-veil{
   position:fixed;
   inset:0;
@@ -414,9 +414,13 @@ body.searching .processing-veil{
   object-fit:cover;
   object-position:center 20%;
   opacity:0;
-  transform:scale(1.08);
-  filter:blur(34px) brightness(.48) saturate(.85);
-  transition:opacity .48s ease, transform 1s ease, filter 1s ease;
+  transform:scale(1.12);
+  filter:blur(36px) brightness(.34) contrast(1.15) saturate(.65);
+  image-rendering:pixelated;
+  transition:
+    opacity .32s ease,
+    transform 1.15s cubic-bezier(.16,1,.3,1),
+    filter 1.15s cubic-bezier(.16,1,.3,1);
 }
 .processing-layer.visible{
   opacity:1;
@@ -424,17 +428,19 @@ body.searching .processing-veil{
 .processing-layer.sharp{
   opacity:1;
   transform:scale(1.01);
-  filter:blur(0px) brightness(.92) saturate(1.02);
+  filter:blur(0px) brightness(.9) contrast(1.02) saturate(1.05);
+  image-rendering:auto;
 }
 .processing-backdrop::before{
   content:'';
   position:absolute;
   inset:0;
   z-index:2;
+  pointer-events:none;
   background:
-    radial-gradient(circle at 50% 52%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 34%),
-    linear-gradient(180deg, rgba(5,5,5,.74) 0%, rgba(5,5,5,.28) 34%, rgba(5,5,5,.66) 100%),
-    linear-gradient(90deg, rgba(5,5,5,.72) 0%, rgba(5,5,5,.18) 28%, rgba(5,5,5,.18) 72%, rgba(5,5,5,.72) 100%);
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.055) 0%, rgba(255,255,255,0) 38%),
+    linear-gradient(180deg, rgba(5,5,5,.78) 0%, rgba(5,5,5,.22) 38%, rgba(5,5,5,.72) 100%),
+    linear-gradient(90deg, rgba(5,5,5,.78) 0%, rgba(5,5,5,.18) 30%, rgba(5,5,5,.18) 70%, rgba(5,5,5,.78) 100%);
 }
 .processing-backdrop::after{
   content:'';
@@ -442,15 +448,20 @@ body.searching .processing-veil{
   inset:0;
   z-index:3;
   pointer-events:none;
-  background:repeating-linear-gradient(
-    180deg,
-    rgba(255,255,255,.016) 0px,
-    rgba(255,255,255,.016) 1px,
-    rgba(0,0,0,0) 2px,
-    rgba(0,0,0,0) 4px
-  );
-  mix-blend-mode:screen;
-  opacity:.18;
+  opacity:.34;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(180deg, rgba(255,255,255,.10) 0 1px, transparent 1px 18px);
+  mix-blend-mode:overlay;
+  transform:scale(1.02);
+}
+body.processing-locked .processing-backdrop::after{
+  animation:pixelGridDissolve 1.05s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes pixelGridDissolve{
+  0%{opacity:.42;filter:blur(0);background-size:18px 18px,18px 18px}
+  48%{opacity:.28;background-size:10px 10px,10px 10px}
+  100%{opacity:0;filter:blur(8px);background-size:3px 3px,3px 3px}
 }
 .processing-head{
   position:absolute;
@@ -531,12 +542,10 @@ body.searching .processing-bar::after{
 }
 body.processing-locked .processing-stage{color:rgba(246,241,232,.9)}
 body.processing-locked .processing-signal-dot{background:#fff}
-body.processing-locked .processing-layer.visible{
-  filter:blur(0px) brightness(.92) saturate(1.02);
-  transform:scale(1.01);
-}
-body.processing-locked .processing-bar::after{
-  animation-duration:.8s;
+body.processing-locked .processing-query-wrap{
+  opacity:.32;
+  transform:translateY(10px);
+  transition:opacity .7s ease, transform .7s ease;
 }
 @media(max-width:760px){
   .processing-layer{object-position:center 32%;}
@@ -3766,6 +3775,69 @@ body:not(.has-results) .search-actions{
   }
 }
 
+
+/* Fullscreen trailer player:
+   once the image resolves, the trailer becomes the experience. */
+body.trailer-active{
+  overflow:hidden !important;
+}
+body.trailer-active .hero-trailer.active{
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100svh !important;
+  z-index:950 !important;
+  display:block !important;
+  background:#000 !important;
+}
+body.trailer-active .hero-trailer.active iframe{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  border:0 !important;
+}
+body.trailer-active .hero-trailer-close{
+  position:fixed !important;
+  top:18px !important;
+  right:18px !important;
+  z-index:980 !important;
+  width:46px !important;
+  height:46px !important;
+  border:1px solid rgba(246,241,232,.2) !important;
+  background:rgba(0,0,0,.55) !important;
+  color:#fff !important;
+  backdrop-filter:blur(12px) !important;
+}
+body.trailer-active .hero-nav{
+  position:fixed !important;
+  top:50% !important;
+  z-index:975 !important;
+  display:flex !important;
+  opacity:.92 !important;
+  background:rgba(0,0,0,.48) !important;
+  backdrop-filter:blur(12px) !important;
+}
+body.trailer-active .hero-nav-prev{left:18px !important}
+body.trailer-active .hero-nav-next{right:18px !important}
+body.trailer-active #newSearch.results-home-link{
+  z-index:970 !important;
+}
+@media(max-width:760px){
+  body.trailer-active .hero-trailer-close{
+    top:12px !important;
+    right:12px !important;
+    width:42px !important;
+    height:42px !important;
+  }
+  body.trailer-active .hero-nav{
+    width:44px !important;
+    height:44px !important;
+  }
+  body.trailer-active .hero-nav-prev{left:10px !important}
+  body.trailer-active .hero-nav-next{right:10px !important}
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -4082,96 +4154,68 @@ function renderWall(movies){
 // ════════════════════════════════════════
 // SEARCH
 // ════════════════════════════════════════
-const PROCESSING_STAGES=['forming','measuring','narrowing','summoning','entering'];
+const PROCESSING_STAGES=['forming','measuring','summoning','entering'];
 let stageTimer=null;
-let processingImageTimer=null;
 let processingStageIndex=0;
-let processingActiveLayer='A';
 
-function processingLayers(){
-  return {
-    A:$('#processingLayerA'),
-    B:$('#processingLayerB')
-  };
+function processingLayer(){
+  return $('#processingLayerA') || $('#processingLayerB');
 }
 
-function getProcessingImagePool(corpus){
-  const source=(corpus?.movies?.length?corpus.movies:(cache?.movies||[]));
-
-  // Keep the Squid reveal lightweight. Archive mode sends a large ARBITER payload;
-  // do not compete with it by loading dozens of full-size/original TMDB images.
-  const pool=source
-    .filter(m=>m?.backdropPath||m?.posterPath)
-    .sort(()=>Math.random()-.5)
-    .slice(0,42)
-    .map(m=>backdrop(m,'w780')||poster(m,'w500'))
-    .filter(Boolean);
-
-  if(pool.length)return pool;
-  return Array.from($$('#wall img')).map(img=>img.currentSrc||img.src).filter(Boolean).slice(0,42);
-}
-
-function setProcessingImage(src,{sharp=false}={}){
-  if(!src)return;
-  const {A,B}=processingLayers();
-  const showA=processingActiveLayer!=='A';
-  const next=showA?A:B;
-  const prev=showA?B:A;
-  if(!next||!prev)return;
-  next.src=src;
-  next.classList.add('visible');
-  next.classList.toggle('sharp',!!sharp);
-  prev.classList.remove('sharp');
-  requestAnimationFrame(()=>{
-    prev.classList.remove('visible');
+function clearProcessingImage(){
+  const a=$('#processingLayerA');
+  const b=$('#processingLayerB');
+  [a,b].forEach(el=>{
+    if(!el)return;
+    el.removeAttribute('src');
+    el.classList.remove('visible','sharp');
   });
-  processingActiveLayer=showA?'A':'B';
 }
 
-function cycleProcessingImages(pool){
-  clearInterval(processingImageTimer);
-  if(!pool?.length)return;
-  let idx=Math.floor(Math.random()*pool.length);
-  setProcessingImage(pool[idx]);
-  processingImageTimer=setInterval(()=>{
-    idx=(idx+1+Math.floor(Math.random()*4))%pool.length;
-    setProcessingImage(pool[idx]);
-  },620);
+function setProcessingResultImage(movie){
+  const layer=processingLayer();
+  if(!layer||!movie)return;
+  const src=backdrop(movie,'w1280')||poster(movie,'w780')||'';
+  if(!src)return;
+  layer.src=src;
+  layer.classList.remove('sharp');
+  layer.classList.add('visible');
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>layer.classList.add('sharp'));
+  });
 }
 
 function startProcessing(q){
   document.body.classList.add('searching');
   document.body.classList.remove('processing-locked');
+  clearProcessingImage();
   $('#processingQuery').textContent=q;
   processingStageIndex=0;
   $('#processingStage').textContent=PROCESSING_STAGES[processingStageIndex];
   $('#processingMeta').textContent=`${DEPTHS[searchDepth]?.film||900} candidates · ${searchDepth} depth`;
-  cycleProcessingImages(getProcessingImagePool());
 
   clearInterval(stageTimer);
   stageTimer=setInterval(()=>{
     processingStageIndex=Math.min(processingStageIndex+1,PROCESSING_STAGES.length-2);
     $('#processingStage').textContent=PROCESSING_STAGES[processingStageIndex];
-  },950);
+  },1000);
 }
 
 async function settleProcessingWithResult(movie){
   clearInterval(stageTimer);
-  clearInterval(processingImageTimer);
   document.body.classList.add('processing-locked');
   $('#processingStage').textContent='summoning';
-  $('#processingMeta').textContent='signal resolved · preparing reveal';
-  const src=backdrop(movie,'w1280')||poster(movie,'w780')||'';
-  if(src)setProcessingImage(src,{sharp:true});
-  await new Promise(r=>setTimeout(r,880));
+  $('#processingMeta').textContent='signal resolved · entering trailer';
+  setProcessingResultImage(movie);
+  await new Promise(r=>setTimeout(r,1250));
   $('#processingStage').textContent='entering';
-  await new Promise(r=>setTimeout(r,260));
+  await new Promise(r=>setTimeout(r,180));
 }
 
 function stopProcessing(){
   clearInterval(stageTimer);
-  clearInterval(processingImageTimer);
   document.body.classList.remove('searching','processing-locked');
+  setTimeout(clearProcessingImage,260);
 }
 
 const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/compare';
@@ -4272,7 +4316,6 @@ async function search(text){
       const stage=$('#processingStage');
       if(stage)stage.textContent='forming';
       corpus=await loadCorpus();
-      cycleProcessingImages(getProcessingImagePool(corpus));
       $('#processingMeta').textContent=`${corpus.movies.length} candidates · ${searchDepth} depth`;
     }catch(e){
       console.error('corpus load failed',e);
