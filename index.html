@@ -5102,6 +5102,8 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
   pointer-events:auto !important;
 }
 
+
+/* VOICE DROP + TRAILER WARMING LOOP: speech auto-submits, trailers prewarm, fullscreen exits into inline playback. */
 </style>
 <base target="_blank">
 </head>
@@ -5749,6 +5751,7 @@ async function search(text){
         return;
       }
 
+      fetchTrailer(results[0]).catch(()=>{});
       await settleProcessingWithResult(results[0]);
       renderResults({autoplayFullscreen:true});
       document.body.classList.add('has-results');
@@ -5983,6 +5986,11 @@ function renderResults({autoplayFullscreen=false}={}){
   // Grid
   renderRankGrid();
 
+  if(results.length>1){
+    fetchTrailer(results[(active+1)%results.length]).catch(()=>{});
+    fetchTrailer(results[(active-1+results.length)%results.length]).catch(()=>{});
+  }
+
   // Squid mode: the reveal drops directly into the trailer.
   if(autoplayFullscreen)scheduleAutoplayTrailer();
 }
@@ -6058,7 +6066,19 @@ $('#newSearch').addEventListener('click',()=>{
 $('#prevResult').addEventListener('click',()=>goToResult(-1));
 $('#nextResult').addEventListener('click',()=>goToResult(1));
 $('#heroTrailerClose').addEventListener('click',closeInlineTrailer);
-$('#playerClose')?.addEventListener('click',closeFullscreenTrailer);
+function exitToBrowse(){
+  const playerFrame=$('#playerFrame');
+  const heroFrame=$('#heroTrailerFrame');
+  const heroWrap=$('#heroTrailer');
+  const src=playerFrame?.src||'';
+  closeFullscreenTrailer();
+  if(src&&heroFrame&&heroWrap){
+    heroFrame.src=src;
+    heroWrap.classList.add('active');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$('#playerClose')?.addEventListener('click',exitToBrowse);
 $('#playerPrev')?.addEventListener('click',()=>goToResult(-1,{fullscreen:true}));
 $('#playerNext')?.addEventListener('click',()=>goToResult(1,{fullscreen:true}));
 
@@ -6077,7 +6097,10 @@ document.addEventListener('keydown',e=>{
   if(!results.length)return;
   if(e.key==='ArrowRight')goToResult(1);
   if(e.key==='ArrowLeft')goToResult(-1);
-  if(e.key==='Escape')closeTrailer();
+  if(e.key==='Escape'){
+    if(document.body.classList.contains('trailer-active'))exitToBrowse();
+    else closeTrailer();
+  }
 });
 
 // Depth toggle
@@ -6101,7 +6124,7 @@ $$('.depth-btn').forEach(btn=>{
 // Voice
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
-function bindVoiceButton(buttonSelector,targetSelector,label='Speak search'){
+function bindVoiceButton(buttonSelector,targetSelector,label='Speak search',submitFn=null){
   const btn=$(buttonSelector);
   const target=$(targetSelector);
   if(!btn||!target)return;
@@ -6138,6 +6161,7 @@ function bindVoiceButton(buttonSelector,targetSelector,label='Speak search'){
     rec.onend=()=>{
       btn.classList.remove('listening');
       btn.setAttribute('aria-label',label);
+      if(submitFn && final.trim())submitFn();
     };
 
     rec.onerror=()=>{
@@ -6150,8 +6174,8 @@ function bindVoiceButton(buttonSelector,targetSelector,label='Speak search'){
   });
 }
 
-bindVoiceButton('#voiceBtn','#query','Speak search');
-bindVoiceButton('#resultVoiceBtn','#resultQuery','Speak summon');
+bindVoiceButton('#voiceBtn','#query','Speak search',submitMainSearch);
+bindVoiceButton('#resultVoiceBtn','#resultQuery','Speak summon',submitResultSearch);
 
 
 // Auto-resize textareas
