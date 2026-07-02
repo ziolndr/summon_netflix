@@ -5348,6 +5348,16 @@ body.transport-live .player-overlay iframe{
   100%{opacity:1; filter:brightness(1) contrast(1) blur(0); transform:scale(1)}
 }
 
+
+/* FAST FULLSCREEN SURF RESTORE:
+   arrowing to next/previous trailer swaps immediately again.
+   No transport mask, no interstitial background image, no artificial wait. */
+.player-overlay.active:not(.loading) iframe{
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -6212,7 +6222,7 @@ function releaseTransportTrailer(){
   }
 }
 
-async function openTrailer({auto=false,fullscreen=false}={}){
+async function openTrailer({auto=false,fullscreen=false,fast=false}={}){
   const m=results[active];
   if(!m?.tmdbId)return;
 
@@ -6238,24 +6248,36 @@ async function openTrailer({auto=false,fullscreen=false}={}){
 
     if(useFullscreen){
       closeInlineTrailer();
-      showFullscreenTrailerShell();
       const frame=$('#playerFrame');
       const url=trailerUrl(video);
-      if(frame && frame.src!==url)frame.src=url;
       const summon=$('#playerSummon');
       if(summon){
         const q=(currentQuery||$('#resultQuery')?.value||$('#query')?.value||'').trim();
         summon.textContent=q.length>180?q.slice(0,177).trimEnd()+'…':q;
       }
-      if(player)player.style.display='block';
-      player?.classList.add('active','controls-visible');
-      player?.setAttribute('aria-hidden','false');
-      document.body.classList.add('trailer-active','trailer-arming');
-      await armYoutubePlayback(frame,1900,3400);
-      document.body.classList.remove('trailer-arming');
-      player?.classList.remove('loading');
-      document.body.classList.add('transport-live');
-      setTimeout(()=>document.body.classList.remove('transport-live'),520);
+
+      if(fast){
+        // Fullscreen arrow surfing: no SQUID mask, no delay, no interstitial image.
+        document.body.classList.remove('transport-priming','trailer-arming','transport-live');
+        if(player)player.style.display='block';
+        if(frame && frame.src!==url)frame.src=url;
+        player?.classList.add('active','controls-visible');
+        player?.classList.remove('loading');
+        player?.setAttribute('aria-hidden','false');
+        document.body.classList.add('trailer-active');
+      }else{
+        showFullscreenTrailerShell();
+        if(frame && frame.src!==url)frame.src=url;
+        if(player)player.style.display='block';
+        player?.classList.add('active','controls-visible');
+        player?.setAttribute('aria-hidden','false');
+        document.body.classList.add('trailer-active','trailer-arming');
+        await armYoutubePlayback(frame,1900,3400);
+        document.body.classList.remove('trailer-arming');
+        player?.classList.remove('loading');
+        document.body.classList.add('transport-live');
+        setTimeout(()=>document.body.classList.remove('transport-live'),520);
+      }
     }else{
       closeFullscreenTrailer();
       const frame=$('#heroTrailerFrame');
@@ -6288,11 +6310,12 @@ function scheduleAutoplayTrailer(){
   },10);
 }
 
-function renderResults({autoplayFullscreen=false}={}){
-  closeTrailer();
+function renderResults({autoplayFullscreen=false,preserveFullscreen=false}={}){
+  if(preserveFullscreen)closeInlineTrailer();
+  else closeTrailer();
   const m=results[active];
   if(!m)return;
-  if(autoplayFullscreen)showFullscreenTrailerShell();
+  if(autoplayFullscreen && !preserveFullscreen)showFullscreenTrailerShell();
   requestAnimationFrame(()=>autoResize($('#resultQuery')));
 
   // Hero image
@@ -6350,7 +6373,7 @@ function renderResults({autoplayFullscreen=false}={}){
   }
 
   // Squid mode: the reveal drops directly into the trailer.
-  if(autoplayFullscreen)scheduleAutoplayTrailer();
+  if(autoplayFullscreen && !preserveFullscreen)scheduleAutoplayTrailer();
 }
 
 function renderRankGrid(){
@@ -6380,7 +6403,12 @@ function renderRankGrid(){
 function goToResult(d,{fullscreen=false}={}){
   if(!results.length)return;
   active=(active+d+results.length)%results.length;
-  renderResults({autoplayFullscreen:fullscreen});
+  if(fullscreen){
+    renderResults({autoplayFullscreen:false,preserveFullscreen:true});
+    openTrailer({auto:true,fullscreen:true,fast:true});
+    return;
+  }
+  renderResults();
 }
 
 
@@ -6465,10 +6493,11 @@ $('#playerOverlay')?.addEventListener('touchstart',showPlayerControls,{passive:t
 
 document.addEventListener('keydown',e=>{
   if(!results.length)return;
-  if(e.key==='ArrowRight')goToResult(1);
-  if(e.key==='ArrowLeft')goToResult(-1);
+  const inFullscreen=document.body.classList.contains('trailer-active');
+  if(e.key==='ArrowRight')goToResult(1,{fullscreen:inFullscreen});
+  if(e.key==='ArrowLeft')goToResult(-1,{fullscreen:inFullscreen});
   if(e.key==='Escape'){
-    if(document.body.classList.contains('trailer-active'))exitToBrowse();
+    if(inFullscreen)exitToBrowse();
     else closeTrailer();
   }
 });
