@@ -4262,6 +4262,193 @@ body.trailer-active .player-nav,
   z-index:5020 !important;
 }
 
+
+/* FINAL PROCESSING EXPERIENCE REWORK */
+.processing-head{display:none !important;}
+.processing-cinema,
+.processing-backdrop{background:#000;}
+.processing-backdrop{overflow:hidden;}
+.processing-ambient,
+.processing-layer{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.processing-ambient{
+  z-index:0;
+  opacity:0;
+  transform:scale(1.08);
+  filter:blur(1.4px) brightness(.28) saturate(.72) contrast(1.05);
+  transition:opacity .75s ease, transform 6s ease;
+}
+.processing-ambient.visible{
+  opacity:1;
+  transform:scale(1.02);
+}
+body.processing-locked .processing-ambient{
+  opacity:.10 !important;
+  transform:scale(1.06);
+  transition:opacity .45s ease, transform .8s ease;
+}
+.processing-layer{
+  z-index:1;
+}
+.processing-backdrop::before{
+  z-index:2;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 36%),
+    linear-gradient(180deg, rgba(0,0,0,.66) 0%, rgba(0,0,0,.22) 38%, rgba(0,0,0,.76) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.64) 0%, rgba(0,0,0,.18) 24%, rgba(0,0,0,.18) 76%, rgba(0,0,0,.64) 100%);
+}
+.processing-backdrop::after{
+  z-index:3;
+}
+.processing-query-wrap.processing-query-center{
+  left:50% !important;
+  right:auto !important;
+  top:50% !important;
+  bottom:auto !important;
+  width:min(980px,86vw);
+  transform:translate(-50%,-50%) !important;
+  z-index:6;
+  display:grid;
+  justify-items:center;
+  align-items:center;
+  text-align:center;
+  gap:12px;
+}
+.processing-query-label,
+.processing-meta,
+.processing-stage,
+.processing-percent{
+  font-family:var(--mono);
+  text-transform:uppercase;
+}
+.processing-query-label{
+  color:rgba(246,241,232,.5);
+  letter-spacing:.18em;
+}
+.processing-query{
+  max-width:min(1040px,84vw);
+  text-wrap:balance;
+}
+.processing-progress-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-height:12px;
+}
+.processing-stage{
+  color:rgba(246,241,232,.86);
+  letter-spacing:.18em;
+}
+.processing-percent{
+  font-size:10px;
+  letter-spacing:.18em;
+  color:rgba(246,241,232,.52);
+  min-width:42px;
+  text-align:right;
+}
+.processing-bar{
+  width:min(360px,48vw);
+  max-width:100%;
+  height:2px;
+  background:rgba(246,241,232,.16);
+  position:relative;
+  overflow:hidden;
+}
+.processing-bar::after{display:none !important;}
+.processing-bar-fill{
+  position:absolute;
+  inset:0 auto 0 0;
+  width:var(--processing-progress,0%);
+  background:linear-gradient(90deg, rgba(229,9,20,.78) 0%, rgba(255,255,255,.86) 100%);
+  box-shadow:0 0 14px rgba(229,9,20,.38);
+  transition:width .18s linear;
+}
+.processing-meta{
+  color:rgba(246,241,232,.44);
+  letter-spacing:.14em;
+}
+body.processing-locked .processing-query-wrap.processing-query-center{
+  opacity:1 !important;
+  transform:translate(-50%,-50%) !important;
+}
+body.processing-locked .processing-query,
+body.processing-locked .processing-query-label,
+body.processing-locked .processing-meta,
+body.processing-locked .processing-stage,
+body.processing-locked .processing-percent{
+  text-shadow:0 1px 14px rgba(0,0,0,.35);
+}
+body.processing-launch .processing-query-wrap.processing-query-center{
+  opacity:0;
+  transform:translate(-50%,-46%) !important;
+  transition:opacity .26s ease, transform .26s ease;
+}
+body.processing-locked .processing-cinema::after{
+  animation:pixelGridDissolve 1.65s cubic-bezier(.16,1,.3,1) forwards;
+}
+.processing-layer.sharp{
+  animation:actualImageConstructThought 2.4s steps(14,end) forwards !important;
+}
+@keyframes actualImageConstructThought{
+  0%{
+    opacity:.04;
+    clip-path:inset(49% 49% 49% 49%);
+    transform:scale(1.2);
+    filter:blur(54px) brightness(.12) contrast(2.15) saturate(.28);
+    image-rendering:pixelated;
+  }
+  16%{
+    opacity:.16;
+    clip-path:inset(40% 40% 40% 40%);
+    filter:blur(44px) brightness(.18) contrast(2.0) saturate(.35);
+  }
+  32%{
+    opacity:.34;
+    clip-path:inset(27% 27% 27% 27%);
+    transform:scale(1.14);
+    filter:blur(30px) brightness(.28) contrast(1.78) saturate(.48);
+  }
+  52%{
+    opacity:.58;
+    clip-path:inset(14% 14% 14% 14%);
+    transform:scale(1.09);
+    filter:blur(18px) brightness(.46) contrast(1.48) saturate(.68);
+  }
+  72%{
+    opacity:.82;
+    clip-path:inset(5% 5% 5% 5%);
+    transform:scale(1.045);
+    filter:blur(7px) brightness(.72) contrast(1.18) saturate(.92);
+  }
+  100%{
+    opacity:1;
+    clip-path:inset(0 0 0 0);
+    transform:scale(1.01);
+    filter:blur(0) brightness(.96) contrast(1.04) saturate(1.05);
+    image-rendering:auto;
+  }
+}
+@media(max-width:760px){
+  .processing-query-wrap.processing-query-center{
+    width:min(92vw,680px);
+    gap:10px;
+  }
+  .processing-query{
+    font-size:clamp(20px,7vw,34px) !important;
+    line-height:1.06;
+    max-width:100%;
+  }
+  .processing-progress-row{gap:10px;}
+  .processing-bar{width:min(220px,70vw);}
+  .processing-meta,.processing-query-label,.processing-stage,.processing-percent{font-size:9px;}
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -4329,16 +4516,22 @@ body.trailer-active .player-nav,
 <div class="processing-veil" id="processingVeil" aria-hidden="true">
   <div class="processing-cinema">
     <div class="processing-backdrop">
+      <img class="processing-ambient visible" id="processingAmbientA" alt="" aria-hidden="true">
+      <img class="processing-ambient" id="processingAmbientB" alt="" aria-hidden="true">
       <img class="processing-layer visible" id="processingLayerA" alt="" aria-hidden="true">
       <img class="processing-layer" id="processingLayerB" alt="" aria-hidden="true">
-      <div class="processing-head">
+      <div class="processing-head" aria-hidden="true">
         <span class="processing-signal-dot" aria-hidden="true"></span>
-        <div class="processing-stage" id="processingStage">forming</div>
+        <div class="processing-stage">forming</div>
       </div>
-      <div class="processing-query-wrap">
+      <div class="processing-query-wrap processing-query-center">
         <div class="processing-query-label">your summon</div>
         <div class="processing-query" id="processingQuery"></div>
-        <div class="processing-bar"></div>
+        <div class="processing-progress-row">
+          <div class="processing-stage" id="processingStage">forming</div>
+          <div class="processing-percent" id="processingPercent">00%</div>
+        </div>
+        <div class="processing-bar"><span class="processing-bar-fill" id="processingBarFill"></span></div>
         <div class="processing-meta" id="processingMeta">reading the field</div>
       </div>
     </div>
@@ -4591,6 +4784,113 @@ const PROCESSING_STAGES=['forming','measuring','summoning','entering'];
 let stageTimer=null;
 let processingStageIndex=0;
 
+let progressTimer=null;
+let progressValue=0;
+let ambientTimer=null;
+let ambientPool=[];
+let ambientIndex=0;
+let ambientFlip=0;
+
+function setProcessingProgress(v){
+  progressValue=Math.max(0,Math.min(100,v));
+  document.documentElement.style.setProperty('--processing-progress', `${progressValue}%`);
+  const percent=$('#processingPercent');
+  if(percent)percent.textContent=`${String(Math.round(progressValue)).padStart(2,'0')}%`;
+}
+
+function stageForProgress(v){
+  if(v < 28) return 'forming';
+  if(v < 62) return 'measuring';
+  if(v < 95) return 'summoning';
+  return 'entering';
+}
+
+function syncProcessingStage(){
+  const stage=$('#processingStage');
+  if(stage)stage.textContent=stageForProgress(progressValue);
+}
+
+function startProgressSimulation(){
+  clearInterval(progressTimer);
+  setProcessingProgress(3);
+  syncProcessingStage();
+  progressTimer=setInterval(()=>{
+    const ceiling=84;
+    if(progressValue >= ceiling)return;
+    const step=Math.max(.7,(ceiling-progressValue)*.08);
+    setProcessingProgress(Math.min(ceiling, progressValue+step));
+    syncProcessingStage();
+  },100);
+}
+
+function animateProgressTo(target,duration=1200){
+  clearInterval(progressTimer);
+  const start=progressValue;
+  const diff=Math.max(0,target-start);
+  if(diff <= 0){
+    setProcessingProgress(target);
+    syncProcessingStage();
+    return Promise.resolve();
+  }
+  return new Promise(resolve=>{
+    const begun=performance.now();
+    function tick(now){
+      const t=Math.min(1,(now-begun)/duration);
+      const eased=1-Math.pow(1-t,3);
+      setProcessingProgress(start + diff*eased);
+      syncProcessingStage();
+      if(t < 1) requestAnimationFrame(tick);
+      else resolve();
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+function clearProcessingProgress(){
+  clearInterval(progressTimer);
+  setProcessingProgress(0);
+}
+
+function ambientVisual(m){
+  return backdrop(m,'w780') || poster(m,'w780') || poster(m,'w500') || '';
+}
+
+function buildAmbientPool(){
+  const movies=(cache?.movies || []).filter(m=>ambientVisual(m));
+  ambientPool=[...movies].sort(()=>Math.random()-.5).slice(0,28).map(ambientVisual).filter(Boolean);
+  ambientIndex=0;
+}
+
+function setAmbientFrame(url){
+  const a=$('#processingAmbientA');
+  const b=$('#processingAmbientB');
+  if(!a || !b || !url) return;
+  const incoming=(ambientFlip % 2 === 0) ? a : b;
+  const outgoing=(ambientFlip % 2 === 0) ? b : a;
+  incoming.src=url;
+  incoming.classList.add('visible');
+  outgoing.classList.remove('visible');
+  ambientFlip += 1;
+}
+
+function startAmbientRotation(){
+  clearInterval(ambientTimer);
+  buildAmbientPool();
+  if(!ambientPool.length) return;
+  setAmbientFrame(ambientPool[ambientIndex % ambientPool.length]);
+  ambientIndex += 1;
+  ambientTimer=setInterval(()=>{
+    if(!ambientPool.length) return;
+    setAmbientFrame(ambientPool[ambientIndex % ambientPool.length]);
+    ambientIndex += 1;
+  },1100);
+}
+
+function stopAmbientRotation(){
+  clearInterval(ambientTimer);
+  ambientTimer=null;
+}
+
 function processingLayer(){
   return $('#processingLayerA') || $('#processingLayerB');
 }
@@ -4624,34 +4924,30 @@ function setProcessingResultImage(movie){
 
 function startProcessing(q){
   document.body.classList.add('searching');
-  document.body.classList.remove('processing-locked');
+  document.body.classList.remove('processing-locked','processing-launch');
   clearProcessingImage();
+  stopAmbientRotation();
   $('#processingQuery').textContent=q;
-  processingStageIndex=0;
-  $('#processingStage').textContent=PROCESSING_STAGES[processingStageIndex];
   $('#processingMeta').textContent=`${DEPTHS[searchDepth]?.film||900} candidates · ${searchDepth} depth`;
-
-  clearInterval(stageTimer);
-  stageTimer=setInterval(()=>{
-    processingStageIndex=Math.min(processingStageIndex+1,PROCESSING_STAGES.length-2);
-    $('#processingStage').textContent=PROCESSING_STAGES[processingStageIndex];
-  },1000);
+  startAmbientRotation();
+  startProgressSimulation();
 }
 
 async function settleProcessingWithResult(movie){
-  clearInterval(stageTimer);
+  stopAmbientRotation();
   document.body.classList.add('processing-locked');
-  $('#processingStage').textContent='summoning';
   $('#processingMeta').textContent='signal resolved · entering trailer';
   setProcessingResultImage(movie);
-  await new Promise(r=>setTimeout(r,2100));
+  await animateProgressTo(100, 2300);
   $('#processingStage').textContent='entering';
   document.body.classList.add('processing-launch');
-  await new Promise(r=>setTimeout(r,360));
+  await new Promise(r=>setTimeout(r,380));
 }
 
 function stopProcessing(){
   clearInterval(stageTimer);
+  stopAmbientRotation();
+  clearProcessingProgress();
   document.body.classList.remove('searching','processing-locked','processing-launch');
   setTimeout(clearProcessingImage,260);
 }
@@ -4780,7 +5076,7 @@ async function search(text){
 
     try{
       const stage=$('#processingStage');
-      if(stage)stage.textContent='locking';
+      if(stage)stage.textContent='summoning';
       const rows=extractArbiterRows(data);
       results=rows
         .map(r=>{
