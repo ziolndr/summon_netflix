@@ -4751,6 +4751,60 @@ body:not(.has-results):not(.searching) .wall{
   }
 }
 
+
+/* Fullscreen summon memory:
+   visible enough to remember the intent, quiet enough not to fight the trailer. */
+.player-summon{
+  position:fixed;
+  left:50%;
+  bottom:22px;
+  z-index:5015;
+  transform:translateX(-50%);
+  max-width:min(780px,72vw);
+  padding:8px 12px;
+  border:1px solid rgba(246,241,232,.12);
+  border-radius:999px;
+  background:rgba(0,0,0,.34);
+  color:rgba(246,241,232,.54);
+  font-family:var(--mono);
+  font-size:10px;
+  line-height:1.35;
+  letter-spacing:.06em;
+  text-transform:none;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  opacity:.42;
+  pointer-events:none;
+  transition:opacity .22s ease, color .22s ease, background .22s ease, transform .22s ease;
+}
+
+body.trailer-active .player-overlay:hover .player-summon,
+body.trailer-active .player-overlay.controls-visible .player-summon{
+  opacity:.82;
+  color:rgba(246,241,232,.78);
+  background:rgba(0,0,0,.48);
+  transform:translateX(-50%) translateY(-2px);
+}
+
+.player-summon::before{
+  content:'summon · ';
+  color:rgba(229,9,20,.7);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+
+@media(max-width:760px){
+  .player-summon{
+    bottom:14px;
+    max-width:calc(100vw - 112px);
+    padding:7px 10px;
+    font-size:9px;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -4916,6 +4970,7 @@ body:not(.has-results):not(.searching) .wall{
 
 <div class="player-overlay" id="playerOverlay" aria-hidden="true">
   <iframe id="playerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  <div class="player-summon" id="playerSummon" aria-live="polite"></div>
   <button type="button" class="player-close" id="playerClose" aria-label="Close trailer">×</button>
   <button type="button" class="player-nav player-prev" id="playerPrev" aria-label="Previous result">←</button>
   <button type="button" class="player-nav player-next" id="playerNext" aria-label="Next result">→</button>
@@ -5486,6 +5541,8 @@ function closeFullscreenTrailer(){
   const playerFrame=$('#playerFrame');
   const player=$('#playerOverlay');
   if(playerFrame)playerFrame.src='';
+  const summon=$('#playerSummon');
+  if(summon)summon.textContent='';
   player?.classList.remove('active','loading','controls-visible');
   if(player)player.style.display='none';
   player?.setAttribute('aria-hidden','true');
@@ -5520,6 +5577,11 @@ async function openTrailer({auto=false,fullscreen=false}={}){
       closeInlineTrailer();
       const frame=$('#playerFrame');
       if(frame)frame.src=trailerUrl(video);
+      const summon=$('#playerSummon');
+      if(summon){
+        const q=(currentQuery||$('#resultQuery')?.value||$('#query')?.value||'').trim();
+        summon.textContent=q.length>180?q.slice(0,177).trimEnd()+'…':q;
+      }
       if(player)player.style.display='block';
       player?.classList.add('active');
       player?.classList.remove('loading','controls-visible');
