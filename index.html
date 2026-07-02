@@ -4546,6 +4546,107 @@ body:not(.has-results) .search-actions{
   }
 }
 
+
+/* MULTILINE INPUT FIX:
+   keep the first typed line visible; let textarea height follow scrollHeight via CSS var. */
+body:not(.has-results) #query{
+  height:var(--query-height, 1.55em) !important;
+  min-height:1.55em !important;
+  max-height:7.2em !important;
+  overflow:hidden !important;
+  white-space:pre-wrap !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  padding:0 !important;
+  line-height:1.24 !important;
+  bottom:0 !important;
+  caret-color:#fff !important;
+  color:rgba(246,241,232,.98) !important;
+  -webkit-text-fill-color:rgba(246,241,232,.98) !important;
+}
+
+body:not(.has-results) .search-input-wrap{
+  min-height:max(
+    calc((clamp(17px,1.6vw,24px) * 1.24) * 2 + 10px),
+    calc(var(--query-height, 1.55em) + 10px)
+  ) !important;
+}
+
+body:not(.has-results) .placeholder-ghost{
+  bottom:0 !important;
+}
+
+@media(max-width:760px){
+  body:not(.has-results) #query{
+    height:var(--query-height, 1.6em) !important;
+    min-height:1.6em !important;
+    max-height:7.8em !important;
+    line-height:1.26 !important;
+  }
+
+  body:not(.has-results) .search-input-wrap{
+    min-height:max(
+      calc((clamp(19px,5.5vw,24px) * 1.26) * 2 + 12px),
+      calc(var(--query-height, 1.6em) + 12px)
+    ) !important;
+  }
+}
+
+
+/* TRAILER MODE FIX:
+   - initial summon/autoplay can go fullscreen
+   - manual Play Trailer plays inline in hero
+   - fullscreen arrow surfing stays fullscreen
+   - fullscreen controls appear only on hover/touch */
+.player-close,
+.player-nav{
+  opacity:0 !important;
+  pointer-events:none !important;
+  transition:opacity .18s ease !important;
+}
+
+.player-overlay:hover .player-close,
+.player-overlay:hover .player-nav,
+.player-overlay.controls-visible .player-close,
+.player-overlay.controls-visible .player-nav{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+.player-overlay:not(:hover):not(.controls-visible){
+  cursor:none;
+}
+
+body.has-results:not(.trailer-active) .hero-nav{
+  opacity:0 !important;
+  pointer-events:none !important;
+  transition:opacity .18s ease !important;
+}
+
+body.has-results:not(.trailer-active) .hero:hover .hero-nav,
+body.has-results:not(.trailer-active) .hero:focus-within .hero-nav{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+body:not(.trailer-active) .hero-trailer.active{
+  display:block !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:12 !important;
+  width:100% !important;
+  height:100% !important;
+  background:#000 !important;
+}
+
+body:not(.trailer-active) .hero-trailer.active iframe{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  border:0 !important;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -5192,7 +5293,7 @@ async function search(text){
       }
 
       await settleProcessingWithResult(results[0]);
-      renderResults();
+      renderResults({autoplayFullscreen:true});
       document.body.classList.add('has-results');
       document.documentElement.classList.add('has-results-page');
       syncScrollMode();
@@ -5262,25 +5363,44 @@ function closeTrailer(){
   if(playerFrame)playerFrame.src='';
 
   heroWrap?.classList.remove('active','loading');
-  player?.classList.remove('active','loading');
+  player?.classList.remove('active','loading','controls-visible');
   if(player)player.style.display='none';
   player?.setAttribute('aria-hidden','true');
 
   document.body.classList.remove('trailer-active');
 }
 
-async function openTrailer({auto=false}={}){
+function closeInlineTrailer(){
+  const heroFrame=$('#heroTrailerFrame');
+  const heroWrap=$('#heroTrailer');
+  if(heroFrame)heroFrame.src='';
+  heroWrap?.classList.remove('active','loading');
+}
+
+function closeFullscreenTrailer(){
+  const playerFrame=$('#playerFrame');
+  const player=$('#playerOverlay');
+  if(playerFrame)playerFrame.src='';
+  player?.classList.remove('active','loading','controls-visible');
+  if(player)player.style.display='none';
+  player?.setAttribute('aria-hidden','true');
+  document.body.classList.remove('trailer-active');
+}
+
+async function openTrailer({auto=false,fullscreen=false}={}){
   const m=results[active];
   if(!m?.tmdbId)return;
 
   const requestId=++trailerRequestId;
   const btn=$('#trailerBtn');
   const heroBtn=$('#heroPlayBtn');
+  const heroWrap=$('#heroTrailer');
   const player=$('#playerOverlay');
+  const useFullscreen=!!fullscreen;
 
   if(btn)btn.textContent='loading…';
   if(heroBtn)heroBtn.classList.add('loading');
-  player?.classList.add('loading');
+  (useFullscreen?player:heroWrap)?.classList.add('loading');
 
   try{
     const video=await fetchTrailer(m);
@@ -5291,20 +5411,29 @@ async function openTrailer({auto=false}={}){
       return;
     }
 
-    const frame=$('#playerFrame');
-    if(frame)frame.src=trailerUrl(video);
-    if(player)player.style.display='block';
-    player?.classList.add('active');
-    player?.classList.remove('loading');
-    player?.setAttribute('aria-hidden','false');
-    document.body.classList.add('trailer-active');
+    if(useFullscreen){
+      closeInlineTrailer();
+      const frame=$('#playerFrame');
+      if(frame)frame.src=trailerUrl(video);
+      if(player)player.style.display='block';
+      player?.classList.add('active');
+      player?.classList.remove('loading','controls-visible');
+      player?.setAttribute('aria-hidden','false');
+      document.body.classList.add('trailer-active');
+    }else{
+      closeFullscreenTrailer();
+      const frame=$('#heroTrailerFrame');
+      if(frame)frame.src=trailerUrl(video);
+      heroWrap?.classList.add('active');
+      heroWrap?.classList.remove('loading');
+    }
   }catch(e){
     if(!auto)toast('trailer unavailable');
   }finally{
     if(requestId===trailerRequestId){
       if(btn)btn.textContent='play trailer';
       if(heroBtn)heroBtn.classList.remove('loading');
-      player?.classList.remove('loading');
+      (useFullscreen?player:heroWrap)?.classList.remove('loading');
     }
   }
 }
@@ -5317,12 +5446,12 @@ function scheduleAutoplayTrailer(){
 
   autoplayTimer=setTimeout(()=>{
     if(document.body.classList.contains('has-results')){
-      openTrailer({auto:true});
+      openTrailer({auto:true,fullscreen:true});
     }
   },120);
 }
 
-function renderResults(){
+function renderResults({autoplayFullscreen=false}={}){
   closeTrailer();
   const m=results[active];
   if(!m)return;
@@ -5349,11 +5478,11 @@ function renderResults(){
   $('#watchBtn').onclick=()=>window.open(`https://www.netflix.com/search?q=${encodeURIComponent(m.title)}`,'_blank');
   const trailerBtn=$('#trailerBtn');
   if(trailerBtn){
-    trailerBtn.onclick=()=>openTrailer({auto:false});
+    trailerBtn.onclick=()=>openTrailer({auto:false,fullscreen:false});
     trailerBtn.hidden=!m.tmdbId;
   }
   $('#heroPlayBtn').classList.toggle('visible',!!m.tmdbId);
-  $('#heroPlayBtn').onclick=()=>openTrailer({auto:false});
+  $('#heroPlayBtn').onclick=()=>openTrailer({auto:false,fullscreen:false});
 
   $('#copyLink').onclick=()=>{
     const url=`${location.href.split('#')[0]}#${encodeURIComponent(currentQuery)}`;
@@ -5378,7 +5507,7 @@ function renderResults(){
   renderRankGrid();
 
   // Squid mode: the reveal drops directly into the trailer.
-  scheduleAutoplayTrailer();
+  if(autoplayFullscreen)scheduleAutoplayTrailer();
 }
 
 function renderRankGrid(){
@@ -5405,10 +5534,10 @@ function renderRankGrid(){
   });
 }
 
-function goToResult(d){
+function goToResult(d,{fullscreen=false}={}){
   if(!results.length)return;
   active=(active+d+results.length)%results.length;
-  renderResults();
+  renderResults({autoplayFullscreen:fullscreen});
 }
 
 
@@ -5451,10 +5580,21 @@ $('#newSearch').addEventListener('click',()=>{
 });
 $('#prevResult').addEventListener('click',()=>goToResult(-1));
 $('#nextResult').addEventListener('click',()=>goToResult(1));
-$('#heroTrailerClose').addEventListener('click',closeTrailer);
-$('#playerClose')?.addEventListener('click',closeTrailer);
-$('#playerPrev')?.addEventListener('click',()=>goToResult(-1));
-$('#playerNext')?.addEventListener('click',()=>goToResult(1));
+$('#heroTrailerClose').addEventListener('click',closeInlineTrailer);
+$('#playerClose')?.addEventListener('click',closeFullscreenTrailer);
+$('#playerPrev')?.addEventListener('click',()=>goToResult(-1,{fullscreen:true}));
+$('#playerNext')?.addEventListener('click',()=>goToResult(1,{fullscreen:true}));
+
+let playerControlsTimer=null;
+function showPlayerControls(){
+  const player=$('#playerOverlay');
+  if(!player)return;
+  player.classList.add('controls-visible');
+  clearTimeout(playerControlsTimer);
+  playerControlsTimer=setTimeout(()=>player.classList.remove('controls-visible'),1400);
+}
+$('#playerOverlay')?.addEventListener('mousemove',showPlayerControls);
+$('#playerOverlay')?.addEventListener('touchstart',showPlayerControls,{passive:true});
 
 document.addEventListener('keydown',e=>{
   if(!results.length)return;
@@ -5540,9 +5680,17 @@ bindVoiceButton('#resultVoiceBtn','#resultQuery','Speak summon');
 // Auto-resize textareas
 function autoResize(el){
   if(!el)return;
+  const cs=getComputedStyle(el);
+  const min=parseFloat(cs.minHeight)||0;
+  const max=parseFloat(cs.maxHeight)||Infinity;
+
+  // CSS has important height rules, so drive height through a custom property.
+  el.style.setProperty('--query-height', `${min}px`);
   el.style.height='auto';
-  const min=parseFloat(getComputedStyle(el).minHeight)||0;
-  el.style.height=Math.max(min,el.scrollHeight)+'px';
+
+  const next=Math.min(max,Math.max(min,el.scrollHeight));
+  el.style.setProperty('--query-height', `${next}px`);
+  el.style.height=`${next}px`;
 }
 $('#query').addEventListener('input',()=>{
   autoResize($('#query'));
@@ -5552,6 +5700,7 @@ $('#query').addEventListener('input',()=>{
 $('#query').addEventListener('focus',()=>{
   updatePlaceholderVisibility();
   autoResize($('#query'));
+  requestAnimationFrame(()=>autoResize($('#query')));
 });
 $('#query').addEventListener('blur',()=>{
   updatePlaceholderVisibility();
