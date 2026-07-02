@@ -4647,6 +4647,64 @@ body:not(.trailer-active) .hero-trailer.active iframe{
   border:0 !important;
 }
 
+
+/* PROCESSING PROGRESS FIX:
+   no fake numeric percentage; bar is indicative and stays alive while ARBITER works. */
+.processing-percent{
+  display:none !important;
+}
+
+.processing-progress-row{
+  gap:0 !important;
+}
+
+.processing-bar{
+  width:min(420px,52vw) !important;
+}
+
+.processing-bar-fill{
+  width:var(--processing-progress,0%) !important;
+  transition:width .28s cubic-bezier(.16,1,.3,1) !important;
+}
+
+.processing-bar-fill::after{
+  content:'';
+  position:absolute;
+  inset:0 auto 0 -36%;
+  width:36%;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.72) 48%, transparent 100%);
+  animation:processingBarGlint 1.15s ease-in-out infinite;
+}
+
+@keyframes processingBarGlint{
+  0%{left:-36%; opacity:.22}
+  45%{opacity:.9}
+  100%{left:100%; opacity:.22}
+}
+
+body.searching:not(.processing-locked) .processing-bar{
+  box-shadow:0 0 0 1px rgba(246,241,232,.05), 0 0 26px rgba(229,9,20,.10);
+}
+
+body.searching:not(.processing-locked) .processing-bar-fill{
+  animation:processingPendingPulse 1.9s ease-in-out infinite;
+}
+
+@keyframes processingPendingPulse{
+  0%,100%{filter:brightness(.78); box-shadow:0 0 10px rgba(229,9,20,.20)}
+  50%{filter:brightness(1.22); box-shadow:0 0 20px rgba(229,9,20,.42)}
+}
+
+body.processing-locked .processing-bar-fill{
+  animation:none !important;
+}
+
+@media(max-width:760px){
+  .processing-bar{
+    width:min(260px,72vw) !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -4992,14 +5050,12 @@ let ambientFlip=0;
 function setProcessingProgress(v){
   progressValue=Math.max(0,Math.min(100,v));
   document.documentElement.style.setProperty('--processing-progress', `${progressValue}%`);
-  const percent=$('#processingPercent');
-  if(percent)percent.textContent=`${String(Math.round(progressValue)).padStart(2,'0')}%`;
 }
 
 function stageForProgress(v){
   if(v < 28) return 'forming';
   if(v < 62) return 'measuring';
-  if(v < 95) return 'summoning';
+  if(v < 98) return 'summoning';
   return 'entering';
 }
 
@@ -5010,15 +5066,18 @@ function syncProcessingStage(){
 
 function startProgressSimulation(){
   clearInterval(progressTimer);
-  setProcessingProgress(3);
+  setProcessingProgress(4);
   syncProcessingStage();
+
+  // This is not a fake percentage. It is a tension bar:
+  // moves quickly at first, then keeps breathing/creeping while the real request is in flight.
   progressTimer=setInterval(()=>{
-    const ceiling=84;
-    if(progressValue >= ceiling)return;
-    const step=Math.max(.7,(ceiling-progressValue)*.08);
+    const ceiling=94;
+    const distance=Math.max(0,ceiling-progressValue);
+    const step=distance > 12 ? distance*.075 : .18;
     setProcessingProgress(Math.min(ceiling, progressValue+step));
     syncProcessingStage();
-  },100);
+  },140);
 }
 
 function animateProgressTo(target,duration=1200){
