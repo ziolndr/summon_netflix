@@ -4077,6 +4077,191 @@ body.trailer-active #newSearch.results-home-link{
   .player-next{right:10px}
 }
 
+
+/* Final search baseline: examples begin on the underline line. */
+body:not(.has-results) .search-input-wrap{
+  min-height:calc((clamp(17px,1.6vw,24px) * 1.24) * 2 + 10px) !important;
+  padding-bottom:3px !important;
+  overflow:visible !important;
+}
+
+body:not(.has-results) .placeholder-ghost{
+  left:0 !important;
+  right:104px !important;
+  top:auto !important;
+  bottom:0 !important;
+  transform:none !important;
+  z-index:1 !important;
+  font-size:clamp(17px,1.6vw,24px) !important;
+  line-height:1.24 !important;
+  letter-spacing:-.01em !important;
+  white-space:normal !important;
+  text-wrap:normal !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  color:rgba(246,241,232,.50) !important;
+}
+
+body:not(.has-results) #query{
+  min-height:1.55em !important;
+  height:1.55em !important;
+  max-height:5.2em !important;
+  padding:0 104px 0 0 !important;
+  line-height:1.24 !important;
+  overflow:hidden !important;
+}
+
+body:not(.has-results) #query[data-has-value="false"]{
+  color:transparent !important;
+}
+
+body:not(.has-results) .search-actions{
+  bottom:3px !important;
+}
+
+@media(max-width:760px){
+  body:not(.has-results) .search-input-wrap{
+    min-height:calc((clamp(19px,5.5vw,24px) * 1.26) * 2 + 12px) !important;
+    padding-bottom:4px !important;
+  }
+
+  body:not(.has-results) .placeholder-ghost{
+    right:100px !important;
+    bottom:0 !important;
+    font-size:clamp(19px,5.5vw,24px) !important;
+    line-height:1.26 !important;
+  }
+
+  body:not(.has-results) #query{
+    min-height:1.6em !important;
+    height:1.6em !important;
+    padding-right:100px !important;
+    line-height:1.26 !important;
+  }
+
+  body:not(.has-results) .search-actions{
+    bottom:4px !important;
+  }
+}
+
+/* Stronger processing reveal: actual result builds like a signal resolving, then drops into player. */
+.processing-veil{
+  z-index:1100 !important;
+}
+
+.processing-cinema::after{
+  content:'';
+  position:absolute;
+  inset:-12%;
+  z-index:4;
+  pointer-events:none;
+  opacity:0;
+  background:
+    conic-gradient(from 90deg at 50% 50%, transparent 0deg, rgba(229,9,20,.22) 34deg, transparent 72deg, transparent 360deg),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.12), transparent 34%);
+  mix-blend-mode:screen;
+}
+
+body.processing-locked .processing-cinema::after{
+  animation:signalIris 1.85s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+@keyframes signalIris{
+  0%{opacity:0;transform:scale(.72) rotate(0deg);filter:blur(28px)}
+  25%{opacity:.45;transform:scale(.9) rotate(16deg);filter:blur(16px)}
+  62%{opacity:.28;transform:scale(1.08) rotate(38deg);filter:blur(8px)}
+  100%{opacity:0;transform:scale(1.34) rotate(56deg);filter:blur(0)}
+}
+
+.processing-layer.sharp{
+  animation:actualImageConstructStrong 2.05s steps(12,end) forwards !important;
+}
+
+@keyframes actualImageConstructStrong{
+  0%{
+    opacity:.05;
+    clip-path:inset(50% 50% 50% 50%);
+    transform:scale(1.24);
+    filter:blur(52px) brightness(.12) contrast(2.1) saturate(.35);
+    image-rendering:pixelated;
+  }
+  12%{
+    opacity:.20;
+    clip-path:inset(42% 42% 42% 42%);
+    filter:blur(42px) brightness(.20) contrast(1.9) saturate(.42);
+  }
+  26%{
+    opacity:.38;
+    clip-path:inset(31% 31% 31% 31%);
+    transform:scale(1.17);
+    filter:blur(32px) brightness(.30) contrast(1.7) saturate(.55);
+  }
+  44%{
+    opacity:.58;
+    clip-path:inset(19% 19% 19% 19%);
+    transform:scale(1.11);
+    filter:blur(22px) brightness(.44) contrast(1.5) saturate(.68);
+  }
+  62%{
+    opacity:.76;
+    clip-path:inset(9% 9% 9% 9%);
+    transform:scale(1.07);
+    filter:blur(12px) brightness(.62) contrast(1.3) saturate(.82);
+  }
+  82%{
+    opacity:.92;
+    clip-path:inset(2% 2% 2% 2%);
+    transform:scale(1.03);
+    filter:blur(5px) brightness(.80) contrast(1.14) saturate(.95);
+  }
+  100%{
+    opacity:1;
+    clip-path:inset(0 0 0 0);
+    transform:scale(1.005);
+    filter:blur(0) brightness(.96) contrast(1.03) saturate(1.05);
+    image-rendering:auto;
+  }
+}
+
+body.processing-launch .processing-veil{
+  animation:processingFlashOut .42s ease forwards;
+}
+
+@keyframes processingFlashOut{
+  0%{opacity:1;filter:brightness(1)}
+  45%{opacity:1;filter:brightness(1.75)}
+  100%{opacity:0;filter:brightness(1)}
+}
+
+/* Force the trailer player to be actual fullscreen, above every app layer. */
+body.trailer-active .player-overlay,
+.player-overlay.active{
+  display:block !important;
+  position:fixed !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100svh !important;
+  z-index:5000 !important;
+  background:#000 !important;
+}
+
+body.trailer-active .player-overlay iframe,
+.player-overlay.active iframe{
+  position:absolute !important;
+  inset:0 !important;
+  width:100vw !important;
+  height:100svh !important;
+  border:0 !important;
+  background:#000 !important;
+}
+
+body.trailer-active .player-close,
+body.trailer-active .player-nav,
+.player-overlay.active .player-close,
+.player-overlay.active .player-nav{
+  z-index:5020 !important;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -4459,14 +4644,15 @@ async function settleProcessingWithResult(movie){
   $('#processingStage').textContent='summoning';
   $('#processingMeta').textContent='signal resolved · entering trailer';
   setProcessingResultImage(movie);
-  await new Promise(r=>setTimeout(r,1250));
+  await new Promise(r=>setTimeout(r,2100));
   $('#processingStage').textContent='entering';
-  await new Promise(r=>setTimeout(r,180));
+  document.body.classList.add('processing-launch');
+  await new Promise(r=>setTimeout(r,360));
 }
 
 function stopProcessing(){
   clearInterval(stageTimer);
-  document.body.classList.remove('searching','processing-locked');
+  document.body.classList.remove('searching','processing-locked','processing-launch');
   setTimeout(clearProcessingImage,260);
 }
 
@@ -4684,6 +4870,7 @@ function closeTrailer(){
 
   heroWrap?.classList.remove('active','loading');
   player?.classList.remove('active','loading');
+  if(player)player.style.display='none';
   player?.setAttribute('aria-hidden','true');
 
   document.body.classList.remove('trailer-active');
@@ -4713,6 +4900,7 @@ async function openTrailer({auto=false}={}){
 
     const frame=$('#playerFrame');
     if(frame)frame.src=trailerUrl(video);
+    if(player)player.style.display='block';
     player?.classList.add('active');
     player?.classList.remove('loading');
     player?.setAttribute('aria-hidden','false');
