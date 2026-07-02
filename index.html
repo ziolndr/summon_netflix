@@ -5094,6 +5094,14 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
   }
 }
 
+
+/* REMOVE NATIVE TRAILER TOOLTIP:
+   the gray "Trailer" pill was the iframe title tooltip on hover. */
+#heroTrailerFrame,
+#playerFrame{
+  pointer-events:auto !important;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -5199,7 +5207,7 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
       <button type="button" class="hero-nav hero-nav-next" id="nextResult" aria-label="Next">→</button>
       <div class="hero-trailer" id="heroTrailer">
         <button type="button" class="hero-trailer-close" id="heroTrailerClose">×</button>
-        <iframe id="heroTrailerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="heroTrailerFrame" aria-label="Trailer video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
   </div>
@@ -5258,7 +5266,7 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
 
 
 <div class="player-overlay" id="playerOverlay" aria-hidden="true">
-  <iframe id="playerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  <iframe id="playerFrame" aria-label="Trailer video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   <div class="player-summon" id="playerSummon" aria-live="polite"></div>
   <button type="button" class="player-close" id="playerClose" aria-label="Close trailer">×</button>
   <button type="button" class="player-nav player-prev" id="playerPrev" aria-label="Previous result">←</button>
