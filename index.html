@@ -3446,6 +3446,52 @@ html.has-results-page body.has-results .reveal-query-form #resultGo{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   Squid mode autoplay trailer reveal.
+   Search/speak → result → trailer drops in automatically.
+   ───────────────────────────────────────────── */
+
+.hero-trailer.loading::before{
+  content:'summoning trailer';
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:12;
+  transform:translate(-50%,-50%);
+  padding:10px 14px;
+  border:1px solid rgba(246,241,232,.18);
+  background:rgba(0,0,0,.46);
+  color:rgba(246,241,232,.72);
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  backdrop-filter:blur(10px);
+}
+
+.hero-play-btn.loading{
+  opacity:.72;
+  pointer-events:none;
+}
+
+body.trailer-active .hero-play-btn{
+  display:none !important;
+}
+
+body.trailer-active .hero-media::after{
+  opacity:0;
+}
+
+/* Keep nav available over the autoplaying trailer so the field can be surfed. */
+body.trailer-active .hero-nav{
+  z-index:14 !important;
+}
+
+body.trailer-active .hero-trailer-close{
+  z-index:15 !important;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -3467,7 +3513,7 @@ html.has-results-page body.has-results .reveal-query-form #resultGo{
             autocomplete="off" 
             spellcheck="false" 
             inputmode="search" 
-            placeholder="Had a brutal week. Give me something that resets me."
+            placeholder="feeling lonely but not something depressing"
             rows="1"
           ></textarea>
           <div class="search-actions">
@@ -3484,7 +3530,7 @@ html.has-results-page body.has-results .reveal-query-form #resultGo{
         </div>
       </form>
 
-      <div class="search-hint" id="modeHint">Say the feeling. Enter searches. Shift+Enter adds a line.</div>
+      <div class="search-hint" id="modeHint">Enter searches. Shift+Enter adds a line.</div>
 
       <div class="depth-bar" role="group" aria-label="Search depth">
         <button type="button" class="depth-btn active" data-depth="surface">surface</button>
@@ -3979,29 +4025,71 @@ async function fetchTrailer(m){
   }catch(e){return null}
 }
 
-function trailerUrl(v){return v?.key?`https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.key)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1`:''}
+function trailerUrl(v){return v?.key?`https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.key)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`:''}
+
+let trailerRequestId=0;
+let autoplayTimer=null;
+let squidAutoplay=true;
 
 function closeTrailer(){
+  trailerRequestId++;
+  clearTimeout(autoplayTimer);
   const frame=$('#heroTrailerFrame');
   const wrap=$('#heroTrailer');
   if(frame)frame.src='';
-  wrap?.classList.remove('active');
+  wrap?.classList.remove('active','loading');
+  document.body.classList.remove('trailer-active');
 }
 
-async function openTrailer(){
+async function openTrailer({auto=false}={}){
   const m=results[active];
-  if(!m)return;
+  if(!m?.tmdbId)return;
+
+  const requestId=++trailerRequestId;
   const btn=$('#trailerBtn');
+  const heroBtn=$('#heroPlayBtn');
+  const wrap=$('#heroTrailer');
+
   if(btn)btn.textContent='loading…';
+  if(heroBtn)heroBtn.classList.add('loading');
+  wrap?.classList.add('loading');
+
   try{
     const video=await fetchTrailer(m);
-    if(!video){toast('no trailer found');return}
+    if(requestId!==trailerRequestId)return;
+
+    if(!video){
+      if(!auto)toast('no trailer found');
+      return;
+    }
+
     const frame=$('#heroTrailerFrame');
-    const wrap=$('#heroTrailer');
     if(frame)frame.src=trailerUrl(video);
     wrap?.classList.add('active');
-  }catch(e){toast('trailer unavailable')}
-  finally{if(btn)btn.textContent='play trailer'}
+    wrap?.classList.remove('loading');
+    document.body.classList.add('trailer-active');
+  }catch(e){
+    if(!auto)toast('trailer unavailable');
+  }finally{
+    if(requestId===trailerRequestId){
+      if(btn)btn.textContent='play trailer';
+      if(heroBtn)heroBtn.classList.remove('loading');
+      wrap?.classList.remove('loading');
+    }
+  }
+}
+
+function scheduleAutoplayTrailer(){
+  clearTimeout(autoplayTimer);
+  if(!squidAutoplay)return;
+  const m=results[active];
+  if(!m?.tmdbId)return;
+
+  autoplayTimer=setTimeout(()=>{
+    if(document.body.classList.contains('has-results')){
+      openTrailer({auto:true});
+    }
+  },320);
 }
 
 function renderResults(){
@@ -4031,11 +4119,11 @@ function renderResults(){
   $('#watchBtn').onclick=()=>window.open(`https://www.netflix.com/search?q=${encodeURIComponent(m.title)}`,'_blank');
   const trailerBtn=$('#trailerBtn');
   if(trailerBtn){
-    trailerBtn.onclick=openTrailer;
+    trailerBtn.onclick=()=>openTrailer({auto:false});
     trailerBtn.hidden=!m.tmdbId;
   }
   $('#heroPlayBtn').classList.toggle('visible',!!m.tmdbId);
-  $('#heroPlayBtn').onclick=openTrailer;
+  $('#heroPlayBtn').onclick=()=>openTrailer({auto:false});
 
   $('#copyLink').onclick=()=>{
     const url=`${location.href.split('#')[0]}#${encodeURIComponent(currentQuery)}`;
@@ -4058,6 +4146,9 @@ function renderResults(){
 
   // Grid
   renderRankGrid();
+
+  // Squid mode: the reveal drops directly into the trailer.
+  scheduleAutoplayTrailer();
 }
 
 function renderRankGrid(){
@@ -4118,6 +4209,7 @@ $('#resultForm').addEventListener('submit',e=>{e.preventDefault();submitResultSe
 bindEnterToSubmit('#query',submitMainSearch);
 bindEnterToSubmit('#resultQuery',submitResultSearch);
 $('#newSearch').addEventListener('click',()=>{
+  closeTrailer();
   document.body.classList.remove('has-results');
   document.documentElement.classList.remove('has-results-page');
   syncScrollMode();
@@ -4212,21 +4304,58 @@ bindVoiceButton('#resultVoiceBtn','#resultQuery','Speak summon');
 
 // Auto-resize textareas
 function autoResize(el){if(!el)return;el.style.height='auto';el.style.height=el.scrollHeight+'px'}
-$('#query').addEventListener('input',()=>autoResize($('#query')));
+$('#query').addEventListener('input',()=>{autoResize($('#query')); if(!$('#query').value.trim())updateSearchPlaceholder();});
+$('#query').addEventListener('focus',stopPlaceholderRotation);
+$('#query').addEventListener('blur',()=>{if(!$('#query').value.trim())startPlaceholderRotation();});
 $('#resultQuery').addEventListener('input',()=>autoResize($('#resultQuery')));
+
+
+// Rotating placeholder examples
+const PLACEHOLDER_EXAMPLES=[
+  'feeling lonely but not something depressing',
+  'budgeting tips but make it cool',
+  'the next currency nobody knows about',
+  'something that feels like trouble arriving in a nice suit',
+  'a movie for when ambition gets dangerous',
+  'comfort but not cheesy',
+  'cathedral gargoyles but romantic',
+  'make me feel like I found a secret'
+];
+
+let placeholderIdx=0;
+let placeholderTimer=null;
+
+function updateSearchPlaceholder(){
+  const input=$('#query');
+  if(!input || input.value.trim())return;
+  input.placeholder=PLACEHOLDER_EXAMPLES[placeholderIdx % PLACEHOLDER_EXAMPLES.length];
+  placeholderIdx++;
+}
+
+function startPlaceholderRotation(){
+  clearInterval(placeholderTimer);
+  updateSearchPlaceholder();
+  placeholderTimer=setInterval(updateSearchPlaceholder,2600);
+}
+
+function stopPlaceholderRotation(){
+  clearInterval(placeholderTimer);
+  placeholderTimer=null;
+}
+
 
 // ════════════════════════════════════════
 // QUERY TRACES
 // ════════════════════════════════════════
 const TRACES=[
-  'a movie that feels like waking up in the wrong city',
-  'a beautiful film where everything is already lost',
-  'obsession, repetition, and a mind turning on itself',
-  'something cold, elegant, and emotionally catastrophic',
-  'a woman disappearing into architecture',
-  'the feeling of surveillance without proof',
-  'a city at night after the signal has gone wrong',
-  'grief, symmetry, and a room that should not exist'
+  'feeling lonely but I do not want something depressing',
+  'the next currency nobody knows about',
+  'budgeting tips but make it cool',
+  'a dark room with cathedral gargoyles energy',
+  'something that feels like trouble arriving in a nice suit',
+  'I need relief but not a children’s movie',
+  'a movie for when ambition starts feeling dangerous',
+  'make me feel like I found a secret'
 ];
 let traceIdx=0,traceTimer=null,tracePos=0,traceMode='type';
 
