@@ -4999,6 +4999,101 @@ body:not(.has-results) .search-hint{
   }
 }
 
+
+/* VIDEO CONTROL RESTORE:
+   controls are always available again on both inline hero trailer and fullscreen player. */
+body.trailer-active .player-close,
+body.trailer-active .player-nav,
+.player-overlay.active .player-close,
+.player-overlay.active .player-nav,
+.player-overlay.loading .player-close,
+.player-overlay.loading .player-nav{
+  display:flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  z-index:5025 !important;
+}
+
+body.trailer-active .player-close,
+.player-overlay.active .player-close,
+.player-overlay.loading .player-close{
+  position:fixed !important;
+  top:18px !important;
+  right:18px !important;
+}
+
+body.trailer-active .player-nav,
+.player-overlay.active .player-nav,
+.player-overlay.loading .player-nav{
+  position:fixed !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+}
+
+body.trailer-active .player-prev,
+.player-overlay.active .player-prev,
+.player-overlay.loading .player-prev{
+  left:18px !important;
+}
+
+body.trailer-active .player-next,
+.player-overlay.active .player-next,
+.player-overlay.loading .player-next{
+  right:18px !important;
+}
+
+/* Hero inline trailer: keep next/previous and close above the iframe. */
+body.has-results:not(.trailer-active) .hero .hero-nav,
+body.has-results:not(.trailer-active) .hero-trailer.active + .hero-nav{
+  display:flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  z-index:90 !important;
+}
+
+body.has-results:not(.trailer-active) .hero-media .hero-nav{
+  display:flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  z-index:90 !important;
+}
+
+body.has-results:not(.trailer-active) .hero-trailer.active{
+  z-index:20 !important;
+}
+
+body.has-results:not(.trailer-active) .hero-trailer-close{
+  display:flex !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  z-index:95 !important;
+}
+
+@media(max-width:760px){
+  body.trailer-active .player-close,
+  .player-overlay.active .player-close,
+  .player-overlay.loading .player-close{
+    top:12px !important;
+    right:12px !important;
+  }
+
+  body.trailer-active .player-prev,
+  .player-overlay.active .player-prev,
+  .player-overlay.loading .player-prev{
+    left:10px !important;
+  }
+
+  body.trailer-active .player-next,
+  .player-overlay.active .player-next,
+  .player-overlay.loading .player-next{
+    right:10px !important;
+  }
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -5751,7 +5846,7 @@ function showFullscreenTrailerShell(){
     summon.textContent=q.length>180?q.slice(0,177).trimEnd()+'…':q;
   }
   if(player)player.style.display='block';
-  player?.classList.add('loading');
+  player?.classList.add('loading','controls-visible');
   player?.setAttribute('aria-hidden','false');
   document.body.classList.add('trailer-active');
 }
@@ -5790,7 +5885,7 @@ async function openTrailer({auto=false,fullscreen=false}={}){
         summon.textContent=q.length>180?q.slice(0,177).trimEnd()+'…':q;
       }
       if(player)player.style.display='block';
-      player?.classList.add('active');
+      player?.classList.add('active','controls-visible');
       player?.classList.remove('loading');
       player?.setAttribute('aria-hidden','false');
       document.body.classList.add('trailer-active');
