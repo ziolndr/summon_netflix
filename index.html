@@ -5157,11 +5157,13 @@ body.has-results:not(.trailer-active) .hero:has(.hero-trailer.active) .hero-play
 
       <div class="search-hint" id="modeHint">Enter searches. Shift+Enter adds a line.</div>
 
-      <div class="depth-bar corpus-mode" role="status" aria-label="Search mode">
-        <button type="button" class="depth-btn active" disabled>full film field</button>
+      <div class="depth-bar" role="group" aria-label="Search depth">
+        <button type="button" class="depth-btn" data-depth="surface">surface</button>
+        <button type="button" class="depth-btn" data-depth="field">field</button>
+        <button type="button" class="depth-btn active" data-depth="archive">archive</button>
       </div>
 
-      <div class="corpus-status" id="corpusStatus">loading · full film field</div>
+      <div class="corpus-status" id="corpusStatus">loading · archive depth</div>
       <div class="corpus-track"><span id="corpusBar" style="width:100%"></span></div>
       <div class="station-footer">
         <span>© 2026 Actual General Intelligence Inc.</span>
@@ -5296,12 +5298,22 @@ const NETFLIX_PROVIDER=8;
 const NETFLIX_PROVIDER_EXTRA_IDS=['1796'];
 const RETURN_COUNT=10;
 const TMDB_MAX_DISCOVER_PAGE=500;
-const CORPUS_LABEL='full film field';
+
+// Depth changes only the size of the film field sent to ARBITER.
+// No Algolia, no third-party search ranking, no batched scoring.
+const DEPTHS={
+  surface:{limit:250,label:'surface'},
+  field:{limit:900,label:'field'},
+  archive:{limit:Infinity,label:'archive'}
+};
+const DEFAULT_DEPTH='archive';
+const CORPUS_LABEL='film field';
 
 // ════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════
 let cache=null, results=[], active=0, currentQuery='';
+let searchDepth=DEFAULT_DEPTH;
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -5316,6 +5328,28 @@ function poster(m,size='w500'){return img(m?.posterPath,size)}
 function backdrop(m,size='w1280'){return img(m?.backdropPath||m?.posterPath,size)}
 function candidate(m){return `${m.title}. ${(m.genres||[]).join(', ')}. ${m.overview?.substring(0,360)||''}`}
 
+function getDepthConfig(){return DEPTHS[searchDepth]||DEPTHS[DEFAULT_DEPTH]}
+function getDepthLimit(total=Infinity){
+  const limit=getDepthConfig().limit;
+  return Number.isFinite(limit)?Math.min(limit,total):total;
+}
+function getDepthLabel(){return getDepthConfig().label||searchDepth}
+function depthCandidateCount(corpus){return getDepthLimit(corpus?.candidates?.length||0)}
+function depthCandidates(corpus){
+  const limit=depthCandidateCount(corpus);
+  const out=[];
+  for(let i=0;i<limit;i++)out.push(corpus.candidates[i]);
+  return out;
+}
+function depthStatus(prefix='ready'){
+  if(!cache){
+    const cfg=getDepthConfig();
+    const n=Number.isFinite(cfg.limit)?cfg.limit:'full';
+    return `${prefix} · ${n} films · ${getDepthLabel()} depth`;
+  }
+  return `${prefix} · ${depthCandidateCount(cache)} films · ${getDepthLabel()} depth`;
+}
+
 function setStatus(t){const el=$('#corpusStatus');if(el)el.textContent=t}
 function toast(t){
   const el=document.createElement('div');
@@ -5328,8 +5362,8 @@ function toast(t){
 // ════════════════════════════════════════
 // TMDB / NETFLIX FILM CORPUS FETCH
 // Catalog loading is only metadata collection. It is not ranking/search.
-// Ranking happens exactly once in search(): one user query against the full
-// in-memory candidate field through ARBITER.
+// Ranking happens exactly once in search(): one user query against the
+// selected in-memory film field through ARBITER.
 // ════════════════════════════════════════
 let genreMapPromise=null;
 async function getGenreMaps(){
@@ -5427,7 +5461,7 @@ async function loadCorpus(){
   const map=new Map();
   candidates.forEach((c,i)=>map.set(c,movies[i]));
   cache={movies,candidates,map};
-  setStatus(`ready · ${movies.length} films · full field`);
+  setStatus(depthStatus('ready'));
   renderWall(movies);
   return cache;
 }
@@ -5711,20 +5745,23 @@ async function search(text){
       const stage=$('#processingStage');
       if(stage)stage.textContent='forming';
       corpus=await loadCorpus();
-      $('#processingMeta').textContent=`${corpus.movies.length} candidates · full film field`; 
+      $('#processingMeta').textContent=`${depthCandidateCount(corpus)} candidates · ${getDepthLabel()} depth`; 
     }catch(e){
       console.error('corpus load failed',e);
       toast('Netflix field failed to load — reload');
       return;
     }
 
+    const measuredCandidates=depthCandidates(corpus);
+
     let data;
     try{
       const stage=$('#processingStage');
       if(stage)stage.textContent='measuring';
+      if(!measuredCandidates.length)throw new Error('empty selected film field');
       data=await fetchArbiterJson({
         query:q,
-        candidates:corpus.candidates,
+        candidates:measuredCandidates,
         use_freq:true,
         top_k:RETURN_COUNT
       },2);
@@ -6093,6 +6130,21 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeTrailer();
 });
 
+// Depth toggle
+function setSearchDepth(depth,{rerun=false}={}){
+  if(!DEPTHS[depth])return;
+  searchDepth=depth;
+  $$('.depth-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.depth===depth));
+  setStatus(depthStatus(cache?'ready':'loading'));
+  const bar=$('#corpusBar');
+  if(bar)bar.style.width=cache?'100%':'30%';
+  if(rerun && currentQuery)search(currentQuery);
+}
+
+$$('.depth-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>setSearchDepth(btn.dataset.depth));
+});
+
 // Voice
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
@@ -6288,11 +6340,12 @@ function stopPlaceholderTypewriter(){
 // ════════════════════════════════════════
 (async function init(){
   try{
-    $('#corpusStatus').textContent='loading · full film field';
+    $('#corpusStatus').textContent=depthStatus('loading');
     $('#corpusStatus').classList.add('processing');
     $('#corpusBar').style.width='20%';
+    setSearchDepth(searchDepth);
     await loadCorpus();
-    $('#corpusStatus').textContent=`ready · ${cache?.movies?.length||0} films · full field`; 
+    $('#corpusStatus').textContent=depthStatus('ready'); 
     $('#corpusStatus').classList.remove('processing');
     $('#corpusBar').style.width='100%';
 
