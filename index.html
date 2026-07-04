@@ -5094,270 +5094,6 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
   }
 }
 
-
-/* REMOVE NATIVE TRAILER TOOLTIP:
-   the gray "Trailer" pill was the iframe title tooltip on hover. */
-#heroTrailerFrame,
-#playerFrame{
-  pointer-events:auto !important;
-}
-
-
-/* VOICE DROP + TRAILER WARMING LOOP: speech auto-submits, trailers prewarm, fullscreen exits into inline playback. */
-
-/* SQUID TRANSPORT PASS:
-   no title-flip waiting room; the measurement feels like a signal transport into the trailer. */
-body.searching .processing-ambient{
-  display:none !important;
-  opacity:0 !important;
-}
-
-body.searching:not(.processing-locked) .processing-layer{
-  opacity:0 !important;
-}
-
-body.searching .processing-cinema::after{
-  content:'';
-  position:absolute;
-  inset:-18%;
-  z-index:4;
-  pointer-events:none;
-  opacity:.72;
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(229,9,20,.20) 0%, rgba(229,9,20,.07) 18%, transparent 42%),
-    conic-gradient(from 90deg at 50% 50%, transparent 0deg, rgba(229,9,20,.20) 68deg, transparent 118deg, rgba(255,255,255,.10) 180deg, transparent 236deg, rgba(229,9,20,.16) 296deg, transparent 360deg);
-  filter:blur(18px) saturate(1.2);
-  mix-blend-mode:screen;
-  animation:squidTransportVortex 4.8s cubic-bezier(.2,.8,.2,1) infinite;
-}
-
-body.searching .processing-backdrop::after{
-  opacity:.30 !important;
-  background:
-    repeating-linear-gradient(90deg, rgba(229,9,20,.22) 0 1px, transparent 1px 22px),
-    repeating-linear-gradient(180deg, rgba(246,241,232,.10) 0 1px, transparent 1px 18px),
-    radial-gradient(circle at 50% 50%, transparent 0 28%, rgba(229,9,20,.12) 29% 30%, transparent 31% 100%) !important;
-  transform:perspective(700px) rotateX(62deg) scale(1.4) translateY(8%);
-  transform-origin:center;
-  animation:squidGridRush 1.9s linear infinite !important;
-  mix-blend-mode:screen !important;
-}
-
-body.processing-locked .processing-cinema::after{
-  opacity:.46;
-  animation:squidTransportLock .92s cubic-bezier(.16,1,.3,1) forwards !important;
-}
-
-@keyframes squidTransportVortex{
-  0%{transform:scale(.94) rotate(0deg); opacity:.52}
-  38%{opacity:.80}
-  100%{transform:scale(1.12) rotate(28deg); opacity:.58}
-}
-
-@keyframes squidGridRush{
-  0%{background-position:0 0,0 0,50% 50%; opacity:.22}
-  100%{background-position:88px 0,0 72px,50% 50%; opacity:.36}
-}
-
-@keyframes squidTransportLock{
-  0%{transform:scale(1) rotate(0deg); filter:blur(18px); opacity:.62}
-  100%{transform:scale(1.34) rotate(18deg); filter:blur(32px); opacity:0}
-}
-
-/* Keep the user summon present, but make the transport feel like motion, not a loading screen. */
-body.searching .processing-query-wrap.processing-query-center{
-  transform:translate(-50%,-50%) scale(.98) !important;
-  transition:opacity .55s ease, transform .55s ease;
-}
-
-body.processing-locked .processing-query-wrap.processing-query-center{
-  opacity:.20 !important;
-  transform:translate(-50%,-50%) scale(.94) !important;
-}
-
-/* Trailer can be mounted/buffering under the transport flash without exposing a dead gap. */
-body.transport-priming .player-overlay{
-  display:block !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-  transform:scale(1.018) !important;
-}
-
-body.transport-live .player-overlay{
-  animation:transportTrailerIn .24s cubic-bezier(.16,1,.3,1) both;
-}
-
-@keyframes transportTrailerIn{
-  0%{opacity:0; filter:brightness(1.7) contrast(1.25) blur(5px); transform:scale(1.018)}
-  100%{opacity:1; filter:brightness(1) contrast(1) blur(0); transform:scale(1)}
-}
-
-/* Decompression exit keeps the fullscreen player alive while the inline hero iframe mounts underneath. */
-body.decompressing .player-overlay{
-  display:block !important;
-  pointer-events:none !important;
-  animation:decompressPlayerOut .42s cubic-bezier(.16,1,.3,1) forwards !important;
-}
-
-body.decompressing .hero-trailer.active{
-  display:block !important;
-  z-index:20 !important;
-}
-
-@keyframes decompressPlayerOut{
-  0%{opacity:1; transform:scale(1); filter:brightness(1)}
-  42%{opacity:.92; transform:scale(.992); filter:brightness(1.35) contrast(1.08)}
-  100%{opacity:0; transform:scale(.985); filter:brightness(.65) blur(6px)}
-}
-
-
-/* ZERO VISIBLE TRAILER LAUNCH:
-   the YouTube iframe is armed under a black transport mask.
-   User never sees the player "click"/play-state handoff. */
-body.trailer-arming .player-overlay iframe,
-body.transport-priming .player-overlay iframe{
-  opacity:0 !important;
-}
-
-body.trailer-arming .player-close,
-body.trailer-arming .player-nav,
-body.trailer-arming .player-summon{
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-
-body.trailer-arming .player-overlay::after,
-body.transport-priming .player-overlay::after{
-  content:'';
-  position:fixed;
-  inset:0;
-  z-index:5022;
-  pointer-events:none;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(229,9,20,.18) 0%, rgba(229,9,20,.06) 21%, rgba(0,0,0,.94) 66%),
-    linear-gradient(180deg, rgba(0,0,0,.96), rgba(0,0,0,.86));
-  filter:saturate(1.15);
-}
-
-body.trailer-arming .player-overlay::before,
-body.transport-priming .player-overlay::before{
-  content:'';
-  position:fixed;
-  inset:-8%;
-  z-index:5023;
-  pointer-events:none;
-  opacity:.42;
-  background:
-    repeating-linear-gradient(90deg, rgba(229,9,20,.20) 0 1px, transparent 1px 26px),
-    repeating-linear-gradient(180deg, rgba(246,241,232,.08) 0 1px, transparent 1px 22px);
-  transform:perspective(760px) rotateX(62deg) scale(1.34);
-  transform-origin:center;
-  animation:squidArmatureRush .9s linear infinite;
-  mix-blend-mode:screen;
-}
-
-@keyframes squidArmatureRush{
-  0%{background-position:0 0,0 0; opacity:.24}
-  100%{background-position:78px 0,0 64px; opacity:.44}
-}
-
-body.transport-live .player-overlay iframe{
-  animation:trailerIframeMaterialize .34s cubic-bezier(.16,1,.3,1) both;
-}
-
-@keyframes trailerIframeMaterialize{
-  0%{opacity:0; filter:brightness(1.8) blur(8px); transform:scale(1.018)}
-  55%{opacity:1; filter:brightness(1.22) blur(2px); transform:scale(1.006)}
-  100%{opacity:1; filter:brightness(1) blur(0); transform:scale(1)}
-}
-
-
-/* HARD MASK THE YOUTUBE STARTUP:
-   iframe load is not playback. Keep the jack-in mask up while we pump play commands,
-   so the browser/Youtube click/play transition is never exposed. */
-body.transport-priming.trailer-arming .player-overlay,
-body.trailer-arming .player-overlay{
-  display:block !important;
-  opacity:1 !important;
-  pointer-events:none !important;
-  background:#000 !important;
-}
-
-body.trailer-arming .player-overlay iframe{
-  opacity:0 !important;
-  visibility:hidden !important;
-  pointer-events:none !important;
-}
-
-body.trailer-arming,
-body.trailer-arming *{
-  cursor:none !important;
-}
-
-body.trailer-arming .player-overlay::after{
-  content:'' !important;
-  position:fixed !important;
-  inset:0 !important;
-  z-index:20000 !important;
-  pointer-events:none !important;
-  opacity:1 !important;
-  background:
-    radial-gradient(circle at 50% 52%, rgba(229,9,20,.20) 0%, rgba(229,9,20,.08) 18%, rgba(0,0,0,.68) 42%, #000 74%),
-    linear-gradient(180deg, #000 0%, rgba(0,0,0,.86) 48%, #000 100%) !important;
-  filter:none !important;
-}
-
-body.trailer-arming .player-overlay::before{
-  content:'' !important;
-  position:fixed !important;
-  inset:-12% !important;
-  z-index:20001 !important;
-  pointer-events:none !important;
-  opacity:.55 !important;
-  background:
-    repeating-linear-gradient(90deg, rgba(229,9,20,.26) 0 1px, transparent 1px 24px),
-    repeating-linear-gradient(180deg, rgba(246,241,232,.10) 0 1px, transparent 1px 20px),
-    radial-gradient(circle at 50% 50%, transparent 0 24%, rgba(229,9,20,.16) 25% 26%, transparent 27% 100%) !important;
-  transform:perspective(780px) rotateX(62deg) scale(1.42) translateY(6%) !important;
-  transform-origin:center !important;
-  animation:squidNoClickArmature .72s linear infinite !important;
-  mix-blend-mode:screen !important;
-}
-
-@keyframes squidNoClickArmature{
-  0%{background-position:0 0,0 0,50% 50%; opacity:.38}
-  100%{background-position:96px 0,0 78px,50% 50%; opacity:.58}
-}
-
-body.trailer-arming .player-close,
-body.trailer-arming .player-nav,
-body.trailer-arming .player-summon{
-  opacity:0 !important;
-  visibility:hidden !important;
-  pointer-events:none !important;
-}
-
-body.transport-live .player-overlay iframe{
-  visibility:visible !important;
-  animation:trailerNoClickReveal .42s cubic-bezier(.16,1,.3,1) both !important;
-}
-
-@keyframes trailerNoClickReveal{
-  0%{opacity:0; filter:brightness(1.8) contrast(1.25) blur(10px); transform:scale(1.024)}
-  55%{opacity:1; filter:brightness(1.22) contrast(1.08) blur(3px); transform:scale(1.008)}
-  100%{opacity:1; filter:brightness(1) contrast(1) blur(0); transform:scale(1)}
-}
-
-
-/* FAST FULLSCREEN SURF RESTORE:
-   arrowing to next/previous trailer swaps immediately again.
-   No transport mask, no interstitial background image, no artificial wait. */
-.player-overlay.active:not(.loading) iframe{
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-}
-
 </style>
 <base target="_blank">
 </head>
@@ -5463,7 +5199,7 @@ body.transport-live .player-overlay iframe{
       <button type="button" class="hero-nav hero-nav-next" id="nextResult" aria-label="Next">→</button>
       <div class="hero-trailer" id="heroTrailer">
         <button type="button" class="hero-trailer-close" id="heroTrailerClose">×</button>
-        <iframe id="heroTrailerFrame" aria-label="Trailer video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="heroTrailerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
   </div>
@@ -5522,7 +5258,7 @@ body.transport-live .player-overlay iframe{
 
 
 <div class="player-overlay" id="playerOverlay" aria-hidden="true">
-  <iframe id="playerFrame" aria-label="Trailer video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  <iframe id="playerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   <div class="player-summon" id="playerSummon" aria-live="polite"></div>
   <button type="button" class="player-close" id="playerClose" aria-label="Close trailer">×</button>
   <button type="button" class="player-nav player-prev" id="playerPrev" aria-label="Previous result">←</button>
@@ -5809,9 +5545,7 @@ function processingLayer(){
 function clearProcessingImage(){
   const a=$('#processingLayerA');
   const b=$('#processingLayerB');
-  const aa=$('#processingAmbientA');
-  const ab=$('#processingAmbientB');
-  [a,b,aa,ab].forEach(el=>{
+  [a,b].forEach(el=>{
     if(!el)return;
     el.removeAttribute('src');
     el.classList.remove('visible','sharp');
@@ -5841,8 +5575,8 @@ function startProcessing(q){
   clearProcessingImage();
   stopAmbientRotation();
   $('#processingQuery').textContent=q;
-  $('#processingMeta').textContent='routing signal';
-  // SQUID mode: no title/poster roulette while measuring.
+  $('#processingMeta').textContent=`${DEPTHS[searchDepth]?.film||900} candidates · ${searchDepth} depth`;
+  startAmbientRotation();
   startProgressSimulation();
 }
 
@@ -6007,18 +5741,12 @@ async function search(text){
         return;
       }
 
+      await settleProcessingWithResult(results[0]);
+      renderResults({autoplayFullscreen:true});
       document.body.classList.add('has-results');
       document.documentElement.classList.add('has-results-page');
       syncScrollMode();
-      renderResults({autoplayFullscreen:false});
       requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
-
-      const firstTrailerPrime=primeFullscreenTrailerFor(results[0]).catch(()=>false);
-      await settleProcessingWithResult(results[0]);
-      const primed=await firstTrailerPrime;
-      if(primed)releaseTransportTrailer();
-      else openTrailer({auto:true,fullscreen:true});
-
       history.replaceState(null,'',`#${encodeURIComponent(q)}`);
     }catch(e){
       console.error('result render failed',e);
@@ -6065,11 +5793,7 @@ async function fetchTrailer(m){
   }catch(e){return null}
 }
 
-function trailerUrl(v){
-  if(!v?.key)return '';
-  const origin=encodeURIComponent(location.origin||'null');
-  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.key)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${origin}&iv_load_policy=3&fs=1`;
-}
+function trailerUrl(v){return v?.key?`https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.key)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`:''}
 
 let trailerRequestId=0;
 let autoplayTimer=null;
@@ -6092,7 +5816,7 @@ function closeTrailer(){
   if(player)player.style.display='none';
   player?.setAttribute('aria-hidden','true');
 
-  document.body.classList.remove('trailer-active','transport-priming','transport-live','trailer-arming','decompressing');
+  document.body.classList.remove('trailer-active');
 }
 
 function closeInlineTrailer(){
@@ -6111,7 +5835,7 @@ function closeFullscreenTrailer(){
   player?.classList.remove('active','loading','controls-visible');
   if(player)player.style.display='none';
   player?.setAttribute('aria-hidden','true');
-  document.body.classList.remove('trailer-active','transport-priming','transport-live','trailer-arming','decompressing');
+  document.body.classList.remove('trailer-active');
 }
 
 function showFullscreenTrailerShell(){
@@ -6124,105 +5848,10 @@ function showFullscreenTrailerShell(){
   if(player)player.style.display='block';
   player?.classList.add('loading','controls-visible');
   player?.setAttribute('aria-hidden','false');
-  document.body.classList.add('trailer-active','trailer-arming');
+  document.body.classList.add('trailer-active');
 }
 
-function youtubeCommand(frame,func,args=[]){
-  try{
-    frame?.contentWindow?.postMessage(JSON.stringify({event:'command',func,args}), '*');
-  }catch(e){}
-}
-
-function armYoutubePlayback(frame,minMs=2800,maxMs=4300){
-  return new Promise(resolve=>{
-    const start=performance.now();
-    let done=false;
-    let loaded=false;
-
-    const pump=()=>{
-      youtubeCommand(frame,'playVideo');
-      youtubeCommand(frame,'unMute');
-    };
-
-    const pumpTimer=setInterval(pump,140);
-
-    const finish=()=>{
-      if(done)return;
-      done=true;
-      clearInterval(pumpTimer);
-      pump();
-      const elapsed=performance.now()-start;
-      const remaining=Math.max(0,minMs-elapsed);
-      setTimeout(()=>{
-        pump();
-        resolve();
-      },remaining);
-    };
-
-    const maxTimer=setTimeout(finish,maxMs);
-
-    if(frame){
-      frame.addEventListener('load',()=>{
-        loaded=true;
-        pump();
-        // iframe load is not playback; hold the mask past load to cover YouTube's visible startup click.
-        setTimeout(()=>{
-          clearTimeout(maxTimer);
-          finish();
-        },1350);
-      },{once:true});
-    }
-
-    setTimeout(pump,80);
-    setTimeout(pump,320);
-    setTimeout(pump,760);
-  });
-}
-
-async function primeFullscreenTrailerFor(movie){
-  if(!movie?.tmdbId)return false;
-  const requestId=++trailerRequestId;
-  document.body.classList.add('transport-priming','trailer-arming');
-  showFullscreenTrailerShell();
-
-  const video=await fetchTrailer(movie);
-  if(requestId!==trailerRequestId)return false;
-  if(!video){
-    document.body.classList.remove('transport-priming','trailer-arming');
-    closeFullscreenTrailer();
-    return false;
-  }
-
-  const frame=$('#playerFrame');
-  const player=$('#playerOverlay');
-  const url=trailerUrl(video);
-  if(frame && frame.src!==url)frame.src=url;
-  player?.classList.add('active','controls-visible');
-  player?.classList.remove('loading');
-  player?.setAttribute('aria-hidden','false');
-  document.body.classList.add('trailer-active','trailer-arming');
-
-  await armYoutubePlayback(frame,3000,4800);
-  if(requestId!==trailerRequestId)return false;
-  return true;
-}
-
-function releaseTransportTrailer(){
-  const player=$('#playerOverlay');
-  const frame=$('#playerFrame');
-  youtubeCommand(frame,'playVideo');
-  youtubeCommand(frame,'unMute');
-  document.body.classList.remove('transport-priming','trailer-arming');
-  if(player?.classList.contains('active')){
-    document.body.classList.add('transport-live');
-    setTimeout(()=>{
-      youtubeCommand(frame,'playVideo');
-      document.body.classList.remove('transport-live');
-    },900);
-  }
-}
-
-async function openTrailer({auto=false,fullscreen=false,fast=false}={}){
+async function openTrailer({auto=false,fullscreen=false}={}){
   const m=results[active];
   if(!m?.tmdbId)return;
 
@@ -6249,35 +5878,17 @@ async function openTrailer({auto=false,fullscreen=false,fast=false}={}){
     if(useFullscreen){
       closeInlineTrailer();
       const frame=$('#playerFrame');
-      const url=trailerUrl(video);
+      if(frame)frame.src=trailerUrl(video);
       const summon=$('#playerSummon');
       if(summon){
         const q=(currentQuery||$('#resultQuery')?.value||$('#query')?.value||'').trim();
         summon.textContent=q.length>180?q.slice(0,177).trimEnd()+'…':q;
       }
-
-      if(fast){
-        // Fullscreen arrow surfing: no SQUID mask, no delay, no interstitial image.
-        document.body.classList.remove('transport-priming','trailer-arming','transport-live');
-        if(player)player.style.display='block';
-        if(frame && frame.src!==url)frame.src=url;
-        player?.classList.add('active','controls-visible');
-        player?.classList.remove('loading');
-        player?.setAttribute('aria-hidden','false');
-        document.body.classList.add('trailer-active');
-      }else{
-        showFullscreenTrailerShell();
-        if(frame && frame.src!==url)frame.src=url;
-        if(player)player.style.display='block';
-        player?.classList.add('active','controls-visible');
-        player?.setAttribute('aria-hidden','false');
-        document.body.classList.add('trailer-active','trailer-arming');
-        await armYoutubePlayback(frame,1900,3400);
-        document.body.classList.remove('trailer-arming');
-        player?.classList.remove('loading');
-        document.body.classList.add('transport-live');
-        setTimeout(()=>document.body.classList.remove('transport-live'),520);
-      }
+      if(player)player.style.display='block';
+      player?.classList.add('active','controls-visible');
+      player?.classList.remove('loading');
+      player?.setAttribute('aria-hidden','false');
+      document.body.classList.add('trailer-active');
     }else{
       closeFullscreenTrailer();
       const frame=$('#heroTrailerFrame');
@@ -6304,18 +5915,15 @@ function scheduleAutoplayTrailer(){
 
   showFullscreenTrailerShell();
   autoplayTimer=setTimeout(()=>{
-    primeFullscreenTrailerFor(m)
-      .then(ok=>{ if(ok)releaseTransportTrailer(); else openTrailer({auto:true,fullscreen:true}); })
-      .catch(()=>openTrailer({auto:true,fullscreen:true}));
+    openTrailer({auto:true,fullscreen:true});
   },10);
 }
 
-function renderResults({autoplayFullscreen=false,preserveFullscreen=false}={}){
-  if(preserveFullscreen)closeInlineTrailer();
-  else closeTrailer();
+function renderResults({autoplayFullscreen=false}={}){
+  closeTrailer();
   const m=results[active];
   if(!m)return;
-  if(autoplayFullscreen && !preserveFullscreen)showFullscreenTrailerShell();
+  if(autoplayFullscreen)showFullscreenTrailerShell();
   requestAnimationFrame(()=>autoResize($('#resultQuery')));
 
   // Hero image
@@ -6367,13 +5975,8 @@ function renderResults({autoplayFullscreen=false,preserveFullscreen=false}={}){
   // Grid
   renderRankGrid();
 
-  if(results.length>1){
-    fetchTrailer(results[(active+1)%results.length]).catch(()=>{});
-    fetchTrailer(results[(active-1+results.length)%results.length]).catch(()=>{});
-  }
-
   // Squid mode: the reveal drops directly into the trailer.
-  if(autoplayFullscreen && !preserveFullscreen)scheduleAutoplayTrailer();
+  if(autoplayFullscreen)scheduleAutoplayTrailer();
 }
 
 function renderRankGrid(){
@@ -6403,12 +6006,7 @@ function renderRankGrid(){
 function goToResult(d,{fullscreen=false}={}){
   if(!results.length)return;
   active=(active+d+results.length)%results.length;
-  if(fullscreen){
-    renderResults({autoplayFullscreen:false,preserveFullscreen:true});
-    openTrailer({auto:true,fullscreen:true,fast:true});
-    return;
-  }
-  renderResults();
+  renderResults({autoplayFullscreen:fullscreen});
 }
 
 
@@ -6452,31 +6050,7 @@ $('#newSearch').addEventListener('click',()=>{
 $('#prevResult').addEventListener('click',()=>goToResult(-1));
 $('#nextResult').addEventListener('click',()=>goToResult(1));
 $('#heroTrailerClose').addEventListener('click',closeInlineTrailer);
-function exitToBrowse(){
-  const playerFrame=$('#playerFrame');
-  const heroFrame=$('#heroTrailerFrame');
-  const heroWrap=$('#heroTrailer');
-  const src=playerFrame?.src||'';
-
-  if(src&&heroFrame&&heroWrap){
-    heroFrame.src=src;
-    heroWrap.classList.add('active');
-  }
-
-  document.body.classList.add('decompressing');
-  window.scrollTo({top:0,behavior:'smooth'});
-
-  setTimeout(()=>{
-    closeFullscreenTrailer();
-    document.body.classList.remove('decompressing');
-    if(src&&heroFrame&&heroWrap){
-      heroFrame.src=src;
-      heroWrap.classList.add('active');
-    }
-    window.scrollTo({top:0,behavior:'auto'});
-  },420);
-}
-$('#playerClose')?.addEventListener('click',exitToBrowse);
+$('#playerClose')?.addEventListener('click',closeFullscreenTrailer);
 $('#playerPrev')?.addEventListener('click',()=>goToResult(-1,{fullscreen:true}));
 $('#playerNext')?.addEventListener('click',()=>goToResult(1,{fullscreen:true}));
 
@@ -6493,13 +6067,9 @@ $('#playerOverlay')?.addEventListener('touchstart',showPlayerControls,{passive:t
 
 document.addEventListener('keydown',e=>{
   if(!results.length)return;
-  const inFullscreen=document.body.classList.contains('trailer-active');
-  if(e.key==='ArrowRight')goToResult(1,{fullscreen:inFullscreen});
-  if(e.key==='ArrowLeft')goToResult(-1,{fullscreen:inFullscreen});
-  if(e.key==='Escape'){
-    if(inFullscreen)exitToBrowse();
-    else closeTrailer();
-  }
+  if(e.key==='ArrowRight')goToResult(1);
+  if(e.key==='ArrowLeft')goToResult(-1);
+  if(e.key==='Escape')closeTrailer();
 });
 
 // Depth toggle
@@ -6523,7 +6093,7 @@ $$('.depth-btn').forEach(btn=>{
 // Voice
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
-function bindVoiceButton(buttonSelector,targetSelector,label='Speak search',submitFn=null){
+function bindVoiceButton(buttonSelector,targetSelector,label='Speak search'){
   const btn=$(buttonSelector);
   const target=$(targetSelector);
   if(!btn||!target)return;
@@ -6560,7 +6130,6 @@ function bindVoiceButton(buttonSelector,targetSelector,label='Speak search',subm
     rec.onend=()=>{
       btn.classList.remove('listening');
       btn.setAttribute('aria-label',label);
-      if(submitFn && final.trim())submitFn();
     };
 
     rec.onerror=()=>{
@@ -6573,8 +6142,8 @@ function bindVoiceButton(buttonSelector,targetSelector,label='Speak search',subm
   });
 }
 
-bindVoiceButton('#voiceBtn','#query','Speak search',submitMainSearch);
-bindVoiceButton('#resultVoiceBtn','#resultQuery','Speak summon',submitResultSearch);
+bindVoiceButton('#voiceBtn','#query','Speak search');
+bindVoiceButton('#resultVoiceBtn','#resultQuery','Speak summon');
 
 
 // Auto-resize textareas
