@@ -5649,8 +5649,6 @@ function matchRowToMovie(row,corpus){
 async function fetchArbiterJson(payload,attempts=2){
   let last;
   for(let i=0;i<attempts;i++){
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),90000);
     try{
       const res=await fetch(ARBITER_URL,{
         method:'POST',
@@ -5659,8 +5657,7 @@ async function fetchArbiterJson(payload,attempts=2){
           'Accept':'application/json',
           'ngrok-skip-browser-warning':'true'
         },
-        body:JSON.stringify(payload),
-        signal:controller.signal
+        body:JSON.stringify(payload)
       });
       const raw=await res.text();
       if(!res.ok)throw new Error(`arbiter ${res.status}: ${raw.slice(0,180)}`);
@@ -5669,8 +5666,6 @@ async function fetchArbiterJson(payload,attempts=2){
     }catch(e){
       last=e;
       if(i<attempts-1)await new Promise(r=>setTimeout(r,850));
-    }finally{
-      clearTimeout(timer);
     }
   }
   throw last;
