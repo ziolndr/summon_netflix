@@ -5094,6 +5094,28 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
   }
 }
 
+
+/* TRAILER TOOLTIP CLEANUP:
+   Removing iframe title text prevents the browser from showing a floating
+   “Trailer” tooltip/tag over the playing video. Also hide the play CTA once
+   the inline hero trailer is active. */
+#heroTrailerFrame,
+#playerFrame{
+  display:block !important;
+}
+
+#heroTrailerFrame[title],
+#playerFrame[title]{
+  pointer-events:auto !important;
+}
+
+body.has-results:not(.trailer-active) .hero:has(.hero-trailer.active) .hero-play-btn{
+  display:none !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -5199,7 +5221,7 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
       <button type="button" class="hero-nav hero-nav-next" id="nextResult" aria-label="Next">→</button>
       <div class="hero-trailer" id="heroTrailer">
         <button type="button" class="hero-trailer-close" id="heroTrailerClose">×</button>
-        <iframe id="heroTrailerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="heroTrailerFrame" aria-label="Trailer video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
   </div>
@@ -5258,7 +5280,7 @@ body.has-results:not(.trailer-active) .hero-trailer-close{
 
 
 <div class="player-overlay" id="playerOverlay" aria-hidden="true">
-  <iframe id="playerFrame" title="Trailer" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  <iframe id="playerFrame" aria-label="Trailer video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   <div class="player-summon" id="playerSummon" aria-live="polite"></div>
   <button type="button" class="player-close" id="playerClose" aria-label="Close trailer">×</button>
   <button type="button" class="player-nav player-prev" id="playerPrev" aria-label="Previous result">←</button>
@@ -5788,6 +5810,13 @@ async function fetchTrailer(m){
   }catch(e){return null}
 }
 
+
+function cleanTrailerFrameLabel(frame,m){
+  if(!frame)return;
+  frame.removeAttribute('title');
+  frame.setAttribute('aria-label',`${m?.title||'Selected title'} trailer video`);
+}
+
 function trailerUrl(v){return v?.key?`https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.key)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`:''}
 
 let trailerRequestId=0;
@@ -5873,6 +5902,7 @@ async function openTrailer({auto=false,fullscreen=false}={}){
     if(useFullscreen){
       closeInlineTrailer();
       const frame=$('#playerFrame');
+      cleanTrailerFrameLabel(frame,m);
       if(frame)frame.src=trailerUrl(video);
       const summon=$('#playerSummon');
       if(summon){
@@ -5887,6 +5917,7 @@ async function openTrailer({auto=false,fullscreen=false}={}){
     }else{
       closeFullscreenTrailer();
       const frame=$('#heroTrailerFrame');
+      cleanTrailerFrameLabel(frame,m);
       if(frame)frame.src=trailerUrl(video);
       heroWrap?.classList.add('active');
       heroWrap?.classList.remove('loading');
