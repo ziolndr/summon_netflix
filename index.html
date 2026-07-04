@@ -5157,13 +5157,11 @@ body.has-results:not(.trailer-active) .hero:has(.hero-trailer.active) .hero-play
 
       <div class="search-hint" id="modeHint">Enter searches. Shift+Enter adds a line.</div>
 
-      <div class="depth-bar" role="group" aria-label="Search depth">
-        <button type="button" class="depth-btn active" data-depth="surface">surface</button>
-        <button type="button" class="depth-btn" data-depth="field">field</button>
-        <button type="button" class="depth-btn" data-depth="archive">archive</button>
+      <div class="depth-bar corpus-mode" role="status" aria-label="Search mode">
+        <button type="button" class="depth-btn active" disabled>full film field</button>
       </div>
 
-      <div class="corpus-status" id="corpusStatus">loading · 250 titles</div>
+      <div class="corpus-status" id="corpusStatus">loading · full film field</div>
       <div class="corpus-track"><span id="corpusBar" style="width:100%"></span></div>
       <div class="station-footer">
         <span>© 2026 Actual General Intelligence Inc.</span>
@@ -5291,29 +5289,19 @@ body.has-results:not(.trailer-active) .hero:has(.hero-trailer.active) .hero-play
 // ════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════
-const ALGOLIA_APP_ID='C3XKD4DFTX';
-const ALGOLIA_API_KEY='af8f49e765acc850e83ae75c64303cf3';
-const ALGOLIA_INDEX='algolia_movie_sample_dataset';
-const ALGOLIA_URL=`https://${ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/${ALGOLIA_INDEX}/query`;
 const IMG='https://image.tmdb.org/t/p/';
 const TMDB_KEY='1616a31a4f3bbcb387e74cbe0ae3c7b6';
 const TMDB_BASE='https://api.themoviedb.org/3';
 const NETFLIX_PROVIDER=8;
 const NETFLIX_PROVIDER_EXTRA_IDS=['1796'];
 const RETURN_COUNT=10;
-
-const DEPTHS={
-  surface:{film:250,label:'surface'},
-  field:{film:900,label:'field'},
-  archive:{film:3200,label:'archive'}
-};
+const TMDB_MAX_DISCOVER_PAGE=500;
+const CORPUS_LABEL='full film field';
 
 // ════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════
 let cache=null, results=[], active=0, currentQuery='';
-let searchDepth='surface';
-let corpusPageOffset=0;
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -5338,83 +5326,93 @@ function toast(t){
 }
 
 // ════════════════════════════════════════
-// TMDB / NETFLIX FETCH
+// TMDB / NETFLIX FILM CORPUS FETCH
+// Catalog loading is only metadata collection. It is not ranking/search.
+// Ranking happens exactly once in search(): one user query against the full
+// in-memory candidate field through ARBITER.
 // ════════════════════════════════════════
 let genreMapPromise=null;
 async function getGenreMaps(){
   if(genreMapPromise)return genreMapPromise;
-  genreMapPromise=Promise.all([
-    fetch(`${TMDB_BASE}/genre/movie/list?api_key=${TMDB_KEY}&language=en-US`).then(r=>r.json()).catch(()=>({genres:[]})),
-    fetch(`${TMDB_BASE}/genre/tv/list?api_key=${TMDB_KEY}&language=en-US`).then(r=>r.json()).catch(()=>({genres:[]}))
-  ]).then(([m,t])=>{
-    const movie={},tv={};
-    (m.genres||[]).forEach(g=>movie[g.id]=g.name);
-    (t.genres||[]).forEach(g=>tv[g.id]=g.name);
-    return {movie,tv};
-  });
+  genreMapPromise=fetch(`${TMDB_BASE}/genre/movie/list?api_key=${TMDB_KEY}&language=en-US`)
+    .then(r=>r.json())
+    .catch(()=>({genres:[]}))
+    .then(data=>{
+      const movie={};
+      (data.genres||[]).forEach(g=>movie[g.id]=g.name);
+      return {movie};
+    });
   return genreMapPromise;
 }
 
-async function fetchTmdbPage(kind,page){
-  const path=kind==='tv'?'/discover/tv':'/discover/movie';
+async function fetchTmdbFilmPage(page){
   const params=new URLSearchParams({
-    api_key:TMDB_KEY,language:'en-US',sort_by:'popularity.desc',
-    page:String(Math.max(1,Math.min(500,page))),
-    with_watch_providers:[String(NETFLIX_PROVIDER),...NETFLIX_PROVIDER_EXTRA_IDS].filter(Boolean).join('|'),watch_region:'US',include_adult:'false'
+    api_key:TMDB_KEY,
+    language:'en-US',
+    sort_by:'popularity.desc',
+    page:String(Math.max(1,Math.min(TMDB_MAX_DISCOVER_PAGE,page))),
+    with_watch_providers:[String(NETFLIX_PROVIDER),...NETFLIX_PROVIDER_EXTRA_IDS].filter(Boolean).join('|'),
+    watch_region:'US',
+    include_adult:'false'
   });
-  const res=await fetch(`${TMDB_BASE}${path}?${params.toString()}`);
+  const res=await fetch(`${TMDB_BASE}/discover/movie?${params.toString()}`);
   if(!res.ok)throw new Error(`tmdb ${res.status}`);
   return res.json();
 }
 
-function tmdbToRecord(s,kind){
-  const title=String(s.title||s.name||'').trim();
+function tmdbToRecord(s,genreMap){
+  const title=String(s.title||'').trim();
   if(!title||!s.poster_path)return null;
-  const year=String(s.release_date||s.first_air_date||'').slice(0,4);
+  const year=String(s.release_date||'').slice(0,4);
   return {
-    title,year,
-    type:kind==='tv'?'tv':'film',
-    netflixKind:kind==='tv'?'series':'movie',
-    genres:[],
+    title,
+    year,
+    type:'film',
+    netflixKind:'movie',
+    genres:(s.genre_ids||[]).map(id=>genreMap[id]).filter(Boolean),
     posterPath:norm(s.poster_path),
     backdropPath:norm(s.backdrop_path),
     overview:`${String(s.overview||'').trim()||title} Available on Netflix.`,
     rating:s.vote_average?Number(s.vote_average).toFixed(1):null,
     tmdbId:s.id,
-    externalUrl:`https://www.netflix.com/search?q=${encodeURIComponent(title)}`,
-    _genreIds:s.genre_ids||[]
+    externalUrl:`https://www.netflix.com/search?q=${encodeURIComponent(title)}`
   };
 }
 
-async function loadNetflixRecords(limit=900){
+async function loadNetflixFilmRecords(){
   const genreMaps=await getGenreMaps();
-  const moviePages=Math.ceil(limit*.65/20)+1;
-  const tvPages=Math.ceil(limit*.45/20)+1;
-  const base=1+((corpusPageOffset||0)*3)%400;
+  const first=await fetchTmdbFilmPage(1);
+  const totalPages=Math.max(1,Math.min(TMDB_MAX_DISCOVER_PAGE,Number(first.total_pages)||1));
+  const pages=[first];
 
-  const [movieRes,tvRes]=await Promise.all([
-    Promise.all(Array.from({length:moviePages},(_,i)=>fetchTmdbPage('movie',base+i).catch(()=>({results:[]})))),
-    Promise.all(Array.from({length:tvPages},(_,i)=>fetchTmdbPage('tv',base+i).catch(()=>({results:[]}))))
-  ]);
+  setStatus(`loading · full film field · page 1/${totalPages}`);
+  const bar=$('#corpusBar');
+  if(bar)bar.style.width=`${Math.max(2,100/totalPages)}%`;
 
-  const seen=new Set(),out=[];
-  function ingest(batches,kind,map){
-    for(const p of batches){
-      for(const s of(p?.results||[])){
-        if(out.length>=limit)return;
-        const rec=tmdbToRecord(s,kind);
-        if(!rec)continue;
-        const key=`${kind}:${rec.title.toLowerCase()}:${rec.year}`;
-        if(seen.has(key))continue;
-        seen.add(key);
-        rec.genres=rec._genreIds.map(id=>map[id]).filter(Boolean);
-        delete rec._genreIds;
-        out.push(rec);
-      }
+  for(let page=2;page<=totalPages;page++){
+    try{
+      pages.push(await fetchTmdbFilmPage(page));
+    }catch(e){
+      console.warn(`tmdb page ${page} failed`,e);
+    }
+    if(page===2 || page%10===0 || page===totalPages){
+      setStatus(`loading · full film field · page ${page}/${totalPages}`);
+      if(bar)bar.style.width=`${Math.round((page/totalPages)*100)}%`;
+      await new Promise(requestAnimationFrame);
     }
   }
-  ingest(movieRes,'movie',genreMaps.movie);
-  if(out.length<limit)ingest(tvRes,'tv',genreMaps.tv);
+
+  const seen=new Set(),out=[];
+  for(const p of pages){
+    for(const s of(p?.results||[])){
+      const rec=tmdbToRecord(s,genreMaps.movie);
+      if(!rec)continue;
+      const key=`${rec.title.toLowerCase()}:${rec.year}`;
+      if(seen.has(key))continue;
+      seen.add(key);
+      out.push(rec);
+    }
+  }
   return out;
 }
 
@@ -5423,14 +5421,13 @@ async function loadNetflixRecords(limit=900){
 // ════════════════════════════════════════
 async function loadCorpus(){
   if(cache)return cache;
-  const limit=DEPTHS[searchDepth]?.film||900;
-  const movies=await loadNetflixRecords(limit);
-  if(!movies.length)throw new Error('empty Netflix corpus');
-  const candidates=movies.map(candidate).slice(0,limit);
+  const movies=await loadNetflixFilmRecords();
+  if(!movies.length)throw new Error('empty Netflix film corpus');
+  const candidates=movies.map(candidate);
   const map=new Map();
   candidates.forEach((c,i)=>map.set(c,movies[i]));
   cache={movies,candidates,map};
-  setStatus(`ready · ${movies.length} titles`);
+  setStatus(`ready · ${movies.length} films · full field`);
   renderWall(movies);
   return cache;
 }
@@ -5597,7 +5594,7 @@ function startProcessing(q){
   clearProcessingImage();
   stopAmbientRotation();
   $('#processingQuery').textContent=q;
-  $('#processingMeta').textContent=`${DEPTHS[searchDepth]?.film||900} candidates · ${searchDepth} depth`;
+  $('#processingMeta').textContent='full film field · ARBITER only';
   startAmbientRotation();
   startProgressSimulation();
 }
@@ -5714,7 +5711,7 @@ async function search(text){
       const stage=$('#processingStage');
       if(stage)stage.textContent='forming';
       corpus=await loadCorpus();
-      $('#processingMeta').textContent=`${corpus.movies.length} candidates · ${searchDepth} depth`;
+      $('#processingMeta').textContent=`${corpus.movies.length} candidates · full film field`; 
     }catch(e){
       console.error('corpus load failed',e);
       toast('Netflix field failed to load — reload');
@@ -5725,10 +5722,9 @@ async function search(text){
     try{
       const stage=$('#processingStage');
       if(stage)stage.textContent='measuring';
-      const limit=DEPTHS[searchDepth]?.film||900;
       data=await fetchArbiterJson({
         query:q,
-        candidates:corpus.candidates.slice(0,limit),
+        candidates:corpus.candidates,
         use_freq:true,
         top_k:RETURN_COUNT
       },2);
@@ -5783,9 +5779,8 @@ async function fetchTrailer(m){
   if(!m?.tmdbId)return null;
   const key=`${m.tmdbId}`;
   if(trailerCache.has(key))return trailerCache.get(key);
-  const kind=(m.netflixKind==='series'||m.type==='tv')?'tv':'movie';
   try{
-    const data=await fetch(`${TMDB_BASE}/${kind}/${m.tmdbId}/videos?api_key=${TMDB_KEY}&language=en-US`).then(r=>r.json());
+    const data=await fetch(`${TMDB_BASE}/movie/${m.tmdbId}/videos?api_key=${TMDB_KEY}&language=en-US`).then(r=>r.json());
     const videos=(data.results||[]).filter(v=>v?.site==='YouTube'&&v?.key);
     videos.sort((a,b)=>{
       let sa=0,sb=0;
@@ -6098,24 +6093,6 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeTrailer();
 });
 
-// Depth toggle
-$$('.depth-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    searchDepth=btn.dataset.depth;
-    cache=null;
-    $$('.depth-btn').forEach(b=>b.classList.toggle('active',b===btn));
-    const limit=DEPTHS[searchDepth]?.film||900;
-    $('#corpusStatus').textContent=`loading · ${limit} titles`;
-    $('#corpusStatus').classList.add('processing');
-    $('#corpusBar').style.width='30%';
-    loadCorpus().then(()=>{
-      $('#corpusStatus').textContent=`ready · ${cache?.movies?.length||0} titles`;
-      $('#corpusStatus').classList.remove('processing');
-      $('#corpusBar').style.width='100%';
-    });
-  });
-});
-
 // Voice
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 
@@ -6311,11 +6288,11 @@ function stopPlaceholderTypewriter(){
 // ════════════════════════════════════════
 (async function init(){
   try{
-    $('#corpusStatus').textContent=`loading · ${DEPTHS[searchDepth]?.film||900} titles`;
+    $('#corpusStatus').textContent='loading · full film field';
     $('#corpusStatus').classList.add('processing');
     $('#corpusBar').style.width='20%';
     await loadCorpus();
-    $('#corpusStatus').textContent=`ready · ${cache?.movies?.length||0} titles`;
+    $('#corpusStatus').textContent=`ready · ${cache?.movies?.length||0} films · full field`; 
     $('#corpusStatus').classList.remove('processing');
     $('#corpusBar').style.width='100%';
 
@@ -6323,7 +6300,7 @@ function stopPlaceholderTypewriter(){
     if(h){search(h)}else{startPlaceholderTypewriter()}
   }catch(e){
     console.error(e);
-    $('#corpusStatus').textContent='corpus not ready — reload';
+    $('#corpusStatus').textContent='film corpus not ready — reload';
     $('#corpusStatus').classList.remove('processing');
     $('#corpusBar').style.width='0%';
     
