@@ -5116,6 +5116,13 @@ body.has-results:not(.trailer-active) .hero:has(.hero-trailer.active) .hero-play
   pointer-events:none !important;
 }
 
+
+/* loader state: borrowed from the working SUMMON loading lifecycle */
+body.corpus-loading .corpus-status{color:var(--accent) !important}
+body.corpus-loading .corpus-track span{animation:surfaceLoadSweep 1.15s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes surfaceLoadSweep{0%{transform:translateX(-120%);width:34%}100%{transform:translateX(330%);width:34%}}
+body.corpus-ready .corpus-track span{transform:none;animation:none}
+
 </style>
 <base target="_blank">
 </head>
@@ -5158,12 +5165,12 @@ body.has-results:not(.trailer-active) .hero:has(.hero-trailer.active) .hero-play
       <div class="search-hint" id="modeHint">Enter searches. Shift+Enter adds a line.</div>
 
       <div class="depth-bar" role="group" aria-label="Search depth">
-        <button type="button" class="depth-btn" data-depth="surface">surface</button>
+        <button type="button" class="depth-btn active" data-depth="surface">surface</button>
         <button type="button" class="depth-btn" data-depth="field">field</button>
-        <button type="button" class="depth-btn active" data-depth="archive">archive</button>
+        <button type="button" class="depth-btn" data-depth="archive">archive</button>
       </div>
 
-      <div class="corpus-status" id="corpusStatus">loading · archive depth</div>
+      <div class="corpus-status" id="corpusStatus">loading · surface depth</div>
       <div class="corpus-track"><span id="corpusBar" style="width:100%"></span></div>
       <div class="station-footer">
         <span>© 2026 Actual General Intelligence Inc.</span>
@@ -5306,7 +5313,7 @@ const DEPTHS={
   field:{limit:900,label:'field'},
   archive:{limit:Infinity,label:'archive'}
 };
-const DEFAULT_DEPTH='archive';
+const DEFAULT_DEPTH='surface';
 const CORPUS_LABEL='film field';
 
 // ════════════════════════════════════════
@@ -5314,6 +5321,17 @@ const CORPUS_LABEL='film field';
 // ════════════════════════════════════════
 let cache=null, results=[], active=0, currentQuery='';
 let searchDepth=DEFAULT_DEPTH;
+let corpusLoadLock=null;
+const corpusLoadState={
+  genreMaps:null,
+  totalPages:0,
+  nextPage:1,
+  movies:[],
+  seen:new Set(),
+  complete:false,
+  wallPainted:false
+};
+let lastWallRenderCount=0;
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
@@ -5328,26 +5346,70 @@ function poster(m,size='w500'){return img(m?.posterPath,size)}
 function backdrop(m,size='w1280'){return img(m?.backdropPath||m?.posterPath,size)}
 function candidate(m){return `${m.title}. ${(m.genres||[]).join(', ')}. ${m.overview?.substring(0,360)||''}`}
 
-function getDepthConfig(){return DEPTHS[searchDepth]||DEPTHS[DEFAULT_DEPTH]}
-function getDepthLimit(total=Infinity){
-  const limit=getDepthConfig().limit;
+function getDepthConfig(depth=searchDepth){return DEPTHS[depth]||DEPTHS[DEFAULT_DEPTH]}
+function getDepthLimit(total=Infinity,depth=searchDepth){
+  const limit=getDepthConfig(depth).limit;
   return Number.isFinite(limit)?Math.min(limit,total):total;
 }
-function getDepthLabel(){return getDepthConfig().label||searchDepth}
-function depthCandidateCount(corpus){return getDepthLimit(corpus?.candidates?.length||0)}
-function depthCandidates(corpus){
-  const limit=depthCandidateCount(corpus);
+function getDepthLabel(depth=searchDepth){return getDepthConfig(depth).label||depth}
+function getDepthTarget(depth=searchDepth){return getDepthConfig(depth).limit}
+function depthCandidateCount(corpus,depth=searchDepth){return getDepthLimit(corpus?.candidates?.length||0,depth)}
+function depthCandidates(corpus,depth=searchDepth){
+  const limit=depthCandidateCount(corpus,depth);
   const out=[];
   for(let i=0;i<limit;i++)out.push(corpus.candidates[i]);
   return out;
 }
-function depthStatus(prefix='ready'){
-  if(!cache){
-    const cfg=getDepthConfig();
+function targetCountForDepth(depth=searchDepth){
+  const limit=getDepthTarget(depth);
+  return Number.isFinite(limit)?limit:Infinity;
+}
+function depthStatus(prefix='ready',depth=searchDepth){
+  const cfg=getDepthConfig(depth);
+  const loaded=cache?.candidates?.length||corpusLoadState.movies.length||0;
+  const label=getDepthLabel(depth);
+  if(!loaded){
     const n=Number.isFinite(cfg.limit)?cfg.limit:'full';
-    return `${prefix} · ${n} films · ${getDepthLabel()} depth`;
+    return `${prefix} · ${n} films · ${label} depth`;
   }
-  return `${prefix} · ${depthCandidateCount(cache)} films · ${getDepthLabel()} depth`;
+  if(Number.isFinite(cfg.limit)){
+    const n=Math.min(cfg.limit,loaded);
+    const suffix=(!corpusLoadState.complete && loaded<cfg.limit)?`/${cfg.limit}`:'';
+    return `${prefix} · ${n}${suffix} films · ${label} depth`;
+  }
+  const suffix=corpusLoadState.complete?'':'/full';
+  return `${prefix} · ${loaded}${suffix} films · ${label} depth`;
+}
+
+
+function setCorpusLoading(on,text=''){
+  const status=$('#corpusStatus');
+  const bar=$('#corpusBar');
+  if(status)status.classList.toggle('processing',!!on);
+  document.body.classList.toggle('corpus-loading',!!on);
+  document.body.classList.toggle('corpus-ready',!on);
+  $$('.depth-btn').forEach(btn=>{
+    btn.disabled=false;
+    btn.setAttribute('aria-busy',on && btn.dataset.depth===searchDepth ? 'true' : 'false');
+  });
+  if(text)setStatus(text);
+  if(bar){
+    if(on){
+      const current=parseFloat(bar.style.width||'0')||0;
+      bar.style.width=`${Math.max(18,Math.min(88,current||28))}%`;
+    }else{
+      bar.style.width='100%';
+    }
+  }
+}
+
+async function loadCorpusWithRetry(tries=2,targetCount=targetCountForDepth(searchDepth)){
+  let last;
+  for(let i=0;i<tries;i++){
+    try{return await loadCorpus(targetCount)}
+    catch(e){last=e; await new Promise(r=>setTimeout(r,260))}
+  }
+  throw last;
 }
 
 function setStatus(t){const el=$('#corpusStatus');if(el)el.textContent=t}
@@ -5413,71 +5475,159 @@ function tmdbToRecord(s,genreMap){
   };
 }
 
-async function loadNetflixFilmRecords(){
-  const genreMaps=await getGenreMaps();
-  const first=await fetchTmdbFilmPage(1);
-  const totalPages=Math.max(1,Math.min(TMDB_MAX_DISCOVER_PAGE,Number(first.total_pages)||1));
-  const pages=[first];
-
-  setStatus(`loading · full film field · page 1/${totalPages}`);
-  const bar=$('#corpusBar');
-  if(bar)bar.style.width=`${Math.max(2,100/totalPages)}%`;
-
-  for(let page=2;page<=totalPages;page++){
-    try{
-      pages.push(await fetchTmdbFilmPage(page));
-    }catch(e){
-      console.warn(`tmdb page ${page} failed`,e);
-    }
-    if(page===2 || page%10===0 || page===totalPages){
-      setStatus(`loading · full film field · page ${page}/${totalPages}`);
-      if(bar)bar.style.width=`${Math.round((page/totalPages)*100)}%`;
-      await new Promise(requestAnimationFrame);
-    }
-  }
-
-  const seen=new Set(),out=[];
-  for(const p of pages){
-    for(const s of(p?.results||[])){
-      const rec=tmdbToRecord(s,genreMaps.movie);
-      if(!rec)continue;
-      const key=`${rec.title.toLowerCase()}:${rec.year}`;
-      if(seen.has(key))continue;
-      seen.add(key);
-      out.push(rec);
-    }
-  }
-  return out;
-}
-
-// ════════════════════════════════════════
-// CORPUS
-// ════════════════════════════════════════
-async function loadCorpus(){
-  if(cache)return cache;
-  const movies=await loadNetflixFilmRecords();
-  if(!movies.length)throw new Error('empty Netflix film corpus');
+function buildCorpusFromMovies(movies){
   const candidates=movies.map(candidate);
   const map=new Map();
   candidates.forEach((c,i)=>map.set(c,movies[i]));
   cache={movies,candidates,map};
-  setStatus(depthStatus('ready'));
-  renderWall(movies);
   return cache;
 }
 
+function ingestTmdbFilmPage(pageData,genreMap){
+  let added=0;
+  for(const s of(pageData?.results||[])){
+    const rec=tmdbToRecord(s,genreMap);
+    if(!rec)continue;
+    const key=`${rec.title.toLowerCase()}:${rec.year}`;
+    if(corpusLoadState.seen.has(key))continue;
+    corpusLoadState.seen.add(key);
+    corpusLoadState.movies.push(rec);
+    added++;
+  }
+  if(added)buildCorpusFromMovies(corpusLoadState.movies);
+  return added;
+}
+
+
 function renderWall(movies){
-  const sample=[...movies].filter(m=>m.posterPath).sort(()=>Math.random()-.5).slice(0,54);
-  $('#wall').innerHTML=sample.map(m=>`
+  const list=Array.isArray(movies)?movies:[];
+  const sample=[...list]
+    .filter(m=>m && m.posterPath)
+    .sort(()=>Math.random()-.5)
+    .slice(0,72);
+
+  const wall=$('#wall');
+  if(!wall)return;
+
+  // Never replace a live wall with emptiness. This keeps the surface tiles visible
+  // while field/archive are still loading.
+  if(!sample.length && wall.children.length)return;
+
+  wall.innerHTML=sample.map(m=>`
     <div class="wall-cell" data-title="${esc(m.title)}">
       <img src="${poster(m,'w780')}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"
-        onerror="this.style.opacity='0';this.parentElement.style.background='var(--surface)'">
+        onerror="this.closest('.wall-cell')?.remove()">
     </div>
   `).join('');
+
+  lastWallRenderCount=list.length;
+}
+
+function maybePaintSurfaceWall({force=false}={}){
+  const movies=corpusLoadState.movies||[];
+  const posterCount=movies.filter(m=>m && m.posterPath).length;
+  if(!posterCount)return;
+
+  // Working-loader behavior: as soon as the surface has any usable posters,
+  // paint them and leave them in place. Deeper depths never blank the wall.
+  const firstPaintReady=posterCount>=8;
+  const surfaceComplete=movies.length>=DEPTHS.surface.limit || corpusLoadState.complete;
+  const shouldRefresh=force || !corpusLoadState.wallPainted || (surfaceComplete && lastWallRenderCount<DEPTHS.surface.limit);
+
+  if(firstPaintReady && shouldRefresh){
+    renderWall(movies.slice(0,DEPTHS.surface.limit));
+    corpusLoadState.wallPainted=true;
+  }
+}
+
+async function loadCorpus(targetCount=DEPTHS.surface.limit){
+  const requested=Number.isFinite(targetCount)?targetCount:Infinity;
+  if(cache && (corpusLoadState.complete || cache.movies.length>=requested))return cache;
+
+  while(corpusLoadLock)await corpusLoadLock;
+  if(cache && (corpusLoadState.complete || cache.movies.length>=requested))return cache;
+
+  corpusLoadLock=(async()=>{
+    if(!corpusLoadState.genreMaps)corpusLoadState.genreMaps=await getGenreMaps();
+    const movieGenres=corpusLoadState.genreMaps.movie;
+    const bar=$('#corpusBar');
+    const loadLabel=requested===Infinity?'archive':requested<=DEPTHS.surface.limit?'surface':'field';
+
+    if(!corpusLoadState.totalPages){
+      setStatus(`loading · ${loadLabel} first · page 1`);
+      const first=await fetchTmdbFilmPage(1);
+      corpusLoadState.totalPages=Math.max(1,Math.min(TMDB_MAX_DISCOVER_PAGE,Number(first.total_pages)||1));
+      corpusLoadState.nextPage=2;
+      ingestTmdbFilmPage(first,movieGenres);
+      maybePaintSurfaceWall();
+      if(bar)bar.style.width=`${Math.max(8,Math.round((1/corpusLoadState.totalPages)*100))}%`;
+    }
+
+    while(!corpusLoadState.complete && corpusLoadState.movies.length<requested){
+      const page=corpusLoadState.nextPage;
+      if(page>corpusLoadState.totalPages){
+        corpusLoadState.complete=true;
+        break;
+      }
+      try{
+        const data=await fetchTmdbFilmPage(page);
+        ingestTmdbFilmPage(data,movieGenres);
+      }catch(e){
+        console.warn(`tmdb page ${page} failed`,e);
+      }
+      corpusLoadState.nextPage=page+1;
+      maybePaintSurfaceWall();
+
+      const total=corpusLoadState.totalPages||1;
+      const pagePct=Math.round((Math.min(page,total)/total)*100);
+      const targetText=requested===Infinity?'full':String(requested);
+      if(page===2 || page%5===0 || corpusLoadState.movies.length>=requested){
+        setStatus(`loading · ${corpusLoadState.movies.length}/${targetText} films · ${loadLabel} depth`);
+        if(bar)bar.style.width=`${Math.max(8,Math.min(100,pagePct))}%`;
+        await new Promise(requestAnimationFrame);
+      }
+    }
+
+    if(corpusLoadState.nextPage>corpusLoadState.totalPages)corpusLoadState.complete=true;
+    if(!cache)buildCorpusFromMovies(corpusLoadState.movies);
+    if(!cache?.movies?.length)throw new Error('empty Netflix film corpus');
+    maybePaintSurfaceWall({force:requested<=DEPTHS.surface.limit || !$('#wall')?.children?.length});
+    return cache;
+  })();
+
+  try{
+    await corpusLoadLock;
+  }finally{
+    corpusLoadLock=null;
+  }
+  return cache;
+}
+
+function warmDepth(depth=searchDepth){
+  const target=targetCountForDepth(depth);
+  const loaded=cache?.movies?.length || corpusLoadState.movies.length || 0;
+  if(cache && (corpusLoadState.complete || loaded>=target)){
+    setCorpusLoading(false,depthStatus('ready',depth));
+    maybePaintSurfaceWall({force:!$('#wall')?.children?.length});
+    return Promise.resolve(cache);
+  }
+
+  // Keep the already-painted surface wall visible while deeper depths load.
+  setCorpusLoading(true,depthStatus('loading',depth));
+  return loadCorpusWithRetry(2,target).then(c=>{
+    maybePaintSurfaceWall({force:!$('#wall')?.children?.length || depth==='surface'});
+    setCorpusLoading(false,depthStatus('ready',searchDepth));
+    return c;
+  }).catch(e=>{
+    console.warn('depth load failed',e);
+    setCorpusLoading(false,'film corpus not ready — reload');
+    throw e;
+  });
 }
 
 // ════════════════════════════════════════
 // SEARCH
+
 // ════════════════════════════════════════
 const PROCESSING_STAGES=['forming','measuring','summoning','entering'];
 let stageTimer=null;
@@ -5628,7 +5778,7 @@ function startProcessing(q){
   clearProcessingImage();
   stopAmbientRotation();
   $('#processingQuery').textContent=q;
-  $('#processingMeta').textContent='full film field · ARBITER only';
+  $('#processingMeta').textContent=`${getDepthLabel()} film field · ARBITER only`;
   startAmbientRotation();
   startProgressSimulation();
 }
@@ -5744,7 +5894,7 @@ async function search(text){
     try{
       const stage=$('#processingStage');
       if(stage)stage.textContent='forming';
-      corpus=await loadCorpus();
+      corpus=await loadCorpus(targetCountForDepth(searchDepth));
       $('#processingMeta').textContent=`${depthCandidateCount(corpus)} candidates · ${getDepthLabel()} depth`; 
     }catch(e){
       console.error('corpus load failed',e);
@@ -6131,13 +6281,15 @@ document.addEventListener('keydown',e=>{
 });
 
 // Depth toggle
-function setSearchDepth(depth,{rerun=false}={}){
+async function setSearchDepth(depth,{rerun=false}={}){
   if(!DEPTHS[depth])return;
   searchDepth=depth;
   $$('.depth-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.depth===depth));
-  setStatus(depthStatus(cache?'ready':'loading'));
-  const bar=$('#corpusBar');
-  if(bar)bar.style.width=cache?'100%':'30%';
+  try{
+    await warmDepth(depth);
+  }catch(e){
+    // Error state is already rendered by warmDepth; keep existing wall intact.
+  }
   if(rerun && currentQuery)search(currentQuery);
 }
 
@@ -6340,23 +6492,18 @@ function stopPlaceholderTypewriter(){
 // ════════════════════════════════════════
 (async function init(){
   try{
-    $('#corpusStatus').textContent=depthStatus('loading');
-    $('#corpusStatus').classList.add('processing');
-    $('#corpusBar').style.width='20%';
-    setSearchDepth(searchDepth);
-    await loadCorpus();
-    $('#corpusStatus').textContent=depthStatus('ready'); 
-    $('#corpusStatus').classList.remove('processing');
-    $('#corpusBar').style.width='100%';
+    $$('.depth-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.depth===DEFAULT_DEPTH));
+    searchDepth=DEFAULT_DEPTH;
+    setCorpusLoading(true,depthStatus('loading',DEFAULT_DEPTH));
+    await loadCorpusWithRetry(2,targetCountForDepth(DEFAULT_DEPTH));
+    maybePaintSurfaceWall({force:true});
+    setCorpusLoading(false,depthStatus('ready',DEFAULT_DEPTH));
 
     const h=decodeURIComponent(location.hash.replace(/^#/,''));
     if(h){search(h)}else{startPlaceholderTypewriter()}
   }catch(e){
     console.error(e);
-    $('#corpusStatus').textContent='film corpus not ready — reload';
-    $('#corpusStatus').classList.remove('processing');
-    $('#corpusBar').style.width='0%';
-    
+    setCorpusLoading(false,'film corpus not ready — reload');
   }
 })();
 </script>
