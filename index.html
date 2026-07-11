@@ -91,6 +91,7 @@ button.mark:hover .mark-word{opacity:.7}
 .credits .stack{font-family:var(--serif);font-size:clamp(17px,1.35vw,24px);line-height:1.3}
 .credits .stack span{display:block}
 .subhint{margin-top:18px;font-family:var(--mono);font-size:var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.formats{margin-top:10px;font-family:var(--mono);font-size:var(--label);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
 
 .rail{position:absolute;z-index:6;left:var(--pad);bottom:var(--pad);right:calc(var(--pad) + 210px);display:flex;flex-wrap:wrap;align-items:center;gap:2px}
 .rail .rail-lbl{margin-right:10px;white-space:nowrap}
@@ -98,8 +99,12 @@ button.mark:hover .mark-word{opacity:.7}
 .rail button:hover{color:var(--white)}
 .rail button.on{background:var(--chip);color:var(--white)}
 
-.depth{display:flex;gap:16px}
-.depth button{font-size:var(--label);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);padding-bottom:3px;border-bottom:1px solid transparent}
+.depth{display:flex;align-items:center;gap:16px}
+.depth-lbl{color:var(--faint);letter-spacing:.2em}
+.depth button{position:relative;font-size:var(--label);letter-spacing:.2em;text-transform:uppercase;color:var(--faint);padding-bottom:3px;border-bottom:1px solid transparent}
+.depth button.loading{color:var(--dim)}
+.depth button.loading::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--accent);animation:depthLoad 1s ease-in-out infinite}
+@keyframes depthLoad{0%{transform:scaleX(0);transform-origin:left}45%{transform:scaleX(1);transform-origin:left}55%{transform:scaleX(1);transform-origin:right}100%{transform:scaleX(0);transform-origin:right}}
 .depth button:hover{color:var(--dim)}
 .depth button.on{color:var(--white);border-color:var(--white)}
 
@@ -283,6 +288,26 @@ body.playing #projector{display:block}
   .tile{width:64px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none !important;transition-duration:.01ms !important}}
+/* ── mobile landing: stop the top-right + credits overlap ── */
+@media(max-width:1000px){
+  .credits{display:none}
+  #landing .corner.br{display:none}
+  .corner.tr{right:var(--pad);left:auto}
+  .depth{gap:12px;white-space:nowrap}
+  .depth-lbl{display:none}
+  .depth button{font-size:10px;letter-spacing:.08em}
+  #landing .head{left:var(--pad);right:var(--pad);width:auto;bottom:calc(var(--pad) + 30px)}
+  .title{font-size:clamp(32px,8.6vw,56px)}
+  .line{gap:10px}
+  .subhint{margin-top:14px}
+}
+@media(max-width:480px){
+  .mark-word{font-size:26px}
+  .depth{gap:9px}
+  .depth button{font-size:9px;letter-spacing:.05em}
+  #query{font-size:clamp(20px,6.2vw,30px)}
+}
+
 </style>
 </head>
 <body>
@@ -295,10 +320,11 @@ body.playing #projector{display:block}
     <div class="mark"><span class="mark-word">Summon</span></div>
   </div>
   <div class="corner tr">
-    <div class="depth" role="group" aria-label="Field depth">
-      <button class="on" data-depth="surface" type="button">surface</button>
-      <button data-depth="field" type="button">deep</button>
-      <button data-depth="archive" type="button">archive</button>
+    <div class="depth" role="group" aria-label="How many titles to search">
+      <span class="lbl depth-lbl">titles</span>
+      <button class="on" data-depth="surface" type="button">250</button>
+      <button data-depth="field" type="button">900</button>
+      <button data-depth="archive" type="button">all</button>
     </div>
   </div>
 
@@ -314,11 +340,9 @@ body.playing #projector{display:block}
       </div>
     </form>
     <p class="subhint" id="subhint">Say what you want, we’ll find what fits</p>
+    <p class="formats">Films · Series · Podcasts · Shorts · Games · Live</p>
   </div>
 
-  <div class="credits">
-    <div class="stack"><span>Films</span><span>Series</span><span>Podcasts</span><span>Shorts</span><span>Games</span><span>Live</span></div>
-  </div>
   <div class="corner br"><span class="lbl" id="status">loading</span></div>
 </section>
 
@@ -426,7 +450,7 @@ const NETFLIX_PROVIDER=8, NETFLIX_EXTRA=['1796'];
 const RETURN_COUNT=10, TMDB_MAX_PAGE=500;
 const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/compare';
 const ARBITER_TIMEOUT_MS=75000, ARCHIVE_BATCH_SIZE=700, ARCHIVE_CONCURRENCY=3;
-const DEPTHS={surface:{limit:250,label:'surface'},field:{limit:900,label:'deep'},archive:{limit:Infinity,label:'archive'}};
+const DEPTHS={surface:{limit:250,label:'250'},field:{limit:900,label:'900'},archive:{limit:Infinity,label:'all'}};
 const DEFAULT_DEPTH='surface';
 const FORMAT_LABELS={film:'film',series:'series',podcast:'podcast',short:'short',game:'game',live:'live'};
 
@@ -443,7 +467,7 @@ const EXAMPLES=[
 ];
 
 /* ═══════ STATE ═══════ */
-let cache=null, results=[], active=0, currentQuery='', searchDepth=DEFAULT_DEPTH, corpusLock=null;
+let cache=null, results=[], active=0, currentQuery='', searchDepth=DEFAULT_DEPTH, corpusLock=null, silentLoad=false;
 const cs={genreMaps:null,movieTotal:0,tvTotal:0,moviePage:1,tvPage:1,movies:[],seen:new Set(),curated:false,complete:false};
 
 const $=s=>document.querySelector(s);
@@ -608,7 +632,7 @@ async function loadCorpus(target=DEPTHS.surface.limit){
       if(cs.tvPage<=cs.tvTotal){const p=cs.tvPage++;jobs.push(discover('tv',p).then(d=>ingestPage(d,gt,toSeries)).catch(()=>{}))}
       if(!jobs.length){cs.complete=true;break}
       await Promise.all(jobs);
-      setStatus(statusLine('loading'));
+      if(!silentLoad)setStatus(statusLine('loading'));
       await new Promise(requestAnimationFrame);
     }
     if(cs.moviePage>cs.movieTotal&&cs.tvPage>cs.tvTotal)cs.complete=true;
@@ -913,9 +937,14 @@ document.addEventListener('keydown',e=>{
 $$('.depth button').forEach(b=>b.onclick=async()=>{
   searchDepth=b.dataset.depth;
   $$('.depth button').forEach(x=>x.classList.toggle('on',x===b));
+  const target=depthTarget();
+  const loaded=cache?.movies?.length||cs.movies.length||0;
+  const needs=Number.isFinite(target)?loaded<target:!cs.complete;
+  if(needs)b.classList.add('loading');
   setStatus(statusLine('loading'));
-  try{await loadCorpus(depthTarget());setStatus(statusLine('ready'))}
+  try{await loadCorpus(target);setStatus(statusLine('ready'))}
   catch(e){setStatus('field unavailable')}
+  finally{b.classList.remove('loading')}
 });
 
 /* auto-typed example queries cycle through the input placeholder */
@@ -967,6 +996,14 @@ voice('#revealVoiceBtn','#revealQuery');
     setStatus(statusLine('ready'));
     const h=decodeURIComponent(location.hash.replace(/^#/,''));
     if(h)search(h);
+    // pre-warm deeper + everything so switching tiers is instant
+    const idle=window.requestIdleCallback||(fn=>setTimeout(()=>fn(),1400));
+    idle(async()=>{
+      silentLoad=true;
+      try{await loadCorpus(depthTarget('field'));await loadCorpus(depthTarget('archive'))}
+      catch(e){}
+      finally{silentLoad=false;setStatus(statusLine('ready'))}
+    });
   }catch(e){console.error(e);setStatus('field unavailable — reload')}
 })();
 </script>
