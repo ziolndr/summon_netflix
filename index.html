@@ -6,6 +6,22 @@
 <meta name="theme-color" content="#0A0A09">
 <title>SUMMON — find anything on Netflix by meaning</title>
 <meta name="description" content="Describe what you want. SUMMON measures the whole Netflix field and returns what fits.">
+<link rel="icon" href="./summon-favicon.svg" type="image/svg+xml">
+<link rel="icon" href="./summon-favicon.ico" sizes="any">
+<link rel="icon" href="./summon-favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="./summon-favicon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="./summon-apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SUMMON">
+<meta property="og:title" content="SUMMON — find anything on Netflix by meaning">
+<meta property="og:description" content="Say what you want, we’ll find what fits. Films, series, podcasts, shorts, games, live — searched by meaning.">
+<meta property="og:image" content="./summon-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SUMMON — find anything on Netflix by meaning">
+<meta name="twitter:description" content="Say what you want, we’ll find what fits.">
+<meta name="twitter:image" content="./summon-og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -147,6 +163,8 @@ body.locked .resolve{animation:openGate 1.6s cubic-bezier(.16,1,.3,1) forwards}
 }
 body.launch #leader{animation:fadeOut .5s ease forwards}
 @keyframes fadeOut{to{opacity:0}}
+#reveal.on{animation:revealIn .48s ease both}
+@keyframes revealIn{from{opacity:0}to{opacity:1}}
 
 .work{position:absolute;z-index:6;left:var(--pad);right:var(--pad);top:50%;translate:0 -50%;text-align:center;pointer-events:none}
 .work .qt{
@@ -487,13 +505,12 @@ const FMT_HUE={film:'#7a1226',series:'#1a2a6b',podcast:'#0f5a4a',game:'#4a1a6b',
 const artCache=new Map();
 function wrap(t,max){const w=String(t||'').split(/\s+/),l=[];let c='';for(const x of w){const n=c?c+' '+x:x;if(n.length>max&&c){l.push(c);c=x}else c=n}if(c)l.push(c);return l.slice(0,4)}
 function fieldArt(m,mode='poster'){
-  const key=mode+(m?.type||'')+(m?.title||'');
+  const key=mode+(m?.type||'');
   if(artCache.has(key))return artCache.get(key);
   const land=mode==='backdrop', w=land?1600:900, h=land?900:1350;
   const hue=FMT_HUE[m?.type]||'#3a1030';
-  const lines=wrap(m?.title,land?18:12);
-  const body=lines.map((l,i)=>`<text x="${land?90:60}" y="${(land?320:430)+i*(land?108:98)}" fill="#F6F4EF" font-family="Georgia,serif" font-size="${land?94:84}">${esc(l)}</text>`).join('');
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${hue}"/><stop offset="1" stop-color="#0A0A09"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="${land?90:60}" y="${land?150:160}" fill="rgba(246,244,239,.72)" font-family="monospace" font-size="26" letter-spacing="6">${esc(fmt(m).toUpperCase())}</text>${body}</svg>`;
+  const fs=land?60:46;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="${hue}"/><stop offset="1" stop-color="#0A0A09"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="50%" fill="rgba(246,244,239,.15)" font-family="monospace" font-size="${fs}" letter-spacing="10" text-anchor="middle" dominant-baseline="central">${esc(fmt(m).toUpperCase())}</text></svg>`;
   const uri='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
   artCache.set(key,uri);return uri;
 }
@@ -534,9 +551,9 @@ function artTerms(title){
 async function resolveArt(m){
   const terms=artTerms(m.title);
   const plans=m.type==='podcast'
-    ? terms.map(t=>()=>itunesArt(t,'podcast','podcast'))
+    ? [...terms.map(t=>()=>itunesArt(t,'podcast','podcast')),...terms.map(t=>()=>itunesArt(t,'all'))]
     : m.type==='game'
-      ? terms.map(t=>()=>itunesArt(t,'software','software'))
+      ? [...terms.map(t=>()=>itunesArt(t,'software','software')),...terms.map(t=>()=>itunesArt(t,'all')),...terms.map(t=>()=>tmdbArt(t))]
       : [...terms.map(t=>()=>tmdbArt(t)),...terms.map(t=>()=>itunesArt(t,'tvShow','tvSeason')),...terms.map(t=>()=>itunesArt(t,'all'))];
   for(const plan of plans){
     try{const url=await plan();if(url){m.imageUrl=url;return true}}catch(e){}
@@ -805,10 +822,16 @@ async function search(text){
     if(!results.length){setState('nothing came close');await pause(1000);show('landing');return}
 
     active=0;
-    await lockLeader(results[0]);
     render();
-    show('reveal');
+    // preload the hero so the reveal appears fully formed, then cross-fade
+    const first=results[0];
+    const heroArt=isSquare(first)?first.imageUrl:backdrop(first,'original');
+    await new Promise(res=>{if(!heroArt)return res();const im=new Image();im.onload=res;im.onerror=res;im.src=heroArt;setTimeout(res,1200)});
+    $('#reveal').classList.add('on');
     requestAnimationFrame(()=>autoResize($('#revealQuery')));
+    await pause(480);
+    $('#landing').classList.remove('on');
+    $('#leader').classList.remove('on');
     history.replaceState(null,'','#'+encodeURIComponent(q));
   }finally{stopLeader()}
 }
