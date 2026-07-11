@@ -368,31 +368,18 @@ body.playing #projector{display:block}
 <section class="plate" id="leader" aria-hidden="true">
   <div class="canvas"><img id="ambA" alt=""><img id="ambB" alt=""></div>
 
-  <div class="field" id="field" aria-hidden="true">
-    <div class="field-col"><div class="run"></div></div>
-    <div class="field-col"><div class="run"></div></div>
-    <div class="field-col"><div class="run"></div></div>
-  </div>
-
-  <img class="resolve" id="resolve" alt="">
-
   <div class="corner tl">
     <div class="mark"><span class="mark-word">Summon</span></div>
   </div>
 
   <div class="work">
-    <span class="lbl">reading the field for</span>
+    <span class="lbl">summoning</span>
     <div class="qt" id="workQuery"></div>
-  </div>
-
-  <div class="verdict" id="verdict">
-    <span class="lbl" id="verdictLbl">coherence</span>
-    <div class="n" id="verdictName"></div>
   </div>
 
   <div class="shuttle"></div>
   <div class="state">
-    <span class="lbl" id="stateText">opening the field</span>
+    <span class="lbl" id="stateText">measuring the field</span>
     <span class="lbl elapsed" id="elapsed">0.0s</span>
   </div>
 </section>
@@ -689,48 +676,22 @@ let t0=0,tickTimer=null,ambTimer=null,ambPool=[],ai=0,af=0;
 const elapsedStr=()=>((performance.now()-t0)/1000).toFixed(1)+'s';
 const setState=t=>{const el=$('#stateText');if(el)el.textContent=t};
 
-function fillField(){
-  const titles=cs.movies.map(m=>m.title);
-  if(!titles.length)return;
-  $$('.field-col .run').forEach((run,c)=>{
-    const picks=[...titles].sort(()=>Math.random()-.5).slice(0,26);
-    const half=picks.map(t=>`<span>${esc(t)}</span>`).join('');
-    run.innerHTML=half+half;
-    run.style.animationDelay=`-${c*7}s`;
-  });
-}
 function startLeader(q){
   show('leader');
   document.body.classList.remove('locked','launch');
   $('#workQuery').textContent=q;
-  $('#verdictName').textContent='';
-  $('#resolve').removeAttribute('src');
-  fillField();
-  setState('opening the field');
+  setState('measuring the field');
   t0=performance.now();
   clearInterval(tickTimer);
   tickTimer=setInterval(()=>{$('#elapsed').textContent=elapsedStr()},100);
-
-  ambPool=cs.movies.filter(m=>m.backdropPath).sort(()=>Math.random()-.5).slice(0,24).map(m=>img(m.backdropPath,'w780'));
+  // one calm, slow-drifting backdrop — no flashing, no scrolling titles
+  const pool=cs.movies.filter(m=>m.backdropPath);
   clearInterval(ambTimer);
-  if(ambPool.length){
-    const step=()=>{const a=$('#ambA'),b=$('#ambB');const i=af%2===0?a:b,o=af%2===0?b:a;i.src=ambPool[ai%ambPool.length];i.classList.add('on');o.classList.remove('on');ai++;af++};
-    step();ambTimer=setInterval(step,850);
+  if(pool.length){
+    const pick=pool[Math.floor(Math.random()*pool.length)];
+    const a=$('#ambA'),b=$('#ambB');
+    a.src=img(pick.backdropPath,'w1280');a.classList.add('on');b.classList.remove('on');
   }
-}
-async function lockLeader(m){
-  clearInterval(ambTimer);
-  setState('resolved');
-  $('#verdictLbl').innerHTML=`${fmt(m)} · coherence <b>${Number(m.score).toFixed(3)}</b>`;
-  $('#verdictName').textContent=m.title;
-  const r=$('#resolve');
-  r.src=backdrop(m,'w780');
-  await new Promise(res=>{r.onload=res;r.onerror=res;setTimeout(res,900)});
-  document.body.classList.add('locked');
-  const hi=new Image();hi.src=backdrop(m,'original');hi.onload=()=>{r.src=hi.src};
-  await pause(1700);
-  document.body.classList.add('launch');
-  await pause(420);
 }
 function stopLeader(){clearInterval(tickTimer);clearInterval(ambTimer);document.body.classList.remove('locked','launch')}
 
@@ -773,14 +734,14 @@ const mapRows=(rs,c)=>rs.map(r=>{const m=matchRow(r,c);return m?{...m,score:rSco
 
 async function measure(q,corpus,cands){
   if(!(searchDepth==='archive'&&cands.length>ARCHIVE_BATCH_SIZE)){
-    setState(`measuring ${cands.length} candidates`);
+    setState(`measuring ${cands.length} titles`);
     const d=await arbiter({query:q,candidates:cands,use_freq:true,top_k:RETURN_COUNT});
     return mapRows(rows(d),corpus).sort((a,b)=>b.score-a.score).slice(0,RETURN_COUNT);
   }
   const total=Math.ceil(cands.length/ARCHIVE_BATCH_SIZE);
   const batches=Array.from({length:total},(_,i)=>[i*ARCHIVE_BATCH_SIZE,Math.min(cands.length,(i+1)*ARCHIVE_BATCH_SIZE)]);
   let cur=0,done=0,ok=0;const merged=[],errs=[];
-  setState(`measuring ${cands.length} candidates · 0 of ${total} batches`);
+  setState(`measuring ${cands.length} titles · 0 of ${total} batches`);
   async function worker(){
     while(true){
       const i=cur++;if(i>=batches.length)return;
@@ -789,7 +750,7 @@ async function measure(q,corpus,cands){
         const d=await arbiter({query:q,candidates:bc.candidates,use_freq:true,top_k:RETURN_COUNT});
         merged.push(...mapRows(rows(d),bc));ok++;
       }catch(e){errs.push(e)}
-      finally{done++;setState(`measuring ${cands.length} candidates · ${done} of ${total} batches`)}
+      finally{done++;setState(`measuring ${cands.length} titles · ${done} of ${total} batches`)}
     }
   }
   await Promise.all(Array.from({length:Math.min(ARCHIVE_CONCURRENCY,total)},worker));
@@ -811,10 +772,8 @@ async function search(text){
     catch(e){console.error(e);setState('the field would not open');await pause(900);toast('field unavailable — reload');show('landing');return}
 
     const cands=depthCandidates(corpus);
-    fillField();
-    const formats=new Set(corpus.movies.slice(0,cands.length).map(m=>m.type)).size;
-    setState(`${cands.length} titles · ${formats} formats`);
-    await pause(320);
+    setState(`measuring ${cands.length} titles`);
+    await pause(280);
 
     try{results=await measure(q,corpus,cands)}
     catch(e){console.error(e);setState('the engine did not answer');await pause(900);toast('engine unreachable');show('landing');return}
