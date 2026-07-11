@@ -126,9 +126,13 @@ button.mark:hover .mark-word{opacity:.7}
 
 /* ═══════ LEADER — reading the field ═══════ */
 #leader{background:var(--film)}
-#leader .canvas img{filter:contrast(1.15) brightness(.34) saturate(.85)}
-#leader .canvas img.on{opacity:.5}
-body.locked #leader .canvas img{opacity:0 !important}
+#leader .canvas img{filter:brightness(.62) contrast(1.03) saturate(.96)}
+#leader .canvas img.on{opacity:1}
+#leader .canvas::after{
+  background:
+    radial-gradient(135% 130% at 50% 36%, rgba(10,10,9,0) 44%, rgba(10,10,9,.74) 100%),
+    linear-gradient(180deg, rgba(10,10,9,.5) 0%, rgba(10,10,9,0) 24%, rgba(10,10,9,0) 60%, rgba(10,10,9,.94) 100%);
+}
 
 /* the field, passing: real candidate titles, read at speed */
 .field{position:absolute;inset:0;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);gap:0;overflow:hidden;
@@ -170,7 +174,7 @@ body.launch #leader{animation:fadeOut .5s ease forwards}
 .work .qt{
   font-family:var(--serif);font-size:clamp(30px,4.4vw,80px);line-height:.94;letter-spacing:-.025em;
   max-width:20ch;margin:16px auto 0;text-wrap:balance;
-  text-shadow:0 2px 60px rgba(10,10,9,.9);
+  text-shadow:0 4px 34px rgba(0,0,0,.82),0 1px 5px rgba(0,0,0,.55);
 }
 body.locked .work{opacity:0;transform:translate(0,-54%);transition:opacity .6s ease,transform .6s ease}
 
@@ -684,13 +688,14 @@ function startLeader(q){
   t0=performance.now();
   clearInterval(tickTimer);
   tickTimer=setInterval(()=>{$('#elapsed').textContent=elapsedStr()},100);
-  // one calm, slow-drifting backdrop — no flashing, no scrolling titles
-  const pool=cs.movies.filter(m=>m.backdropPath);
+  // slow, calm crossfade through a few stills — never flashing, never frozen
+  const pool=cs.movies.filter(m=>m.backdropPath).sort(()=>Math.random()-.5).slice(0,10).map(m=>img(m.backdropPath,'w1280'));
   clearInterval(ambTimer);
   if(pool.length){
-    const pick=pool[Math.floor(Math.random()*pool.length)];
-    const a=$('#ambA'),b=$('#ambB');
-    a.src=img(pick.backdropPath,'w1280');a.classList.add('on');b.classList.remove('on');
+    ai=0;af=0;
+    const step=()=>{const a=$('#ambA'),b=$('#ambB');const inc=af%2===0?a:b,out=af%2===0?b:a;inc.src=pool[ai%pool.length];inc.classList.add('on');out.classList.remove('on');ai++;af++};
+    step();
+    ambTimer=setInterval(step,6500);
   }
 }
 function stopLeader(){clearInterval(tickTimer);clearInterval(ambTimer);document.body.classList.remove('locked','launch')}
