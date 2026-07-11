@@ -39,6 +39,7 @@ button,textarea{font:inherit;color:inherit;background:none;border:0}
 button{cursor:pointer}
 ::selection{background:var(--white);color:var(--film)}
 :focus-visible{outline:1px solid var(--white);outline-offset:4px}
+#query:focus,#query:focus-visible,#revealQuery:focus,#revealQuery:focus-visible{outline:none}
 
 .lbl{font-family:var(--mono);font-size:var(--label);letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
 .lbl b{color:var(--white);font-weight:400}
@@ -210,6 +211,8 @@ body.locked .shuttle::after{animation:none;left:0;width:100%;transition:width .5
 .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:4px 0}
 .meta span{font-size:var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
 .meta span:not(:last-child)::after{content:'/';margin:0 10px;color:var(--faint)}
+.synopsis{margin-top:18px;max-width:54ch;font-family:var(--serif);font-size:clamp(16px,1.35vw,22px);line-height:1.42;color:var(--white);opacity:.84;text-shadow:0 2px 34px rgba(0,0,0,.7)}
+.synopsis:empty{display:none}
 .actions{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
 .actions button{padding:11px 15px;border:1px solid var(--hair);font-size:var(--label);letter-spacing:.18em;text-transform:uppercase;color:var(--white)}
 .actions button:hover{border-color:var(--white)}
@@ -300,7 +303,7 @@ body.playing #projector{display:block}
   </div>
 
   <div class="head">
-    <h1 class="title"><br><i>Find anything on Netflix by meaning.</i></h1>
+    <h1 class="title"><i>Find anything on Netflix by meaning.</i></h1>
     <form id="searchForm">
       <div class="line">
         <textarea id="query" rows="1" spellcheck="false" autocomplete="off" inputmode="search" placeholder="Describe it in your own words"></textarea>
@@ -385,6 +388,7 @@ body.playing #projector{display:block}
         <span class="lbl eyebrow"><b id="format">film</b> · coherence <b id="score">0.000</b></span>
         <h1 id="title">Title</h1>
         <div class="meta" id="meta"></div>
+        <p class="synopsis" id="synopsis"></p>
         <div class="actions">
           <button class="solid" id="play" type="button">watch trailer</button>
           <button id="watch" type="button">open on netflix ↗</button>
@@ -776,6 +780,7 @@ async function search(text){
     await lockLeader(results[0]);
     render();
     show('reveal');
+    requestAnimationFrame(()=>autoResize($('#revealQuery')));
     history.replaceState(null,'','#'+encodeURIComponent(q));
   }finally{stopLeader()}
 }
@@ -837,6 +842,8 @@ function render(){
   $('#format').textContent=fmt(m);
   $('#score').textContent=Number(m.score).toFixed(3);
   $('#meta').innerHTML=[m.year,m.publisher,m.availability,...(m.genres||[]).slice(0,2)].filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join('');
+  const ov=(m.overview||'').trim();
+  $('#synopsis').textContent=ov.length>280?ov.slice(0,279).trimEnd()+'…':ov;
 
   $('#pos').textContent=String(active+1).padStart(2,'0');
   $('#total').textContent=String(results.length).padStart(2,'0');
@@ -873,6 +880,7 @@ function step(d,{play=false}={}){
 /* ═══════ INPUT ═══════ */
 function autoResize(el){
   if(!el)return;
+  if(el.offsetParent===null&&el.offsetHeight===0)return; // hidden plate: keep CSS height, don't zero it
   el.style.height='auto';
   const max=parseFloat(getComputedStyle(el).maxHeight)||Infinity;
   el.style.height=Math.min(max,el.scrollHeight)+'px';
