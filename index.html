@@ -458,7 +458,6 @@ const TMDB_BASE='https://api.themoviedb.org/3';
 const NETFLIX_PROVIDER=8, NETFLIX_EXTRA=['1796'];
 const RETURN_COUNT=10, TMDB_MAX_PAGE=500;
 const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/compare';
-const ARCHIVE_BATCH_SIZE=700, ARCHIVE_CONCURRENCY=3;
 const DEPTHS={surface:{limit:250,label:'250'},field:{limit:900,label:'900'},archive:{limit:Infinity,label:'all'}};
 const DEFAULT_DEPTH='surface';
 const FORMAT_LABELS={film:'film',series:'series',podcast:'podcast',short:'short',game:'game',live:'live'};
@@ -731,33 +730,12 @@ async function arbiter(payload,attempts=3){
   }
   throw last;
 }
-const sliceCorpus=(c,a,b)=>{const movies=c.movies.slice(a,b),candidates=c.candidates.slice(a,b),map=new Map();candidates.forEach((x,i)=>map.set(x,movies[i]));return{movies,candidates,map}};
 const mapRows=(rs,c)=>rs.map(r=>{const m=matchRow(r,c);return m?{...m,score:rScore(r)}:null}).filter(Boolean);
 
 async function measure(q,corpus,cands){
-  if(!(searchDepth==='archive'&&cands.length>ARCHIVE_BATCH_SIZE)){
-    setState(`measuring ${cands.length} titles`);
-    const d=await arbiter({query:q,candidates:cands,use_freq:true,top_k:RETURN_COUNT});
-    return mapRows(rows(d),corpus).sort((a,b)=>b.score-a.score).slice(0,RETURN_COUNT);
-  }
-  const total=Math.ceil(cands.length/ARCHIVE_BATCH_SIZE);
-  const batches=Array.from({length:total},(_,i)=>[i*ARCHIVE_BATCH_SIZE,Math.min(cands.length,(i+1)*ARCHIVE_BATCH_SIZE)]);
-  let cur=0,done=0,ok=0;const merged=[],errs=[];
-  setState(`measuring ${cands.length} titles · 0 of ${total} batches`);
-  async function worker(){
-    while(true){
-      const i=cur++;if(i>=batches.length)return;
-      const bc=sliceCorpus(corpus,batches[i][0],batches[i][1]);
-      try{
-        const d=await arbiter({query:q,candidates:bc.candidates,use_freq:true,top_k:RETURN_COUNT});
-        merged.push(...mapRows(rows(d),bc));ok++;
-      }catch(e){errs.push(e)}
-      finally{done++;setState(`measuring ${cands.length} titles · ${done} of ${total} batches`)}
-    }
-  }
-  await Promise.all(Array.from({length:Math.min(ARCHIVE_CONCURRENCY,total)},worker));
-  if(!ok||!merged.length)throw errs[0]||new Error('archive returned nothing');
-  return merged.sort((a,b)=>b.score-a.score).slice(0,RETURN_COUNT);
+  setState(`measuring ${cands.length} titles`);
+  const d=await arbiter({query:q,candidates:cands,use_freq:true,top_k:RETURN_COUNT});
+  return mapRows(rows(d),corpus).sort((a,b)=>b.score-a.score).slice(0,RETURN_COUNT);
 }
 
 /* ═══════ SEARCH ═══════ */
