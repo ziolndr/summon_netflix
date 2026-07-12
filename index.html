@@ -458,7 +458,7 @@ const TMDB_BASE='https://api.themoviedb.org/3';
 const NETFLIX_PROVIDER=8, NETFLIX_EXTRA=['1796'];
 const RETURN_COUNT=10, TMDB_MAX_PAGE=500;
 const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/compare';
-const ARBITER_TIMEOUT_MS=75000, ARCHIVE_BATCH_SIZE=700, ARCHIVE_CONCURRENCY=3;
+const ARCHIVE_BATCH_SIZE=700, ARCHIVE_CONCURRENCY=3;
 const DEPTHS={surface:{limit:250,label:'250'},field:{limit:900,label:'900'},archive:{limit:Infinity,label:'all'}};
 const DEFAULT_DEPTH='surface';
 const FORMAT_LABELS={film:'film',series:'series',podcast:'podcast',short:'short',game:'game',live:'live'};
@@ -719,18 +719,15 @@ function matchRow(r,c){
   }
   return null;
 }
-async function arbiter(payload,attempts=2){
+async function arbiter(payload,attempts=3){
   let last;
   for(let i=0;i<attempts;i++){
-    const ctl=new AbortController();
-    const to=setTimeout(()=>ctl.abort(),ARBITER_TIMEOUT_MS);
     try{
-      const res=await fetch(ARBITER_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify(payload),signal:ctl.signal});
+      const res=await fetch(ARBITER_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify(payload)});
       const raw=await res.text();
       if(!res.ok)throw new Error('arbiter '+res.status);
       return JSON.parse(raw);
-    }catch(e){last=e;if(i<attempts-1){setState('engine timed out · retrying');await pause(800)}}
-    finally{clearTimeout(to)}
+    }catch(e){last=e;if(i<attempts-1){setState('engine busy · retrying');await pause(1000)}}
   }
   throw last;
 }
