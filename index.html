@@ -97,6 +97,23 @@ button.mark{cursor:pointer}
 .tr{top:var(--pad);right:var(--pad)}
 .br{bottom:var(--pad);right:var(--pad)}
 
+.status-corner{display:flex;align-items:center;gap:8px}
+.status-loader{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--white);
+  opacity:.32;
+  animation:statusPulse 1.05s ease-in-out infinite;
+  flex:0 0 auto;
+}
+.status-loader.off{display:none}
+@keyframes statusPulse{
+  0%,100%{opacity:.18;transform:scale(.82)}
+  50%{opacity:.95;transform:scale(1)}
+}
+
+
 /* ═══════ LANDING ═══════ */
 #landing .head{position:absolute;z-index:6;left:var(--pad);bottom:calc(var(--pad) + 66px);top:auto;width:min(62vw,900px);height:clamp(300px,44vh,430px)}
 .title{position:absolute;left:0;bottom:clamp(155px,18vh,185px);font-family:var(--serif);font-size:clamp(52px,7vw,124px);line-height:.86;letter-spacing:-.025em}
@@ -438,7 +455,7 @@ body.playing #projector{display:block}
     <p class="formats">Films · Series · Podcasts · Shorts · Games · Live</p>
   </div>
 
-  <div class="corner br"><span class="lbl" id="status">loading</span></div>
+  <div class="corner br status-corner"><span class="status-loader" id="statusLoader" aria-hidden="true"></span><span class="lbl" id="status">loading</span></div>
 </section>
 
 <!-- ═════════ LEADER ═════════ -->
@@ -898,7 +915,16 @@ function statusLine(p){
   const loaded=cache?.movies?.length||0;
   return `${p} · ${loaded.toLocaleString()} titles`;
 }
-const setStatus=t=>{$('#status').textContent=t};
+const setStatus=t=>{
+  const el=$('#status');
+  const loader=$('#statusLoader');
+  if(el)el.textContent=t;
+  if(loader){
+    const s=String(t||'').toLowerCase();
+    const loading=!s.includes('ready')&&s.trim()!=='';
+    loader.classList.toggle('off',!loading);
+  }
+};
 
 const loadProgress=new Map();
 let openingCount=0;
@@ -1021,7 +1047,7 @@ async function loadCorpus(){
   if(fieldLoadPromise)return fieldLoadPromise;
 
   fieldLoadPromise=(async()=>{
-    setStatus('');
+    setStatus('loading field');
     loadProgress.clear();
 
     const manifest=await required(FIELD_FILES.manifest,'json','manifest');
