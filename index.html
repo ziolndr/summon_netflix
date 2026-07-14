@@ -1003,6 +1003,9 @@ const setStatus=t=>{
 const loadProgress=new Map();
 let openingCount=0;
 let openingReady=false;
+let openingTargetPct=0;
+let openingVisualPct=0;
+let openingProgressRAF=0;
 
 function setFieldOpening(count){
   openingCount=Number(count)||openingCount||0;
@@ -1014,33 +1017,79 @@ function updateFieldProgress(key,loaded,total){
   renderOpeningProgress();
 }
 
+function setOpeningStage(pct,labelText){
+  openingTargetPct=Math.max(openingTargetPct,Math.min(99.4,Number(pct)||0));
+  const label=$('#openingLabel');
+  if(label&&labelText)label.textContent=labelText;
+  startOpeningProgressAnimation();
+}
+
+function startOpeningProgressAnimation(){
+  if(openingProgressRAF)return;
+
+  const tick=()=>{
+    openingProgressRAF=0;
+    const fill=$('#openingFill');
+    if(!fill)return;
+
+    if(openingReady){
+      openingVisualPct=100;
+    }else{
+      // Keep moving toward the real/staged target instead of visibly freezing
+      // at 99% while JSON parsing and typed-array validation finish.
+      const gap=openingTargetPct-openingVisualPct;
+      if(gap>0.01){
+        openingVisualPct+=Math.max(.035,gap*.075);
+      }else if(openingVisualPct<99.15){
+        // Tiny continuous creep during CPU-side preparation.
+        openingVisualPct=Math.min(99.15,openingVisualPct+.018);
+      }
+    }
+
+    fill.style.width=`${Math.min(100,openingVisualPct)}%`;
+
+    if(!openingReady||openingVisualPct<100){
+      openingProgressRAF=requestAnimationFrame(tick);
+    }
+  };
+
+  openingProgressRAF=requestAnimationFrame(tick);
+}
+
 function renderOpeningProgress(){
-  const fill=$('#openingFill');
   const label=$('#openingLabel');
   const count=$('#openingCount');
-  if(!fill||!label||!count)return;
+  if(!label||!count)return;
 
-  let loaded=0,total=0,known=0;
+  let loaded=0,total=0;
   for(const part of loadProgress.values()){
     loaded+=part.loaded||0;
-    if(part.total>0){total+=part.total;known++}
+    if(part.total>0)total+=part.total;
   }
 
   const rawPct=total>0?Math.max(0,Math.min(100,(loaded/total)*100)):0;
-  const pct=openingReady?100:Math.min(99,rawPct);
-  fill.style.width=`${pct}%`;
-  label.textContent=openingReady?'field ready':(rawPct>=100?'preparing field':'loading field');
+
+  if(!openingReady){
+    // Network bytes visually occupy the first 96% of the bar.
+    openingTargetPct=Math.max(openingTargetPct,Math.min(96,rawPct*.96));
+    label.textContent=rawPct>=100?'preparing field':'loading field';
+  }else{
+    openingTargetPct=100;
+    label.textContent='field ready';
+  }
 
   const titleCount=openingCount?`${openingCount.toLocaleString()} titles`:'';
-  const pctText=total>0?`${Math.floor(pct)}%`:'';
-  count.textContent=[titleCount,pctText].filter(Boolean).join(' · ')||'opening';
+  count.textContent=titleCount||'opening';
+
+  startOpeningProgressAnimation();
 }
 
 function finishFieldOpening(){
   openingReady=true;
-  const fill=$('#openingFill');
-  if(fill)fill.style.width='100%';
-  renderOpeningProgress();
+  openingTargetPct=100;
+  const label=$('#openingLabel');
+  if(label)label.textContent='field ready';
+  startOpeningProgressAnimation();
 }
 
 function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},1600)}
@@ -1317,6 +1366,7 @@ async function loadCorpus(){
 
     const movies=await metadataPromise;
     if(!Array.isArray(movies))throw new Error('metadata is not an array');
+    setOpeningStage(97.2,'preparing field');
 
     // Keep the cinematic loading gate alive with real field artwork while
     // vectors and norms finish loading. The homepage is still hidden.
@@ -1325,6 +1375,7 @@ async function loadCorpus(){
     if(fieldArt.length)openingPool=fieldArt;
 
     const [vectorBuffer,normBuffer]=await Promise.all([vectorPromise,normPromise]);
+    setOpeningStage(98.6,'preparing field');
 
     const vectors=new Float32Array(vectorBuffer);
     const norms=new Float32Array(normBuffer);
@@ -1334,6 +1385,7 @@ async function loadCorpus(){
     if(Number(manifest.count)!==count)throw new Error(`manifest count ${manifest.count} != metadata ${count}`);
     if(vectors.length!==count*dim)throw new Error(`vector length ${vectors.length} != ${count*dim}`);
     if(norms.length!==count)throw new Error(`norm length ${norms.length} != ${count}`);
+    setOpeningStage(99.4,'opening field');
 
     cs.complete=true;
     cache={movies,vectors,norms,manifest,dim};
@@ -1784,7 +1836,6 @@ voice('#revealVoiceBtn','#revealQuery');
 
     await loadCorpus();
     setStatus(statusLine('ready'));
-    finishFieldOpening();
 
     const h=decodeURIComponent(location.hash.replace(/^#/,''));
     if(h){
