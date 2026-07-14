@@ -68,6 +68,7 @@ button{cursor:pointer}
 .mark{display:inline-flex;align-items:center;text-align:left;line-height:1}
 .mark-word{font-family:var(--serif);font-weight:400;font-size:30px;line-height:.86;letter-spacing:.05em;text-transform:uppercase;color:var(--white)}
 button.mark:hover .mark-word{opacity:.7}
+button.mark{cursor:pointer}
 
 /* ─────── shared image bed ─────── */
 .canvas{position:absolute;inset:0;overflow:hidden;background:var(--film)}
@@ -360,7 +361,7 @@ body.playing #projector{display:block}
   <div class="canvas"><img id="coverA" alt=""><img id="coverB" alt=""></div>
 
   <div class="corner tl">
-    <div class="mark"><span class="mark-word">Summon</span></div>
+    <button class="mark" id="landingHome" type="button" aria-label="Go to homepage and restart summons"><span class="mark-word">Summon</span></button>
   </div>
   <div class="corner tr">
     <div class="depth" role="group" aria-label="How many titles to search">
@@ -393,7 +394,7 @@ body.playing #projector{display:block}
   <div class="canvas"><img id="ambA" alt=""><img id="ambB" alt=""></div>
 
   <div class="corner tl">
-    <div class="mark"><span class="mark-word">Summon</span></div>
+    <button class="mark" id="leaderHome" type="button" aria-label="Go to homepage and restart summons"><span class="mark-word">Summon</span></button>
   </div>
 
   <div class="work">
@@ -684,26 +685,46 @@ function typePlaceholder(el,text){
   });
 }
 
-let rollI=0,rollRun=false;
-async function rollCycle(){
+let rollI=0,rollRun=false,rollGeneration=0;
+async function rollCycle(generation){
   const q=$('#query');
-  while(rollRun){
+  while(rollRun&&generation===rollGeneration){
     try{
-      if(busy()){q.setAttribute('placeholder','');resetPlaceholderHeight(q);await pause(700);continue}
+      if(busy()){
+        q.setAttribute('placeholder','');
+        resetPlaceholderHeight(q);
+        await pause(700);
+        continue;
+      }
       await typePlaceholder(q,ROLL[rollI]);
-      if(!busy()){q.setAttribute('placeholder',ROLL[rollI]);resizeForPlaceholder(q,ROLL[rollI]);}   // drop caret, hold full line
+      if(!rollRun||generation!==rollGeneration)break;
+      if(!busy()){
+        q.setAttribute('placeholder',ROLL[rollI]);
+        resizeForPlaceholder(q,ROLL[rollI]);
+      }
       await pause(2600);
+      if(!rollRun||generation!==rollGeneration)break;
       if(!$('#landing').classList.contains('on')){rollRun=false;break}
       rollI=(rollI+1)%ROLL.length;
-    }catch(e){await pause(500)}
+    }catch(e){
+      if(!rollRun||generation!==rollGeneration)break;
+      await pause(500);
+    }
   }
 }
-function rollStart(){
-  if(!$('#query')||rollRun)return;
-  rollRun=true;
-  rollCycle();
+function rollStop(){
+  rollRun=false;
+  rollGeneration++;
 }
-window.addEventListener('load',rollStart);   // backup start, guarded against double-run
+function rollStart({restart=false}={}){
+  if(!$('#query'))return;
+  if(restart)rollI=0;
+  if(rollRun)return;
+  rollRun=true;
+  const generation=++rollGeneration;
+  rollCycle(generation);
+}
+window.addEventListener('load',()=>rollStart());   // backup start, guarded against double-run
 
 /* ═══════ STATE ═══════ */
 let cache=null, results=[], active=0, currentQuery='', searchDepth=DEFAULT_DEPTH, corpusLock=null, silentLoad=false;
@@ -976,6 +997,7 @@ async function measure(q,corpus,cands){
 async function search(text){
   const q=(text||'').trim();
   if(!q)return;
+  rollStop();
   currentQuery=q;
   $('#query').value=q;$('#revealQuery').value=q;
   closeProjector();
@@ -1160,7 +1182,26 @@ $('#searchForm').addEventListener('submit',e=>{
 });
 $('#revealForm').addEventListener('submit',e=>{e.preventDefault();search($('#revealQuery').value)});
 
-$('#home').onclick=()=>{closeProjector();show('landing');history.replaceState(null,'',location.pathname);rollStart();$('#query').focus()};
+function goHomeAndReplay(){
+  closeProjector();
+  rollStop();
+  show('landing');
+  history.replaceState(null,'',location.pathname);
+
+  const q=$('#query');
+  if(document.activeElement)document.activeElement.blur();
+  q.value='';
+  q.setAttribute('placeholder','');
+  resetPlaceholderHeight(q);
+  autoResize(q);
+
+  // Replay the homepage examples from the beginning without forcing focus into the field.
+  requestAnimationFrame(()=>rollStart({restart:true}));
+}
+
+$('#home').onclick=goHomeAndReplay;
+$('#landingHome').onclick=goHomeAndReplay;
+$('#leaderHome').onclick=goHomeAndReplay;
 $('#prev').onclick=()=>step(-1);
 $('#next').onclick=()=>step(1);
 $('#play').onclick=()=>openProjector();
