@@ -1954,7 +1954,7 @@ voice('#revealVoiceBtn','#revealQuery');
 
     // Hold the user on a deliberate cinematic loading gate. Artwork cycles
     // while the full field loads; the homepage does not appear half-ready.
-    primeLoadingCovers();
+    startOpeningCover();
 
     await loadCorpus();
     setStatus(statusLine('ready'));
