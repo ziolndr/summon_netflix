@@ -130,6 +130,32 @@ button.mark{cursor:pointer}
   user-select:none;
   will-change:transform,opacity;
 }
+
+.opening-thought{
+  position:absolute;z-index:7;
+  left:50%;top:calc(50% + clamp(64px,8.5vw,138px));
+  width:min(78vw,980px);
+  transform:translateX(-50%);
+  text-align:center;
+  color:rgba(246,244,239,.96);
+  font-family:var(--sans);
+  font-size:clamp(15px,1.45vw,24px);
+  line-height:1.3;
+  letter-spacing:-.015em;
+  text-wrap:balance;
+  text-shadow:0 2px 22px rgba(0,0,0,.56);
+  opacity:0;
+  transition:opacity .42s ease,transform .42s ease;
+  pointer-events:none;
+}
+.opening-thought.on{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.opening-thought.out{
+  opacity:0;
+  transform:translateX(-50%) translateY(6px);
+}
 .opening-status{
   position:absolute;z-index:7;left:var(--pad);right:var(--pad);bottom:var(--pad);
   display:grid;gap:12px;
@@ -151,6 +177,7 @@ button.mark{cursor:pointer}
   will-change:width;
 }
 #opening.transitioning .opening-status{opacity:0;transform:translateY(8px)}
+#opening.transitioning .opening-thought{opacity:0;transform:translateX(-50%) translateY(6px)}
 #opening.leaving{animation:openingLeave .9s cubic-bezier(.22,.8,.22,1) forwards}
 @keyframes openingLeave{
   0%{opacity:1}
@@ -486,6 +513,12 @@ body.playing #projector{display:block}
 
 @media (max-width:720px){
   .opening-word{font-size:clamp(58px,21vw,108px);top:47%}
+  .opening-thought{
+    top:calc(47% + clamp(52px,17vw,86px));
+    width:min(88vw,620px);
+    font-size:clamp(14px,4vw,18px);
+    line-height:1.32;
+  }
   .opening-meta{align-items:flex-end}
 }
 
@@ -497,6 +530,7 @@ body.playing #projector{display:block}
 <section class="plate on" id="opening" aria-live="polite">
   <div class="canvas"><img id="openingCoverA" alt=""><img id="openingCoverB" alt=""></div>
   <div class="opening-word" id="openingWord">Summon</div>
+  <div class="opening-thought" id="openingThought" aria-live="polite"></div>
   <div class="opening-status">
     <div class="opening-meta">
       <span class="lbl" id="openingLabel">loading field</span>
@@ -858,14 +892,23 @@ function rollStop(){
   rollGeneration++;
 }
 function rollStart({restart=false}={}){
-  if(!$('#query'))return;
+  const q=$('#query');
+  const landing=$('#landing');
+  const opening=$('#opening');
+  if(!q||!landing?.classList.contains('on')||opening?.classList.contains('on'))return;
   if(restart)rollI=0;
   if(rollRun)return;
   rollRun=true;
   const generation=++rollGeneration;
   rollCycle(generation);
 }
-window.addEventListener('load',()=>rollStart());   // backup start, guarded against double-run
+
+// Backup only. Never start examples underneath the opening/loading gate.
+window.addEventListener('load',()=>{
+  if($('#landing')?.classList.contains('on')&&!$('#opening')?.classList.contains('on')){
+    rollStart();
+  }
+});
 
 /* ═══════ STATE ═══════ */
 let cache=null, results=[], active=0, currentQuery='', corpusLock=null, silentLoad=false;
@@ -1136,76 +1179,154 @@ async function required(url,kind='json',progressKey=url,expectedTotal=0,track=tr
 }
 
 
+const OPENING_THOUGHTS=[
+  "See your favorite films in a whole new light.",
+  "Find films, shows, and games that resonate with your intent.",
+  "Wondered what films would feel like heartbreak and victory at the same time? Now you can.",
+  "As the president, what should you watch to end the war? Now you can ask.",
+  "SUMMON hears not just what you say, but what you mean.",
+  "Across Netflix, Apple TV+, Prime Video, Max, Disney+, games, and more.",
+  "Find the film you can feel but have never been able to name.",
+  "Search for a contradiction: something beautiful and terrifying at once.",
+  "Find what resonates with the exact moment you are in.",
+  "Ask for the emotional logic of a dream.",
+  "Find something hopeful and devastating at the same time.",
+  "Search by memory. Search by tension. Search by meaning.",
+  "What should you watch after making the biggest decision of your life?",
+  "Find something that understands the feeling before you can explain it.",
+  "See what your favorite film becomes through a completely different intent.",
+  "Ask for a feeling no genre could ever contain.",
+  "Find the movie that feels like the life you almost lived.",
+  "Search for what victory costs.",
+  "Ask for the exact loneliness of being understood perfectly by a machine.",
+  "Find something that feels like a warning from the future.",
+  "What should the world watch when everything is about to change?",
+  "Find a story that feels like losing everything and finally becoming free.",
+  "Search the field for the thing that should not have a name, but does.",
+  "Find something that feels like remembering a life that was never yours.",
+  "Ask what grief looks like when it becomes beautiful.",
+  "Find the story hiding inside the question you have not asked yet.",
+  "Search across 200,137 titles by resonance.",
+  "One intent. An entire field.",
+  "Find something for the person you are becoming, not the person you were.",
+  "Ask the impossible thing."
+];
+
+let openingThoughtBag=[];
+let openingLastThought='';
+
+function refillOpeningThoughtBag(){
+  const bag=[...new Set(OPENING_THOUGHTS)];
+  for(let i=bag.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [bag[i],bag[j]]=[bag[j],bag[i]];
+  }
+  if(bag.length>1&&bag[0]===openingLastThought){
+    [bag[0],bag[1]]=[bag[1],bag[0]];
+  }
+  openingThoughtBag=bag;
+}
+
+function nextOpeningThought(){
+  if(!openingThoughtBag.length)refillOpeningThoughtBag();
+  const thought=openingThoughtBag.shift()||'';
+  openingLastThought=thought;
+  return thought;
+}
+
+function paintOpeningThought(){
+  const el=$('#openingThought');
+  if(!el)return;
+  const next=nextOpeningThought();
+  el.classList.remove('on');
+  el.classList.add('out');
+  setTimeout(()=>{
+    el.textContent=next;
+    el.classList.remove('out');
+    requestAnimationFrame(()=>el.classList.add('on'));
+  },180);
+}
+
 let openingPool=[],openingFlip=0,openingTimer=null,openingLastId=null;
+let openingArtBag=[];
+let openingLastKey='';
+
+function openingArtKey(item){
+  return [
+    item?.backdropPath||'',
+    item?.posterPath||'',
+    item?.tmdbId||'',
+    item?.title||''
+  ].join('|');
+}
+
+function refillOpeningArtBag(){
+  const unique=[];
+  const seen=new Set();
+
+  for(const item of openingPool){
+    const key=openingArtKey(item);
+    if(!key||seen.has(key))continue;
+    seen.add(key);
+    unique.push(item);
+  }
+
+  for(let i=unique.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [unique[i],unique[j]]=[unique[j],unique[i]];
+  }
+
+  if(unique.length>1&&openingArtKey(unique[0])===openingLastKey){
+    [unique[0],unique[1]]=[unique[1],unique[0]];
+  }
+
+  openingArtBag=unique;
+}
+
+function nextOpeningArt(){
+  if(!openingArtBag.length)refillOpeningArtBag();
+  const item=openingArtBag.shift()||null;
+  if(item)openingLastKey=openingArtKey(item);
+  return item;
+}
+
+function openingImageUrl(item){
+  if(!item)return '';
+  const path=item.backdropPath||item.posterPath||'';
+  if(!path)return '';
+  return `https://image.tmdb.org/t/p/original${path}`;
+}
+
 function paintOpeningCover(){
-  if(!openingPool.length)return;
-  const pick=()=>{
-    let m=null,tries=0;
-    do{m=openingPool[Math.floor(Math.random()*openingPool.length)];tries++}
-    while(openingPool.length>1&&m?.tmdbId===openingLastId&&tries<10);
-    if(m)openingLastId=m.tmdbId;
-    return m;
+  const item=nextOpeningArt();
+  const src=openingImageUrl(item);
+  if(!src)return;
+
+  paintOpeningThought();
+
+  const imgs=$$('#opening .canvas img');
+  const incoming=imgs.find(img=>!img.classList.contains('on'))||imgs[0];
+  const outgoing=imgs.find(img=>img.classList.contains('on'));
+
+  incoming.onload=()=>{
+    incoming.classList.add('on');
+    if(outgoing&&outgoing!==incoming)outgoing.classList.remove('on');
   };
-  const swapOpening=m=>{
-    if(!m)return;
-    const url=img(m.backdropPath||m.posterPath,'original');
-    if(!url)return;
-    const incoming=openingFlip?$('#openingCoverA'):$('#openingCoverB');
-    const outgoing=openingFlip?$('#openingCoverB'):$('#openingCoverA');
-    incoming.onload=()=>{incoming.classList.add('on');outgoing.classList.remove('on')};
-    incoming.src=url;
-    incoming.alt='';
-    openingFlip^=1;
-  };
-  swapOpening(pick());
-  if(!openingTimer)openingTimer=setInterval(()=>swapOpening(pick()),3600);
+  incoming.src=src;
 }
+
+function startOpeningCover(){
+  stopOpeningCover();
+  openingArtBag=[];
+  openingThoughtBag=[];
+  paintOpeningCover();
+  openingTimer=setInterval(paintOpeningCover,3600);
+}
+
 function stopOpeningCover(){
-  clearInterval(openingTimer);
-  openingTimer=null;
-}
-
-async function primeLoadingCovers(){
-  try{
-    const params=new URLSearchParams({
-      api_key:TMDB_KEY,
-      language:'en-US',
-      sort_by:'popularity.desc',
-      page:'1',
-      include_adult:'false'
-    });
-
-    const [movies,tv]=await Promise.all([
-      fetch(`${TMDB_BASE}/discover/movie?${params}`).then(r=>r.ok?r.json():null),
-      fetch(`${TMDB_BASE}/discover/tv?${params}`).then(r=>r.ok?r.json():null)
-    ]);
-
-    const preview=[
-      ...((movies?.results)||[]).map(x=>({
-        title:x.title,
-        type:'film',
-        tmdbId:x.id,
-        tmdbKind:'movie',
-        backdropPath:x.backdrop_path||'',
-        posterPath:x.poster_path||''
-      })),
-      ...((tv?.results)||[]).map(x=>({
-        title:x.name,
-        type:'series',
-        tmdbId:x.id,
-        tmdbKind:'tv',
-        backdropPath:x.backdrop_path||'',
-        posterPath:x.poster_path||''
-      }))
-    ].filter(x=>x.backdropPath);
-
-    if(preview.length){
-      openingPool=preview;
-      cs.movies=preview;
-      paintOpeningCover();
-    }
-  }catch(e){
-    console.warn('loading cover preview unavailable',e);
+  if(openingTimer){
+    clearInterval(openingTimer);
+    openingTimer=null;
   }
 }
 
@@ -1285,9 +1406,19 @@ async function morphOpeningWordToHome(){
 async function enterReadyHomepage(){
   const opening=$('#opening');
   const landing=$('#landing');
+  const q=$('#query');
 
   await whenBarFull();
   await pause(420);
+
+  // The input stays completely blank through the opening → homepage morph.
+  // No example text is allowed to exist or animate during the transition.
+  rollStop();
+  if(q){
+    q.value='';
+    q.setAttribute('placeholder','');
+    resetPlaceholderHeight(q);
+  }
 
   landing?.classList.add('on');
   seedLandingFromOpening();
@@ -1310,6 +1441,11 @@ async function enterReadyHomepage(){
   landing?.classList.add('on');
 
   paintCover();
+
+  // Let the homepage and input geometry fully settle before any example appears.
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  await pause(90);
+
   rollStart({restart:true});
 }
 
@@ -1359,7 +1495,10 @@ async function loadCorpus(){
     if(!Array.isArray(movies))throw new Error('metadata is not an array');
     cs.movies=movies;
     const withArt=movies.filter(m=>m.backdropPath);
-    if(withArt.length)openingPool=withArt;
+    if(withArt.length){
+      openingPool=withArt;
+      openingArtBag=[];
+    }
 
     const [vectorBuffer,normBuffer]=await Promise.all([vectorPromise,normPromise]);
 
