@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0A0A09">
 <title>SUMMON — find anything on Netflix by meaning</title>
-<meta name="description" content="Describe what you want. SUMMON measures the whole Netflix field and returns what fits.">
+<meta name="description" content="Summon anything by resonance. SUMMON measures the whole Netflix field and returns what fits.">
 <link rel="icon" href="./summon-favicon.svg" type="image/svg+xml">
 <link rel="icon" href="./summon-favicon.ico" sizes="any">
 <link rel="icon" href="./summon-favicon-32.png" sizes="32x32" type="image/png">
@@ -24,7 +24,7 @@
 <meta name="twitter:image" content="./summon-og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..900&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <base target="_blank">
 <style>
 /* ══════════════════════════════════════════════
@@ -44,6 +44,7 @@
   --accent-soft:rgba(229,9,20,.16);
   --accent-glow:rgba(229,9,20,.42);
   --serif:'Instrument Serif',Georgia,serif;
+  --display:'Fraunces','Instrument Serif',Georgia,serif;
   --mono:'DM Mono',ui-monospace,Menlo,monospace;
   --pad:clamp(18px,2.6vw,42px);
   --label:clamp(9px,.72vw,11px);
@@ -84,18 +85,27 @@ button.mark:hover .mark-word{opacity:.7}
 }
 
 .corner{position:absolute;z-index:8;display:flex;align-items:center;gap:16px}
+/* ─── landing: let the film pop. protect only the corner the type sits in ─── */
+#landing .canvas img{filter:saturate(1.06)}
+#landing .canvas::after{
+  background:
+    linear-gradient(180deg,rgba(10,10,9,.24) 0%,rgba(10,10,9,0) 28%,rgba(10,10,9,0) 56%,rgba(10,10,9,.88) 100%),
+    linear-gradient(90deg,rgba(10,10,9,.7) 0%,rgba(10,10,9,.16) 32%,rgba(10,10,9,0) 58%);
+}
 .tl{top:var(--pad);left:var(--pad)}
 .tr{top:var(--pad);right:var(--pad)}
 .br{bottom:var(--pad);right:var(--pad)}
 
 /* ═══════ LANDING ═══════ */
-#landing .head{position:absolute;z-index:6;left:var(--pad);bottom:calc(var(--pad) + 66px);width:min(62vw,900px)}
-.title{font-family:var(--serif);font-size:clamp(52px,7vw,124px);line-height:.86;letter-spacing:-.025em}
+#landing .head{position:absolute;z-index:6;left:var(--pad);bottom:calc(var(--pad) + 66px);top:auto;width:min(62vw,900px);height:clamp(300px,44vh,430px)}
+.title{position:absolute;left:0;bottom:clamp(155px,18vh,185px);font-family:var(--serif);font-size:clamp(52px,7vw,124px);line-height:.86;letter-spacing:-.025em}
 .title i{font-style:italic}
+#searchForm{position:absolute;left:0;right:0;bottom:24px}
+#landing .formats{position:absolute;left:0;bottom:0;margin-top:0}
 
-.line{margin-top:28px;display:flex;align-items:flex-end;gap:14px;border-bottom:1px solid var(--white);padding-bottom:10px}
-#query{flex:1;min-width:0;resize:none;overflow:hidden;font-family:var(--serif);font-size:clamp(22px,2.4vw,38px);line-height:1.1;min-height:1.1em;max-height:3.4em;caret-color:var(--white)}
-#query::placeholder{color:var(--faint)}
+.line{margin-top:0;display:flex;align-items:flex-end;gap:14px;border-bottom:1px solid var(--white);padding-bottom:10px}
+#query{flex:1;min-width:0;resize:none;overflow:hidden;font-family:var(--serif);font-size:clamp(22px,2.4vw,38px);line-height:1.1;min-height:1.1em;max-height:8.8em;caret-color:var(--white);transition:height .18s ease}
+#query::placeholder{color:var(--white);opacity:1}
 .icon{width:38px;height:38px;flex:0 0 auto;display:grid;place-items:center;border:1px solid var(--hair);color:var(--dim)}
 .icon:hover{color:var(--white);border-color:var(--white)}
 .icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -108,6 +118,13 @@ button.mark:hover .mark-word{opacity:.7}
 .credits .stack span{display:block}
 .subhint{margin-top:18px;font-family:var(--mono);font-size:var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
 .formats{margin-top:10px;font-family:var(--mono);font-size:var(--label);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+
+/* ═══ PROOF — full-bleed film, the summon overlaid, the score. that's all. ═══ */
+.summon-echo{display:block;font-family:var(--serif);font-style:italic;font-size:clamp(15px,1.4vw,20px);line-height:1.25;color:var(--dim);margin-bottom:12px;max-width:44ch;text-wrap:balance}
+.summon-echo:empty{display:none}
+@media (max-width:720px){
+  #landing .head{width:auto;left:var(--pad);right:var(--pad)}
+}
 
 .rail{position:absolute;z-index:6;left:var(--pad);bottom:var(--pad);right:calc(var(--pad) + 210px);display:flex;flex-wrap:wrap;align-items:center;gap:2px}
 .rail .rail-lbl{margin-right:10px;white-space:nowrap}
@@ -289,8 +306,8 @@ body.playing #projector{display:block}
   :root{--pad:16px}
   .credits{top:auto;bottom:calc(var(--pad) + 186px);translate:0;max-width:46vw}
   .credits .stack{font-size:16px}
-  #landing .head{width:auto;right:var(--pad);bottom:calc(var(--pad) + 54px)}
-  .title{font-size:clamp(38px,10.5vw,64px)}
+  #landing .head{width:auto;right:var(--pad);bottom:calc(var(--pad) + 54px);top:auto;height:clamp(260px,44vh,360px)}
+  .title{bottom:clamp(135px,18vh,165px);font-size:clamp(38px,10.5vw,64px)}
   .rail{right:var(--pad);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .rail::-webkit-scrollbar{display:none}
   #landing .br{bottom:auto;top:var(--pad);right:var(--pad)}
@@ -318,8 +335,8 @@ body.playing #projector{display:block}
   .depth{gap:12px;white-space:nowrap}
   .depth-lbl{display:none}
   .depth button{font-size:10px;letter-spacing:.08em}
-  #landing .head{left:var(--pad);right:var(--pad);width:auto;bottom:calc(var(--pad) + 30px)}
-  .title{font-size:clamp(32px,8.6vw,56px)}
+  #landing .head{left:var(--pad);right:var(--pad);width:auto;bottom:calc(var(--pad) + 30px);top:auto;height:clamp(250px,48vh,340px)}
+  .title{bottom:clamp(125px,18vh,155px);font-size:clamp(32px,8.6vw,56px)}
   .line{gap:10px}
   .subhint{margin-top:14px}
 }
@@ -327,6 +344,8 @@ body.playing #projector{display:block}
   .mark-word{font-size:26px}
   .depth{gap:9px}
   .depth button{font-size:9px;letter-spacing:.05em}
+  #landing .head{height:clamp(240px,50vh,330px)}
+  .title{bottom:clamp(118px,18vh,148px)}
   #query{font-size:clamp(20px,6.2vw,30px)}
 }
 
@@ -351,17 +370,16 @@ body.playing #projector{display:block}
   </div>
 
   <div class="head">
-    <h1 class="title"><i>Find anything on Netflix by meaning.</i></h1>
+    <h1 class="title">Summon anything by resonance on Netflix</h1>
     <form id="searchForm">
       <div class="line">
-        <textarea id="query" rows="1" spellcheck="false" autocomplete="off" inputmode="search" placeholder="Describe it in your own words"></textarea>
-        <button type="button" class="icon" id="voiceBtn" aria-label="Dictate query">
+        <textarea id="query" rows="1" spellcheck="false" autocomplete="off" inputmode="search" placeholder=""></textarea>
+        <button type="button" class="icon" id="voiceBtn" aria-label="Dictate">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.25c1.85 0 3.2-1.35 3.2-3.2V6.2C15.2 4.35 13.85 3 12 3S8.8 4.35 8.8 6.2v4.85c0 1.85 1.35 3.2 3.2 3.2Z"/><path d="M5.75 10.5c0 3.55 2.55 6.05 6.25 6.05s6.25-2.5 6.25-6.05"/><path d="M12 16.55V21"/><path d="M8.6 21h6.8"/></svg>
         </button>
-        <button type="submit" class="send" aria-label="Run query">→</button>
+        <button type="submit" class="send" aria-label="Run summon">→</button>
       </div>
     </form>
-    <p class="subhint" id="subhint">Say what you want, we’ll find what fits</p>
     <p class="formats">Films · Series · Podcasts · Shorts · Games · Live</p>
   </div>
 
@@ -394,18 +412,18 @@ body.playing #projector{display:block}
 
   <div id="revealFrame">
     <header class="bar">
-      <button class="mark" id="home" type="button" aria-label="New query">
+      <button class="mark" id="home" type="button" aria-label="New summon">
         <span class="mark-word">Summon</span>
       </button>
 
       <div class="summon-bar">
-        <span class="lbl">query</span>
+        <span class="lbl">summon</span>
         <form id="revealForm">
-          <textarea id="revealQuery" rows="1" spellcheck="false" placeholder="restate the query"></textarea>
-          <button type="button" class="icon" id="revealVoiceBtn" aria-label="Dictate query">
+          <textarea id="revealQuery" rows="1" spellcheck="false" placeholder="reshape your summon…"></textarea>
+          <button type="button" class="icon" id="revealVoiceBtn" aria-label="Dictate">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.25c1.85 0 3.2-1.35 3.2-3.2V6.2C15.2 4.35 13.85 3 12 3S8.8 4.35 8.8 6.2v4.85c0 1.85 1.35 3.2 3.2 3.2Z"/><path d="M5.75 10.5c0 3.55 2.55 6.05 6.25 6.05s6.25-2.5 6.25-6.05"/><path d="M12 16.55V21"/><path d="M8.6 21h6.8"/></svg>
           </button>
-          <button type="submit" class="send" aria-label="Run query">→</button>
+          <button type="submit" class="send" aria-label="Run summon">→</button>
         </form>
       </div>
 
@@ -418,7 +436,8 @@ body.playing #projector{display:block}
 
     <div class="stage">
       <div class="info">
-        <span class="lbl eyebrow"><b id="format">film</b> · coherence <b id="score">0.000</b></span>
+        <p class="summon-echo" id="summonEcho"></p>
+        <span class="lbl eyebrow"><b id="format">film</b> · resonance <b id="score">0.000</b></span>
         <h1 id="title">Title</h1>
         <div class="meta" id="meta"></div>
         <p class="synopsis" id="synopsis"></p>
@@ -433,7 +452,7 @@ body.playing #projector{display:block}
 
     <div class="deck">
       <div class="deck-head">
-        <span class="lbl">ranked field</span>
+        <span class="lbl">ranked resonance field</span>
         <span class="lbl" id="deckCount"></span>
       </div>
       <div class="deck-strip" id="deck"></div>
@@ -464,19 +483,180 @@ const FORMAT_LABELS={film:'film',series:'series',podcast:'podcast',short:'short'
 
 const CURATED_NETFLIX_FIELD=[{"title":"The Bill Simmons Podcast","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"now on Netflix","genres":["Sports","Culture","Conversation"],"overview":"Long-form sports and culture conversations, arguments, predictions, and deep dives with athletes, celebrities, and voices from The Ringer universe."},{"title":"Pardon My Take","year":"2026","type":"podcast","publisher":"Barstool Sports","availability":"now on Netflix","genres":["Sports","Comedy","Conversation"],"overview":"Irreverent sports talk built around fan culture, sharp commentary, recurring bits, big personalities, and the absurdity surrounding the games."},{"title":"Spittin' Chiclets","year":"2026","type":"podcast","publisher":"Barstool Sports","availability":"now on Netflix","genres":["Hockey","Sports","Storytelling"],"overview":"NHL analysis, hockey culture, locker-room stories, pop culture, and candid conversation with players and personalities."},{"title":"The Ryen Russillo Podcast","year":"2026","type":"podcast","publisher":"Barstool Sports","availability":"now on Netflix","genres":["Sports","Analysis","Interviews"],"overview":"Long-form sports analysis and conversations with athletes, media figures, and people shaping modern sports culture."},{"title":"The Zach Lowe Show","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"on Netflix","genres":["Basketball","NBA","Analysis"],"overview":"Detailed NBA analysis focused on strategy, roster construction, player fit, league trends, and the small tactical decisions that change games."},{"title":"The Rewatchables","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"on Netflix","genres":["Film","Culture","Conversation"],"overview":"A joyful, obsessive return to beloved movies: best scenes, performances, casting what-ifs, legacy, quotability, and why certain films stay alive in memory."},{"title":"The Big Picture","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"on Netflix","genres":["Film","Industry","Criticism"],"overview":"Movies, filmmakers, awards, the business of cinema, and wide-ranging conversations about how films are made, received, and remembered."},{"title":"Dissect","year":"2026","type":"podcast","publisher":"Spotify","availability":"on Netflix","genres":["Music","Analysis","Storytelling"],"overview":"Long-form analysis of major albums and songs, tracing lyrics, themes, production choices, symbolism, and cultural context piece by piece."},{"title":"Conspiracy Theories","year":"2026","type":"podcast","publisher":"Spotify","availability":"on Netflix","genres":["Mystery","History","Psychology"],"overview":"A guided investigation of famous conspiracy theories, separating documented history, plausible questions, hidden incentives, and mythology."},{"title":"Serial Killers","year":"2026","type":"podcast","publisher":"Spotify","availability":"on Netflix","genres":["True Crime","Psychology","History"],"overview":"True-crime stories examining notorious killers, investigative failures, psychology, victims, and the systems surrounding major cases."},{"title":"My Favorite Murder","year":"2026","type":"podcast","publisher":"iHeartMedia","availability":"on Netflix","genres":["True Crime","Comedy","Conversation"],"overview":"True crime told through candid conversation, dark humor, personal reactions, and the strange details that make cases impossible to forget."},{"title":"The Breakfast Club","year":"2026","type":"podcast","publisher":"iHeartMedia","availability":"on Netflix","genres":["Music","Culture","Interviews"],"overview":"Unfiltered interviews and conversation spanning music, celebrity, politics, internet culture, controversy, and the personalities driving the moment."},{"title":"The Pete Davidson Show","year":"2026","type":"podcast","publisher":"Netflix","availability":"now on Netflix","genres":["Comedy","Conversation","Celebrity"],"overview":"Candid, no-holds-barred conversations with Pete Davidson and friends, mostly from his garage, with the looseness of hanging out after midnight."},{"title":"BEEF: The Official Podcast","year":"2026","type":"podcast","publisher":"Netflix","availability":"now on Netflix","genres":["Behind the Scenes","Drama","Creative Process"],"overview":"Creator Lee Sung Jin and the cast unpack BEEF Season 2, creative decisions, performance, rivalry, music, and how the story was built."},{"title":"Bridgerton: The Official Podcast","year":"2026","type":"podcast","publisher":"Netflix / Shondaland","availability":"now on Netflix","genres":["Romance","Behind the Scenes","Drama"],"overview":"A companion journey through Bridgerton Season 4 with cast and creators discussing love, heartbreak, friendship, performance, and the world behind the ton."},{"title":"The Rest Is Football","year":"2026","type":"podcast","publisher":"Goalhanger","availability":"daily during the 2026 tournament","genres":["Football","World Cup","Analysis"],"overview":"Gary Lineker, Alan Shearer, and Micah Richards deliver daily world football analysis, big-match reactions, interviews, honesty, and humor."},{"title":"On Purpose with Jay Shetty","year":"2026","type":"podcast","publisher":"Netflix / Spotify","availability":"2026 on Netflix","genres":["Personal Growth","Relationships","Conversation"],"overview":"Deep conversations about grief, anxiety, love, identity, healing, purpose, and the hardest truths people carry into their lives."},{"title":"We're Back! with Brian Williams","year":"2026","type":"podcast","publisher":"Netflix","availability":"announced for 2026","genres":["Culture","Interviews","Ideas"],"overview":"Unhurried conversations with actors, writers, musicians, athletes, journalists, scientists, and consequential people shaping culture."},{"title":"FIFA World Cup: Launch Edition","year":"2026","type":"game","publisher":"Netflix Games / Delphi Interactive","availability":"play now","genres":["Football","Sports","Multiplayer"],"overview":"A reimagined football simulation built for instant play on TV, with the phone as controller, featuring the drama and emotion of the 2026 World Cup."},{"title":"Boggle Party","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Words","Party","Puzzle"],"overview":"A fast social word game for one to eight players where phones become controllers and everyone races to find the best words on the shared TV grid."},{"title":"LEGO Party!","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Party","Family","Minigames"],"overview":"A competitive collection of playful LEGO minigames, board-game chaos, customization, and living-room rivalry for friends and families."},{"title":"Party Crashers: Fool Your Friends","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Social Deduction","Party","Comedy"],"overview":"A bluffing game where one player does not know the secret word and must fake their way through clues without being exposed as the party crasher."},{"title":"Pictionary: Game Night","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Drawing","Party","Family"],"overview":"Draw on a phone, watch the image appear on the TV, and race against the clock as friends try to decipher increasingly questionable masterpieces."},{"title":"Tetris Time Warp","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Puzzle","Arcade","Multiplayer"],"overview":"Classic Tetris with time-warps into historic versions of the game, each with altered rules, retro constraints, and competitive living-room play."},{"title":"Overcooked! All You Can Eat","year":"2026","type":"game","publisher":"Netflix Games","availability":"play on TV","genres":["Co-op","Party","Chaos"],"overview":"A frantic cooperative cooking game where communication collapses, kitchens move, orders pile up, and friendship is tested under ridiculous pressure."},{"title":"Jackbox Party Pack","year":"2026","type":"game","publisher":"Netflix Games","availability":"play on TV","genres":["Party","Comedy","Trivia"],"overview":"A living-room collection of social games built around jokes, drawing, trivia, bluffing, and group chemistry, with phones used as controllers."},{"title":"Red Dead Redemption","year":"2026","type":"game","publisher":"Netflix Games","availability":"on mobile","genres":["Western","Open World","Story"],"overview":"A sprawling western about violence, loyalty, fading myths, and a man trying to survive as the frontier world that made him begins to disappear."},{"title":"Netflix Puzzled: Scattergories Daily","year":"2026","type":"game","publisher":"Netflix Puzzled","availability":"play daily","genres":["Word Game","Daily","Puzzle"],"overview":"A quick daily word challenge built around categories, speed, originality, and the pressure to find answers nobody else would think of."},{"title":"Unhinged","year":"2026","type":"game","publisher":"Netflix Games","availability":"play on TV","genres":["Horror","Interactive","Motion"],"overview":"A motion-controlled horror experience where real-world phone movements guide a character's flashlight through darkness, uncertainty, and whatever is waiting there."},{"title":"Dead Man's Party: A Knives Out Game","year":"2026","type":"game","publisher":"Netflix Games","availability":"announced","genres":["Mystery","Social Deduction","Party"],"overview":"A social murder mystery inspired by Knives Out, where Benoit Blanc is investigating and the room itself becomes part of the case."},{"title":"Architectural Digest: Open Door","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Design","Architecture","Homes"],"overview":"Short-form access inside remarkable celebrity homes, with architecture, objects, taste, memory, and the private worlds people build around themselves."},{"title":"Vanity Fair: Lie Detector Test","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Celebrity","Interviews","Comedy"],"overview":"Celebrities answer uncomfortable, playful, and revealing questions while wired to a lie detector, turning tension into confession and comedy."},{"title":"Vogue: Fashion and Culture Shorts","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Fashion","Celebrity","Lifestyle"],"overview":"Fast-moving interviews through personal spaces, revealing taste, routine, ambition, style, memories, and unexpected details in a single continuous encounter."},{"title":"WIRED: Tech and Internet Culture Shorts","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Technology","Celebrity","Internet Culture"],"overview":"Public figures answer the internet's most searched questions about themselves, moving from curiosity and myth to strange facts and self-explanation."},{"title":"Bon Appétit: Kitchen and Food Stories","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Food","Cooking","Craft"],"overview":"Short culinary stories about technique, obsession, ingredients, restaurant culture, experimentation, and the craft behind food people cannot stop thinking about."},{"title":"BuzzFeed Studios: Internet Culture Shorts","year":"2026","type":"short","publisher":"BuzzFeed Studios","availability":"arriving Aug 3","genres":["Internet Culture","Comedy","Food"],"overview":"Short-form internet-native entertainment spanning food, identity, experiments, comedy, social behavior, and the cultural questions people share and argue about."},{"title":"Eater: Food, Restaurants and Obsession","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Food","Restaurants","Travel"],"overview":"Short documentaries and field pieces about restaurants, hidden kitchens, culinary craft, regional obsession, and the people behind unforgettable food."},{"title":"Rolling Stone: Music and Culture","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Music","Culture","Artists"],"overview":"Artists, songs, scenes, performances, and cultural moments explored through short-form music journalism and direct conversations."},{"title":"Billboard: Music Interviews and Performances","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Music","Performance","Pop Culture"],"overview":"Short-form interviews, performances, chart stories, and conversations with artists driving the sound and mood of the current moment."},{"title":"The Hollywood Reporter: Creative Roundtables","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Film","Television","Creative Process"],"overview":"Actors, directors, writers, and craftspeople discuss performance, ambition, failure, process, pressure, and what actually happens behind finished work."},{"title":"Variety: Actors, Filmmakers and Industry Conversations","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Film","Television","Interviews"],"overview":"Direct conversations across cinema and television about craft, careers, collaboration, difficult choices, and the business around storytelling."},{"title":"People: Human Stories and Celebrity Profiles","year":"2026","type":"short","publisher":"People Inc.","availability":"arriving Aug 3","genres":["People","Celebrity","Human Interest"],"overview":"Short human-interest stories and profiles centered on relationships, transformation, celebrity, resilience, and the personal lives behind public figures."},{"title":"Tastemade: Food, Travel and Beautiful Places","year":"2026","type":"short","publisher":"Tastemade","availability":"arriving Aug 3","genres":["Travel","Food","Lifestyle"],"overview":"Visually driven short-form stories about where to go, what to eat, how places feel, and the small details that make travel worth remembering."},{"title":"WWE Raw","year":"2026","type":"live","publisher":"WWE / Netflix","availability":"live weekly","genres":["Wrestling","Sports Entertainment","Drama"],"overview":"A weekly live collision of athleticism, rivalry, spectacle, betrayal, crowd energy, and serialized drama where the outcome still unfolds in real time."},{"title":"2026 T-Mobile Home Run Derby","year":"2026","type":"live","publisher":"MLB / Netflix","availability":"live July 13","genres":["Baseball","Competition","Live Sports"],"overview":"Baseball's top sluggers attack the fences in Philadelphia in a live skills competition built around pressure, power, rhythm, and one swing changing everything."},{"title":"MLB at Field of Dreams 2026","year":"2026","type":"live","publisher":"MLB / Netflix","availability":"live Aug 13","genres":["Baseball","Nostalgia","Live Sports"],"overview":"The Minnesota Twins and Philadelphia Phillies play live from the iconic Field of Dreams site in Iowa, blending major-league competition with cinematic mythology."},{"title":"NFL on Netflix: Rams vs. 49ers in Australia","year":"2026","type":"live","publisher":"NFL / Netflix","availability":"live Sept 10","genres":["Football","Rivalry","Live Sports"],"overview":"The NFL's first regular-season game in Australia: divisional rivals Los Angeles and San Francisco meet live at the Melbourne Cricket Ground."},{"title":"NFL Thanksgiving Eve on Netflix","year":"2026","type":"live","publisher":"NFL / Netflix","availability":"live Nov 25","genres":["Football","Holiday","Live Sports"],"overview":"The NFL's first Thanksgiving Eve game brings the Packers and Rams together live under holiday pressure with an audience gathering in real time."},{"title":"NFL Christmas Day on Netflix","year":"2026","type":"live","publisher":"NFL / Netflix","availability":"live Dec 25","genres":["Football","Holiday","Live Sports"],"overview":"Christmas Day football becomes a global live event, with major matchups, family rituals, rivalry, and the unpredictability of games that have not been written yet."},{"title":"FIFA Women's World Cup 2027","year":"2027","type":"live","publisher":"FIFA / Netflix","availability":"announced","genres":["Football","World Cup","Live Sports"],"overview":"The world's biggest women's football tournament, live on Netflix in the United States and Canada, where national identity, pressure, and history collide."}];
 
+/* real, proven summons — every one returns an uncanny resonance match, not a keyword hit */
 const EXAMPLES=[
-  {label:'obsession',    q:"obsession that starts beautiful and turns dangerous"},
-  {label:'unsentimental',q:"a movie about love that isn't sentimental"},
-  {label:'as a tree',    q:"if trees could watch movies, what would they choose?"},
-  {label:'live',         q:"something live where the outcome isn't written yet"},
-  {label:'strange dream',q:"a film that feels like a strange dream"},
-  {label:'company',      q:"argue about basketball while I make dinner"},
-  {label:'end a war',    q:"what should the president watch to end a war?"},
-  {label:'revenge',      q:"revenge, elegance, and someone underestimated too long"},
-  {label:'cerebral',     q:"I need a good laugh, but make it cerebral"},
-  {label:'quiet grief',  q:"grief that doesn't feel like homework"},
-  {label:'1am, no genre',q:"1am and nobody wants to pick a genre"}
+  {label:'the monster',  q:"the exact moment an ordinary person realizes they've become the monster"},
+  {label:'divine dread', q:"a movie with the kind of dread that feels like a divine warning"},
+  {label:'understood',   q:"the specific loneliness of being understood perfectly by a machine"},
+  {label:'skin of teeth',q:"sweaty, panic-inducing chaos where everything goes wrong but they survive by the skin of their teeth"},
+  {label:'storm & tea',  q:"a quiet Sunday afternoon with a storm outside and a cup of tea"},
+  {label:'as a pope',    q:"as a pope, what would I like to watch?"},
+  {label:'basically',    q:"basically Richard from Silicon Valley"},
+  {label:'meant instead',q:"what happens to us when we stop meaning things and start being meant instead?"}
 ];
+
+/* ═══════ ROLL — example summons type over the corpus image rotation (images: paintCover). No locked pairing, no score. ═══════ */
+const ROLL=[
+  "the exact moment an ordinary person realizes they've become the monster",
+  "a movie with the kind of dread that feels like a divine warning",
+  "the specific loneliness of being understood perfectly by a machine",
+  "sweaty, panic-inducing chaos where everything goes wrong but they survive by the skin of their teeth",
+  "a quiet Sunday afternoon with a storm outside and a cup of tea",
+  "basically Richard from Silicon Valley",
+  "what happens to us when we stop meaning things and start being meant instead?",
+  "as a pope, what would I like to watch?",
+  "a show that feels like the liminal space between TikTok and a coming of age film",
+  "a movie that feels like heartbreak in a motel",
+  "CERN and Shiva",
+  "double slit experiment made flesh",
+  "show me something that feels like staring out a rain-slicked window at 3 AM wondering if any of this is real",
+  "as Jesus, this is what I would watch that no one would expect",
+  "the quiet, satisfying inevitability of human error causing a catastrophic cascade failure in a system that was supposedly perfectly redundant",
+  "3am, empty highway, one pair of headlights",
+  "being the villain in someone else's story",
+  "nostalgic for a place that never existed",
+  "revenge served elegantly to someone underestimated too long",
+  "grief that doesn't feel like homework",
+  "the feeling of an office quietly listening to you",
+
+  "I want something that makes me miss being 17 even though I hated being 17",
+  "a movie for when everyone else has gone home and the party is technically over",
+  "I just quit my job and I don't know whether I ruined my life or saved it",
+  "something that feels expensive without being about rich people",
+  "a comedy for someone who is too tired to laugh at anything stupid",
+  "I want to feel like the city belongs to me for one night",
+  "a movie that understands why people stay too long",
+  "something to watch after finding out your friend lied to you for years",
+  "I want a story where nobody is innocent but somebody is still worth rooting for",
+  "a film that feels like deleting a text before sending it",
+  "something for when you are homesick for a version of home that is gone",
+  "I want the tension of knowing someone in the room is pretending",
+  "a movie that feels like making eye contact with a stranger on the last train",
+  "something beautiful where almost nothing good happens",
+  "I want to watch someone become impossible to manipulate",
+  "a story about people who love each other but make each other worse",
+  "something that feels like waking up before sunrise in a city you don't know",
+  "a movie for when you know the apology is sincere but it changes nothing",
+  "I want the feeling of walking into a room where everyone already knows your secret",
+  "something that starts ordinary and then reality quietly stops obeying the rules",
+  "a film for the exact second confidence becomes delusion",
+  "I want a character who wins by understanding people better than they understand themselves",
+  "something about the loneliness of being the competent one",
+  "a movie where the scariest thing is that everyone is acting normal",
+  "I want a story that feels like being forgiven too late",
+  "something with the energy of getting dressed for a night you know will end badly",
+  "a movie for people who confuse peace with boredom",
+  "I want to see what ambition looks like after the dream actually comes true",
+  "something that feels like opening an old phone and seeing a life you forgot you had",
+  "a film about the moment a child realizes the adults are making it up too",
+  "I want something that makes silence feel louder than dialogue",
+  "a movie where two people are having completely different relationships with each other",
+  "something for when you are proud of yourself and terrified at the same time",
+  "I want the emotional equivalent of missing a flight on purpose",
+  "a story where the person telling the truth sounds the least believable",
+  "something that feels like the last warm day before everything changes",
+  "a movie about someone who becomes dangerous the moment they stop needing approval",
+  "I want to watch a person realize the life they envy is a trap",
+  "something that captures the weird intimacy of being stuck somewhere with strangers",
+  "a film that feels like laughing at a funeral and immediately understanding why",
+  "I want a story where the rescue comes from the wrong person",
+  "something to watch when the future suddenly feels real",
+  "a movie that understands the difference between being alone and being left",
+  "I want the feeling of a secret becoming heavier every time it isn't told",
+  "something that feels like seeing your ex look genuinely happy without you",
+  "a movie where success is the beginning of the problem",
+  "I want a character who is charismatic enough to make a terrible idea feel inevitable",
+  "something that feels like driving past your childhood home and not stopping",
+  "a story about the person who notices the pattern before anyone else does",
+  "I want a movie that makes a crowded room feel completely lonely",
+  "something that feels like being underestimated for the last time",
+  "a film where the most loving choice is to leave",
+  "I want a story that feels like knowing exactly what not to say",
+  "something for when you miss someone you would never take back",
+  "a movie that feels like winning an argument and losing the person",
+  "I want the emotional texture of a hotel hallway at midnight",
+  "something about being good at surviving and bad at living",
+  "a story where the person with the least power understands the situation best",
+  "I want a movie that feels like the first lie in a very long friendship",
+  "something that makes adulthood feel like an elaborate misunderstanding",
+  "a film for when you are ready to start over but not ready to admit why"
+].sort(()=>Math.random()-.5);
+
+const busy=()=>{const q=$('#query');return document.activeElement===q||!!q.value};
+let placeholderMirror=null;
+function resizeForPlaceholder(el,text=''){
+  if(!el)return;
+  if(!placeholderMirror){
+    placeholderMirror=document.createElement('div');
+    placeholderMirror.setAttribute('aria-hidden','true');
+    placeholderMirror.style.cssText='position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;';
+    document.body.appendChild(placeholderMirror);
+  }
+  const cs=getComputedStyle(el);
+  Object.assign(placeholderMirror.style,{
+    width:el.clientWidth+'px',
+    font:cs.font,
+    fontFamily:cs.fontFamily,
+    fontSize:cs.fontSize,
+    fontWeight:cs.fontWeight,
+    fontStyle:cs.fontStyle,
+    letterSpacing:cs.letterSpacing,
+    lineHeight:cs.lineHeight,
+    padding:cs.padding,
+    border:cs.border,
+    boxSizing:cs.boxSizing
+  });
+  placeholderMirror.textContent=text||' ';
+  const min=parseFloat(cs.minHeight)||0;
+  const max=parseFloat(cs.maxHeight)||Infinity;
+  const h=Math.max(min,Math.min(max,placeholderMirror.scrollHeight+2));
+  el.style.height=h+'px';
+}
+function resetPlaceholderHeight(el){
+  if(!el)return;
+  el.style.height='';
+}
+function typePlaceholder(el,text){
+  return new Promise(res=>{
+    let i=0;
+    (function step(){
+      if(busy()){
+        el.setAttribute('placeholder','');
+        resetPlaceholderHeight(el);
+        return res();
+      }
+      if(i>text.length)return res();
+      const shown=text.slice(0,i)+'▏';
+      el.setAttribute('placeholder',shown);
+      resizeForPlaceholder(el,shown);
+      const c=text[i-1]||'';
+      let d=30+Math.random()*40;
+      if(',.'.includes(c))d+=240; else if(c===' ')d+=14;
+      i++;setTimeout(step,d);
+    })();
+  });
+}
+
+let rollI=0,rollRun=false;
+async function rollCycle(){
+  const q=$('#query');
+  while(rollRun){
+    try{
+      if(busy()){q.setAttribute('placeholder','');resetPlaceholderHeight(q);await pause(700);continue}
+      await typePlaceholder(q,ROLL[rollI]);
+      if(!busy()){q.setAttribute('placeholder',ROLL[rollI]);resizeForPlaceholder(q,ROLL[rollI]);}   // drop caret, hold full line
+      await pause(2600);
+      if(!$('#landing').classList.contains('on')){rollRun=false;break}
+      rollI=(rollI+1)%ROLL.length;
+    }catch(e){await pause(500)}
+  }
+}
+function rollStart(){
+  if(!$('#query')||rollRun)return;
+  rollRun=true;
+  rollCycle();
+}
+window.addEventListener('load',rollStart);   // backup start, guarded against double-run
 
 /* ═══════ STATE ═══════ */
 let cache=null, results=[], active=0, currentQuery='', searchDepth=DEFAULT_DEPTH, corpusLock=null, silentLoad=false;
@@ -661,10 +841,17 @@ let pool=[],ci=0,flip=0,coverTimer=null;
 function paintCover(){
   const usable=cs.movies.filter(m=>m.backdropPath);
   if(usable.length<3)return;
-  pool=[...usable].sort(()=>Math.random()-.5).slice(0,20);
   if(coverTimer)return;
-  swap(pool[0]);
-  coverTimer=setInterval(()=>{ci=(ci+1)%pool.length;swap(pool[ci])},8000);
+  let lastId=null;
+  const pick=()=>{
+    const u=cs.movies.filter(m=>m.backdropPath);           // read live — grows as tiers load
+    if(!u.length)return null;
+    let m,t=0;
+    do{m=u[Math.floor(Math.random()*u.length)];t++}while(u.length>1&&m.tmdbId===lastId&&t<8);
+    lastId=m.tmdbId;return m;
+  };
+  const first=pick();if(first)swap(first);
+  coverTimer=setInterval(()=>{const m=pick();if(m)swap(m)},7000);
 }
 function swap(m){
   const a=$('#coverA'),b=$('#coverB');
@@ -828,6 +1015,7 @@ function render(){
   $('#cardImg').src=square?m.imageUrl:art;
   $('#cardImg').alt=m.title;
 
+  {const se=$('#summonEcho');if(se)se.textContent=currentQuery||''}
   $('#title').textContent=m.title;
   $('#format').textContent=fmt(m);
   $('#score').textContent=Number(m.score).toFixed(3);
@@ -880,11 +1068,16 @@ function bindInput(el,fn){
   el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fn()}});
 }
 bindInput($('#query'),()=>search($('#query').value));
+$('#query').addEventListener('focus',()=>{
+  $('#query').setAttribute('placeholder','');
+  resetPlaceholderHeight($('#query'));
+});
+
 bindInput($('#revealQuery'),()=>search($('#revealQuery').value));
 $('#searchForm').addEventListener('submit',e=>{e.preventDefault();search($('#query').value)});
 $('#revealForm').addEventListener('submit',e=>{e.preventDefault();search($('#revealQuery').value)});
 
-$('#home').onclick=()=>{closeProjector();show('landing');history.replaceState(null,'',location.pathname);$('#query').focus()};
+$('#home').onclick=()=>{closeProjector();show('landing');history.replaceState(null,'',location.pathname);rollStart();$('#query').focus()};
 $('#prev').onclick=()=>step(-1);
 $('#next').onclick=()=>step(1);
 $('#play').onclick=()=>openProjector();
@@ -928,10 +1121,7 @@ function twTick(){
   if(twC<=0){twDel=false;twI=(twI+1)%EXAMPLES.length;twTimer=setTimeout(twTick,380);return}
   twTimer=setTimeout(twTick,16+Math.random()*18);
 }
-function startTW(){clearTimeout(twTimer);twC=0;twDel=false;twTimer=setTimeout(twTick,300)}
-$('#query').addEventListener('focus',()=>{clearTimeout(twTimer);$('#query').setAttribute('placeholder','Describe it in your own words')});
-$('#query').addEventListener('blur',()=>{if(!$('#query').value.trim())startTW()});
-startTW();
+function startTW(){}   /* typewriter retired — the landing demo carries the live examples now */
 
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 function voice(btnSel,targetSel){
@@ -957,6 +1147,7 @@ voice('#revealVoiceBtn','#revealQuery');
 /* ═══════ INIT ═══════ */
 (async()=>{
   try{
+    rollStart();
     setStatus(statusLine('loading'));
     await loadCorpus(depthTarget(DEFAULT_DEPTH));
     setStatus(statusLine('ready'));
