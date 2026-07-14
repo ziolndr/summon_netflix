@@ -1053,11 +1053,21 @@ async function loadCorpus(){
     const manifest=await required(FIELD_FILES.manifest,'json','manifest');
     setFieldOpening(manifest.count);
 
-    const metadataFile=manifest.metadata_file||FIELD_FILES.metadata;
+    const metadataFiles=Array.isArray(manifest.metadata_files)&&manifest.metadata_files.length
+      ? manifest.metadata_files
+      : [manifest.metadata_file||FIELD_FILES.metadata];
     const vectorsFile=manifest.vectors_file||FIELD_FILES.vectors;
     const normsFile=manifest.norms_file||FIELD_FILES.norms;
 
-    const metadataPromise=required(`./${metadataFile.replace(/^\.\//,'')}`,'json','metadata');
+    const metadataPromise=Promise.all(
+      metadataFiles.map((file,i)=>required(`./${file.replace(/^\.\//,'')}`,'json',`metadata-${i}`))
+    ).then(parts=>{
+      for(const part of parts){
+        if(!Array.isArray(part))throw new Error('metadata shard is not an array');
+      }
+      return parts.flat();
+    });
+
     const vectorPromise=required(`./${vectorsFile.replace(/^\.\//,'')}`,'buffer','vectors');
     const normPromise=required(`./${normsFile.replace(/^\.\//,'')}`,'buffer','norms');
 
