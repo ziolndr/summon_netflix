@@ -66,7 +66,7 @@ button{cursor:pointer}
 
 /* ─────── lockup ─────── */
 .mark{display:inline-flex;align-items:center;text-align:left;line-height:1}
-.mark-word{font-family:var(--serif);font-weight:400;font-size:30px;line-height:.86;letter-spacing:.05em;text-transform:uppercase;color:var(--white)}
+.mark-word{font-family:var(--serif);font-weight:400;font-size:30px;line-height:.86;letter-spacing:.045em;text-transform:uppercase;color:var(--white);-webkit-text-stroke:.45px currentColor;text-shadow:0 0 .01px currentColor}
 button.mark:hover .mark-word{opacity:.7}
 button.mark{cursor:pointer}
 
@@ -344,7 +344,7 @@ body.playing #projector{display:block}
   .subhint{margin-top:14px}
 }
 @media(max-width:480px){
-  .mark-word{font-size:26px}
+  .mark-word{font-size:26px;-webkit-text-stroke:.38px currentColor}
   .depth{gap:9px}
   .depth button{font-size:9px;letter-spacing:.05em}
   #landing .head{height:clamp(240px,50vh,330px)}
