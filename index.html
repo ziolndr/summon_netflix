@@ -113,6 +113,38 @@ button.mark{cursor:pointer}
   50%{opacity:.95;transform:scale(1)}
 }
 
+/* ═══════ OPENING FIELD — cinematic loading gate ═══════ */
+#opening{display:block;background:var(--film);z-index:40}
+#opening:not(.on){display:none}
+#opening .canvas img{filter:saturate(1.04) contrast(1.03);transition:opacity 1.2s ease}
+#opening .canvas::after{
+  background:
+    linear-gradient(180deg,rgba(10,10,9,.48) 0%,rgba(10,10,9,.06) 28%,rgba(10,10,9,.16) 58%,rgba(10,10,9,.9) 100%),
+    radial-gradient(130% 110% at 50% 42%,rgba(10,10,9,0) 34%,rgba(10,10,9,.58) 100%);
+}
+.opening-word{
+  position:absolute;z-index:6;left:50%;top:50%;transform:translate(-50%,-54%);
+  font-family:var(--serif);font-size:clamp(72px,13vw,220px);font-weight:400;line-height:.8;
+  letter-spacing:.045em;text-transform:uppercase;color:var(--white);
+  -webkit-text-stroke:.7px currentColor;text-shadow:0 2px 28px rgba(0,0,0,.34);
+  user-select:none;
+}
+.opening-status{
+  position:absolute;z-index:7;left:var(--pad);right:var(--pad);bottom:var(--pad);
+  display:grid;gap:10px;
+}
+.opening-meta{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.opening-meta .lbl{color:rgba(246,244,239,.78)}
+.opening-count{white-space:nowrap;text-align:right}
+.opening-track{height:1px;background:rgba(246,244,239,.2);overflow:hidden}
+.opening-fill{width:0;height:100%;background:var(--white);transition:width .18s linear}
+.opening-film{
+  position:absolute;z-index:7;right:var(--pad);top:var(--pad);max-width:min(44vw,560px);
+  text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#opening.leaving{animation:openingLeave .48s ease forwards}
+@keyframes openingLeave{to{opacity:0;transform:scale(1.006)}}
+
 
 /* ═══════ LANDING ═══════ */
 #landing .head{position:absolute;z-index:6;left:var(--pad);bottom:calc(var(--pad) + 66px);top:auto;width:min(62vw,900px);height:clamp(300px,44vh,430px)}
@@ -429,12 +461,32 @@ body.playing #projector{display:block}
   }
 }
 
+@media (max-width:720px){
+  .opening-word{font-size:clamp(58px,21vw,108px);top:47%}
+  .opening-meta{align-items:flex-end}
+  .opening-film{max-width:62vw}
+}
+
 </style>
 </head>
 <body>
 
+<!-- ═════════ OPENING FIELD ═════════ -->
+<section class="plate on" id="opening" aria-live="polite">
+  <div class="canvas"><img id="openingCoverA" alt=""><img id="openingCoverB" alt=""></div>
+  <div class="opening-word">Summon</div>
+  <div class="opening-film lbl" id="openingFilm"></div>
+  <div class="opening-status">
+    <div class="opening-meta">
+      <span class="lbl" id="openingLabel">loading field</span>
+      <span class="lbl opening-count" id="openingCount">opening</span>
+    </div>
+    <div class="opening-track" aria-hidden="true"><div class="opening-fill" id="openingFill"></div></div>
+  </div>
+</section>
+
 <!-- ═════════ LANDING ═════════ -->
-<section class="plate on" id="landing">
+<section class="plate" id="landing">
   <div class="canvas"><img id="coverA" alt=""><img id="coverB" alt=""></div>
 
   <div class="corner tl">
@@ -928,16 +980,45 @@ const setStatus=t=>{
 
 const loadProgress=new Map();
 let openingCount=0;
+let openingReady=false;
 
 function setFieldOpening(count){
   openingCount=Number(count)||openingCount||0;
+  renderOpeningProgress();
 }
 
 function updateFieldProgress(key,loaded,total){
   loadProgress.set(key,{loaded:Number(loaded)||0,total:Number(total)||0});
+  renderOpeningProgress();
 }
 
-function finishFieldOpening(){}
+function renderOpeningProgress(){
+  const fill=$('#openingFill');
+  const label=$('#openingLabel');
+  const count=$('#openingCount');
+  if(!fill||!label||!count)return;
+
+  let loaded=0,total=0,known=0;
+  for(const part of loadProgress.values()){
+    loaded+=part.loaded||0;
+    if(part.total>0){total+=part.total;known++}
+  }
+
+  const pct=total>0?Math.max(0,Math.min(100,(loaded/total)*100)):0;
+  fill.style.width=`${pct}%`;
+  label.textContent=openingReady?'field ready':'loading field';
+
+  const titleCount=openingCount?`${openingCount.toLocaleString()} titles`:'';
+  const pctText=total>0?`${Math.floor(pct)}%`:'';
+  count.textContent=[titleCount,pctText].filter(Boolean).join(' · ')||'opening';
+}
+
+function finishFieldOpening(){
+  openingReady=true;
+  const fill=$('#openingFill');
+  if(fill)fill.style.width='100%';
+  renderOpeningProgress();
+}
 
 function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},1600)}
 const show=id=>$$('.plate').forEach(p=>p.classList.toggle('on',p.id===id));
@@ -999,6 +1080,37 @@ async function required(url,kind='json',progressKey=url){
 }
 
 
+let openingPool=[],openingFlip=0,openingTimer=null,openingLastId=null;
+function paintOpeningCover(){
+  if(!openingPool.length)return;
+  const pick=()=>{
+    let m=null,tries=0;
+    do{m=openingPool[Math.floor(Math.random()*openingPool.length)];tries++}
+    while(openingPool.length>1&&m?.tmdbId===openingLastId&&tries<10);
+    if(m)openingLastId=m.tmdbId;
+    return m;
+  };
+  const swapOpening=m=>{
+    if(!m)return;
+    const url=img(m.backdropPath||m.posterPath,'original');
+    if(!url)return;
+    const incoming=openingFlip?$('#openingCoverA'):$('#openingCoverB');
+    const outgoing=openingFlip?$('#openingCoverB'):$('#openingCoverA');
+    incoming.onload=()=>{incoming.classList.add('on');outgoing.classList.remove('on')};
+    incoming.src=url;
+    incoming.alt=m.title||'';
+    const film=$('#openingFilm');
+    if(film)film.textContent=m.title||'';
+    openingFlip^=1;
+  };
+  swapOpening(pick());
+  if(!openingTimer)openingTimer=setInterval(()=>swapOpening(pick()),3600);
+}
+function stopOpeningCover(){
+  clearInterval(openingTimer);
+  openingTimer=null;
+}
+
 async function primeLoadingCovers(){
   try{
     const params=new URLSearchParams({
@@ -1034,8 +1146,9 @@ async function primeLoadingCovers(){
     ].filter(x=>x.backdropPath);
 
     if(preview.length){
+      openingPool=preview;
       cs.movies=preview;
-      paintCover();
+      paintOpeningCover();
     }
   }catch(e){
     console.warn('loading cover preview unavailable',e);
@@ -1074,11 +1187,11 @@ async function loadCorpus(){
     const movies=await metadataPromise;
     if(!Array.isArray(movies))throw new Error('metadata is not an array');
 
-    // The homepage cover cycle is already running from primeLoadingCovers().
-    // Swap its live source to the actual massive corpus immediately, without
-    // waiting for the vector and norm files to finish.
+    // Keep the cinematic loading gate alive with real field artwork while
+    // vectors and norms finish loading. The homepage is still hidden.
     cs.movies=movies;
-    paintCover();
+    const fieldArt=movies.filter(m=>m.backdropPath);
+    if(fieldArt.length)openingPool=fieldArt;
 
     const [vectorBuffer,normBuffer]=await Promise.all([vectorPromise,normPromise]);
 
@@ -1095,7 +1208,8 @@ async function loadCorpus(){
     cache={movies,vectors,norms,manifest,dim};
 
     setStatus(statusLine('ready'));
-        return cache;
+    finishFieldOpening();
+    return cache;
   })();
 
   try{
@@ -1531,20 +1645,36 @@ voice('#revealVoiceBtn','#revealQuery');
 /* ═══════ INIT ═══════ */
 (async()=>{
   try{
-    rollStart();
     setStatus('');
 
-    // Start the original cinematic homepage cover rotation immediately.
-    // The massive field loads in parallel behind it.
+    // Hold the user on a deliberate cinematic loading gate. Artwork cycles
+    // while the full field loads; the homepage does not appear half-ready.
     primeLoadingCovers();
 
     await loadCorpus();
     setStatus(statusLine('ready'));
+    finishFieldOpening();
 
     const h=decodeURIComponent(location.hash.replace(/^#/,''));
-    if(h)search(h);
+    if(h){
+      stopOpeningCover();
+      search(h);
+      return;
+    }
+
+    const opening=$('#opening');
+    opening?.classList.add('leaving');
+    await pause(480);
+    stopOpeningCover();
+    show('landing');
+    paintCover();
+    rollStart({restart:true});
   }catch(e){
     console.error(e);
+    const label=$('#openingLabel');
+    const count=$('#openingCount');
+    if(label)label.textContent='field unavailable';
+    if(count)count.textContent='reload to try again';
     setStatus('');
     console.error('precomputed field load failed',e);
   }
