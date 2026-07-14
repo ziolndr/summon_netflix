@@ -110,7 +110,7 @@ button.mark:hover .mark-word{opacity:.7}
 .icon:hover{color:var(--white);border-color:var(--white)}
 .icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .icon.listening{background:var(--white);color:var(--film);border-color:var(--white)}
-.send{width:38px;height:38px;flex:0 0 auto;background:var(--white);color:var(--film);display:grid;place-items:center;font-size:16px}
+.send{width:38px;height:38px;flex:0 0 auto;background:var(--white);color:var(--film);border:0;display:grid;place-items:center;font-size:16px}
 .send:hover{background:var(--dim)}
 
 .credits{position:absolute;z-index:6;right:var(--pad);top:50%;translate:0 -50%;text-align:right;max-width:24vw}
@@ -512,7 +512,6 @@ const ROLL=[
   "double slit experiment made flesh",
   "show me something that feels like staring out a rain-slicked window at 3 AM wondering if any of this is real",
   "as Jesus, this is what I would watch that no one would expect",
-  "the quiet, satisfying inevitability of human error causing a catastrophic cascade failure in a system that was supposedly perfectly redundant",
   "3am, empty highway, one pair of headlights",
   "being the villain in someone else's story",
   "nostalgic for a place that never existed",
@@ -580,7 +579,54 @@ const ROLL=[
   "a story where the person with the least power understands the situation best",
   "I want a movie that feels like the first lie in a very long friendship",
   "something that makes adulthood feel like an elaborate misunderstanding",
-  "a film for when you are ready to start over but not ready to admit why"
+  "a film for when you are ready to start over but not ready to admit why",
+
+  "I need something to listen to while I drive three hours alone and rethink every decision I've made",
+  "two smart people arguing about something I didn't know I cared about",
+  "give me a voice I can keep in the room while I cook dinner",
+  "I want someone to explain an obsession until it becomes my obsession",
+  "something funny and brutally honest to listen to after midnight",
+  "I want a conversation that feels like overhearing the smartest table at the restaurant",
+
+  "something my friends and I can play tonight that gets competitive immediately",
+  "I want to disappear into a world for six hours and forget my phone exists",
+  "a game for people who love each other but should never be trusted in a kitchen",
+  "something I can play with one hand and still get weirdly obsessed with",
+  "give me a game where one stupid decision ruins everything in the best way",
+  "I want to play something that turns the whole room against each other",
+
+  "show me something fascinating I can finish before my food gets here",
+  "I have seven minutes. Make them count.",
+  "give me a tiny window into a life I would never otherwise see",
+  "something beautiful and strange before bed, not a whole movie",
+  "show me one idea that will stay in my head longer than the video itself",
+  "I want something short enough to send to a friend with no explanation",
+
+  "what can I watch where nobody knows the ending yet?",
+  "give me something happening right now with actual stakes",
+  "I want the feeling that millions of people are holding their breath at the same time",
+  "something live where one mistake changes everything",
+  "I want to watch history before anyone has had time to explain what it means",
+  "give me the kind of event where the whole room starts yelling at once",
+
+  "I want to feel someone else's memory like it happened to me",
+  "give me the rush of a life I never lived",
+  "something that feels almost illegal to remember",
+  "I want the adrenaline of being inside someone else's worst night",
+  "show me something that feels like borrowing another person's senses for ten minutes",
+  "I want a memory that isn't mine but somehow knows me",
+  "give me the feeling of touching a life through a wire",
+  "something that feels like finding a recording of the exact moment everything changed",
+  "I want the rush of seeing what I was never supposed to see",
+  "show me a life more intense than my own for one night",
+  "something that feels like addiction to other people's experiences",
+  "I want the dangerous intimacy of seeing through someone else's eyes",
+  "give me the feeling of reality becoming a drug",
+  "something that feels like a memory you can replay until it destroys you",
+  "I want the rush of being somewhere impossible without leaving the room",
+  "show me something that makes ordinary life feel unbearably quiet afterward",
+  "I want the feeling of plugging into a secret and coming back different",
+  "something that feels like chasing a moment because real life stopped being enough"
 ].sort(()=>Math.random()-.5);
 
 const busy=()=>{const q=$('#query');return document.activeElement===q||!!q.value};
@@ -1090,7 +1136,28 @@ $('#query').addEventListener('focus',()=>{
 });
 
 bindInput($('#revealQuery'),()=>search($('#revealQuery').value));
-$('#searchForm').addEventListener('submit',e=>{e.preventDefault();search($('#query').value)});
+
+function landingSummonValue(){
+  const q=$('#query');
+  const typed=(q.value||'').trim();
+  if(typed)return typed;
+
+  // The rotating example lives in the placeholder until the user clicks the field.
+  // The arrow must be able to summon that visible example directly too.
+  const visible=(q.getAttribute('placeholder')||'').replace(/▏$/,'').trim();
+  if(!visible)return '';
+  q.value=visible;
+  q.setAttribute('placeholder','');
+  resetPlaceholderHeight(q);
+  autoResize(q);
+  return visible;
+}
+
+$('#searchForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const value=landingSummonValue();
+  if(value)search(value);
+});
 $('#revealForm').addEventListener('submit',e=>{e.preventDefault();search($('#revealQuery').value)});
 
 $('#home').onclick=()=>{closeProjector();show('landing');history.replaceState(null,'',location.pathname);rollStart();$('#query').focus()};
