@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0A0A09">
-<title>SUMMON — find anything on Netflix by resonance</title>
+<title>SUMMON — find anything on Netflix by meaning</title>
 <meta name="description" content="Summon anything by resonance. SUMMON measures the whole Netflix field and returns what fits.">
 <link rel="icon" href="./summon-favicon.svg" type="image/svg+xml">
 <link rel="icon" href="./summon-favicon.ico" sizes="any">
@@ -13,14 +13,14 @@
 <link rel="apple-touch-icon" href="./summon-apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SUMMON">
-<meta property="og:title" content="SUMMON — find anything on Netflix by resonance">
-<meta property="og:description" content="Say what you want, we’ll find what resonates. Films, series, podcasts, shorts, games, live — searched by meaning.">
+<meta property="og:title" content="SUMMON — find anything on Netflix by meaning">
+<meta property="og:description" content="Say what you want, we’ll find what fits. Films, series, podcasts, shorts, games, live — searched by meaning.">
 <meta property="og:image" content="./summon-og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SUMMON — find anything on Netflix by resonance">
-<meta name="twitter:description" content="Say what you want, we’ll find what resonates.">
+<meta name="twitter:title" content="SUMMON — find anything on Netflix by meaning">
+<meta name="twitter:description" content="Say what you want, we’ll find what fits.">
 <meta name="twitter:image" content="./summon-og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -350,6 +350,33 @@ body.playing #projector{display:block}
   #landing .head{height:clamp(240px,50vh,330px)}
   .title{bottom:clamp(118px,18vh,148px)}
   #query{font-size:clamp(20px,6.2vw,30px)}
+}
+
+
+@media(max-width:1000px){
+  .bar{align-items:start}
+  .nav{gap:8px;align-self:start}
+  .nav .pos{font-size:9px;letter-spacing:.14em}
+  .nav .arrow{width:30px;height:30px;font-size:12px}
+  .summon-bar .lbl{margin-bottom:4px}
+  .summon-bar form{gap:8px;align-items:flex-end;padding-bottom:8px}
+  #revealQuery{font-size:clamp(16px,4.7vw,21px);line-height:1.22;min-height:1.22em;max-height:3.9em}
+  .stage{gap:14px}
+  .synopsis{max-width:34ch}
+  .actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:18px}
+  .actions button{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center}
+  .deck{margin-top:4px}
+  .deck-head{margin-bottom:8px}
+  .deck-strip{padding-right:16px;padding-bottom:6px}
+}
+@media(max-width:700px){
+  #card{display:none !important}
+}
+@media(max-width:480px){
+  .bar{row-gap:10px}
+  #revealQuery{font-size:15px;line-height:1.2;max-height:4.2em}
+  .summon-bar .icon,.summon-bar .send{width:34px;height:34px}
+  .nav .arrow{width:32px;height:32px}
 }
 
 </style>
@@ -1000,6 +1027,7 @@ async function search(text){
   rollStop();
   currentQuery=q;
   $('#query').value=q;$('#revealQuery').value=q;
+  requestAnimationFrame(()=>autoResize($('#revealQuery')));
   closeProjector();
   startLeader(q);
   try{
@@ -1097,7 +1125,7 @@ function render(){
 
   $('#play').disabled=!m.tmdbId;
   $('#play').textContent=m.tmdbId?'watch trailer':'no trailer';
-  $('#watch').textContent=m.type==='game'?'play on netflix ↗':'open on netflix ↗';
+  $('#watch').textContent='open on netflix ↗';
   $('#watch').onclick=()=>window.open(m.externalUrl||`https://www.netflix.com/search?q=${encodeURIComponent(m.title)}`,'_blank');
   $('#copy').onclick=()=>navigator.clipboard?.writeText(location.href.split('#')[0]+'#'+encodeURIComponent(currentQuery)).then(()=>toast('link copied'));
 
