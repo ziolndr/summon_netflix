@@ -147,7 +147,6 @@ button.mark{cursor:pointer}
 .opening-fill{
   width:0;height:100%;
   background:var(--white);
-  transition:width .22s cubic-bezier(.2,.75,.25,1);
   box-shadow:0 0 18px rgba(246,244,239,.42);
   will-change:width;
 }
@@ -1000,96 +999,83 @@ const setStatus=t=>{
   }
 };
 
+/* ═══════ OPENING PROGRESS — byte-weighted, honest, no fake 99% stall ═══════ */
 const loadProgress=new Map();
 let openingCount=0;
 let openingReady=false;
 let openingTargetPct=0;
 let openingVisualPct=0;
 let openingProgressRAF=0;
+let openingResolved=null;
 
 function setFieldOpening(count){
   openingCount=Number(count)||openingCount||0;
-  renderOpeningProgress();
+  renderOpeningMeta();
 }
 
 function updateFieldProgress(key,loaded,total){
-  loadProgress.set(key,{loaded:Number(loaded)||0,total:Number(total)||0});
-  renderOpeningProgress();
+  loadProgress.set(key,{loaded:Math.max(0,Number(loaded)||0),total:Math.max(0,Number(total)||0)});
+  recomputeOpeningTarget();
+}
+
+function recomputeOpeningTarget(){
+  let loaded=0,total=0;
+  for(const p of loadProgress.values()){
+    total+=p.total||0;
+    loaded+=Math.min(p.loaded||0,p.total||p.loaded||0);
+  }
+  const frac=total>0?Math.min(1,loaded/total):0;
+  openingTargetPct=Math.max(openingTargetPct,5+frac*92);
+  renderOpeningMeta();
+  startOpeningProgressAnimation();
 }
 
 function setOpeningStage(pct,labelText){
-  openingTargetPct=Math.max(openingTargetPct,Math.min(99.4,Number(pct)||0));
-  const label=$('#openingLabel');
-  if(label&&labelText)label.textContent=labelText;
+  openingTargetPct=Math.max(openingTargetPct,Math.min(100,Number(pct)||0));
+  if(labelText){const l=$('#openingLabel');if(l)l.textContent=labelText}
   startOpeningProgressAnimation();
+}
+
+function renderOpeningMeta(){
+  const count=$('#openingCount');
+  if(count)count.textContent=openingCount?`${openingCount.toLocaleString()} titles`:'opening';
 }
 
 function startOpeningProgressAnimation(){
   if(openingProgressRAF)return;
-
   const tick=()=>{
     openingProgressRAF=0;
     const fill=$('#openingFill');
-    if(!fill)return;
-
-    if(openingReady){
-      openingVisualPct=100;
-    }else{
-      // Keep moving toward the real/staged target instead of visibly freezing
-      // at 99% while JSON parsing and typed-array validation finish.
-      const gap=openingTargetPct-openingVisualPct;
-      if(gap>0.01){
-        openingVisualPct+=Math.max(.035,gap*.075);
-      }else if(openingVisualPct<99.15){
-        // Tiny continuous creep during CPU-side preparation.
-        openingVisualPct=Math.min(99.15,openingVisualPct+.018);
+    if(fill){
+      const target=openingReady?100:Math.min(openingTargetPct,99.4);
+      const gap=target-openingVisualPct;
+      if(gap>0.05){
+        openingVisualPct+=Math.max(0.25,gap*0.12);
+        if(openingVisualPct>target)openingVisualPct=target;
+      }else{
+        openingVisualPct=target;
       }
+      fill.style.width=Math.min(100,openingVisualPct)+'%';
     }
-
-    fill.style.width=`${Math.min(100,openingVisualPct)}%`;
-
-    if(!openingReady||openingVisualPct<100){
-      openingProgressRAF=requestAnimationFrame(tick);
+    if(openingReady&&openingVisualPct>=100){
+      if(openingResolved){const r=openingResolved;openingResolved=null;r()}
+      return;
     }
+    openingProgressRAF=requestAnimationFrame(tick);
   };
-
   openingProgressRAF=requestAnimationFrame(tick);
-}
-
-function renderOpeningProgress(){
-  const label=$('#openingLabel');
-  const count=$('#openingCount');
-  if(!label||!count)return;
-
-  let loaded=0,total=0;
-  for(const part of loadProgress.values()){
-    loaded+=part.loaded||0;
-    if(part.total>0)total+=part.total;
-  }
-
-  const rawPct=total>0?Math.max(0,Math.min(100,(loaded/total)*100)):0;
-
-  if(!openingReady){
-    // Network bytes visually occupy the first 96% of the bar.
-    openingTargetPct=Math.max(openingTargetPct,Math.min(96,rawPct*.96));
-    label.textContent=rawPct>=100?'preparing field':'loading field';
-  }else{
-    openingTargetPct=100;
-    label.textContent='field ready';
-  }
-
-  const titleCount=openingCount?`${openingCount.toLocaleString()} titles`:'';
-  count.textContent=titleCount||'opening';
-
-  startOpeningProgressAnimation();
 }
 
 function finishFieldOpening(){
   openingReady=true;
   openingTargetPct=100;
-  const label=$('#openingLabel');
-  if(label)label.textContent='field ready';
+  const l=$('#openingLabel');if(l)l.textContent='field ready';
   startOpeningProgressAnimation();
+}
+
+function whenBarFull(){
+  if(openingReady&&openingVisualPct>=100)return Promise.resolve();
+  return new Promise(res=>{openingResolved=res;startOpeningProgressAnimation()});
 }
 
 function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},1600)}
@@ -1114,38 +1100,36 @@ function contentUrl(m){
   return `https://www.google.com/search?q=${q}`;
 }
 
-async function required(url,kind='json',progressKey=url){
+async function required(url,kind='json',progressKey=url,expectedTotal=0,track=true){
   const r=await fetch(url,{cache:'no-store'});
   if(!r.ok)throw new Error(`${url} · ${r.status}`);
 
-  const total=Number(r.headers.get('content-length'))||0;
+  const headerTotal=Number(r.headers.get('content-length'))||0;
+  const total=expectedTotal||headerTotal;
+  const report=(l,t)=>{if(track)updateFieldProgress(progressKey,l,t)};
+
   if(!r.body||!r.body.getReader){
     const value=kind==='buffer'?await r.arrayBuffer():await r.json();
-    const size=kind==='buffer'?value.byteLength:total;
-    updateFieldProgress(progressKey,size,total||size);
+    const size=kind==='buffer'?value.byteLength:(total||1);
+    report(size,total||size);
     return value;
   }
 
   const reader=r.body.getReader();
   const chunks=[];
   let loaded=0;
-
   while(true){
     const {done,value}=await reader.read();
     if(done)break;
     chunks.push(value);
     loaded+=value.byteLength;
-    updateFieldProgress(progressKey,loaded,total);
+    report(loaded,total||loaded);
   }
 
   const merged=new Uint8Array(loaded);
-  let offset=0;
-  for(const chunk of chunks){
-    merged.set(chunk,offset);
-    offset+=chunk.byteLength;
-  }
-
-  updateFieldProgress(progressKey,loaded,total||loaded);
+  let off=0;
+  for(const c of chunks){merged.set(c,off);off+=c.byteLength}
+  report(loaded,total||loaded);
 
   if(kind==='buffer')return merged.buffer;
   return JSON.parse(new TextDecoder().decode(merged));
@@ -1302,16 +1286,15 @@ async function enterReadyHomepage(){
   const opening=$('#opening');
   const landing=$('#landing');
 
-  // The homepage exists fully ready behind the gate. Keep the same still so the
-  // transition feels continuous, then physically move the opening SUMMON word
-  // into the exact top-left homepage lockup.
+  await whenBarFull();
+  await pause(420);
+
   landing?.classList.add('on');
   seedLandingFromOpening();
   window.scrollTo(0,0);
 
   if(opening){
     opening.classList.add('transitioning','leaving');
-
     await Promise.all([
       morphOpeningWordToHome(),
       Promise.race([
@@ -1319,21 +1302,17 @@ async function enterReadyHomepage(){
         new Promise(resolve=>opening.addEventListener('animationend',resolve,{once:true}))
       ])
     ]);
-
     opening.classList.remove('on','leaving','transitioning');
   }
 
   stopOpeningCover();
-
-  $$('.plate').forEach(p=>{
-    if(p.id!=='landing')p.classList.remove('on');
-  });
+  $$('.plate').forEach(p=>{if(p.id!=='landing')p.classList.remove('on')});
   landing?.classList.add('on');
 
-  // Start normal homepage behavior only after the opening has landed.
   paintCover();
   rollStart({restart:true});
 }
+
 
 async function loadCorpus(){
   if(cache?.vectors&&cache?.norms)return cache;
@@ -1342,9 +1321,14 @@ async function loadCorpus(){
   fieldLoadPromise=(async()=>{
     setStatus('loading field');
     loadProgress.clear();
+    const lbl=$('#openingLabel');if(lbl)lbl.textContent='loading field';
+    setOpeningStage(5,'loading field');
 
-    const manifest=await required(FIELD_FILES.manifest,'json','manifest');
+    const manifest=await required(FIELD_FILES.manifest,'json','__manifest',0,false);
     setFieldOpening(manifest.count);
+
+    const count=Number(manifest.count)||0;
+    const dim=Number(manifest.dim)||72;
 
     const metadataFiles=Array.isArray(manifest.metadata_files)&&manifest.metadata_files.length
       ? manifest.metadata_files
@@ -1352,40 +1336,42 @@ async function loadCorpus(){
     const vectorsFile=manifest.vectors_file||FIELD_FILES.vectors;
     const normsFile=manifest.norms_file||FIELD_FILES.norms;
 
+    const vectorBytes=count*dim*4;
+    const normBytes=count*4;
+    const metaBudget=Math.max(1,Math.round(count*360));
+    const metaPer=Math.max(1,Math.round(metaBudget/metadataFiles.length));
+
+    updateFieldProgress('vectors',0,vectorBytes);
+    updateFieldProgress('norms',0,normBytes);
+    metadataFiles.forEach((f,i)=>updateFieldProgress(`metadata-${i}`,0,metaPer));
+
     const metadataPromise=Promise.all(
-      metadataFiles.map((file,i)=>required(`./${file.replace(/^\.\//,'')}`,'json',`metadata-${i}`))
+      metadataFiles.map((file,i)=>required(`./${file.replace(/^\.\//,'')}`,'json',`metadata-${i}`,metaPer))
     ).then(parts=>{
-      for(const part of parts){
-        if(!Array.isArray(part))throw new Error('metadata shard is not an array');
-      }
+      for(const part of parts)if(!Array.isArray(part))throw new Error('metadata shard is not an array');
       return parts.flat();
     });
 
-    const vectorPromise=required(`./${vectorsFile.replace(/^\.\//,'')}`,'buffer','vectors');
-    const normPromise=required(`./${normsFile.replace(/^\.\//,'')}`,'buffer','norms');
+    const vectorPromise=required(`./${vectorsFile.replace(/^\.\//,'')}`,'buffer','vectors',vectorBytes);
+    const normPromise=required(`./${normsFile.replace(/^\.\//,'')}`,'buffer','norms',normBytes);
 
     const movies=await metadataPromise;
     if(!Array.isArray(movies))throw new Error('metadata is not an array');
-    setOpeningStage(97.2,'preparing field');
-
-    // Keep the cinematic loading gate alive with real field artwork while
-    // vectors and norms finish loading. The homepage is still hidden.
     cs.movies=movies;
-    const fieldArt=movies.filter(m=>m.backdropPath);
-    if(fieldArt.length)openingPool=fieldArt;
+    const withArt=movies.filter(m=>m.backdropPath);
+    if(withArt.length)openingPool=withArt;
 
     const [vectorBuffer,normBuffer]=await Promise.all([vectorPromise,normPromise]);
-    setOpeningStage(98.6,'preparing field');
+
+    setOpeningStage(98,'preparing field');
+    await new Promise(r=>requestAnimationFrame(r));
 
     const vectors=new Float32Array(vectorBuffer);
     const norms=new Float32Array(normBuffer);
-    const dim=Number(manifest.dim)||72;
-    const count=movies.length;
 
-    if(Number(manifest.count)!==count)throw new Error(`manifest count ${manifest.count} != metadata ${count}`);
+    if(count!==movies.length)throw new Error(`manifest count ${count} != metadata ${movies.length}`);
     if(vectors.length!==count*dim)throw new Error(`vector length ${vectors.length} != ${count*dim}`);
     if(norms.length!==count)throw new Error(`norm length ${norms.length} != ${count}`);
-    setOpeningStage(99.4,'opening field');
 
     cs.complete=true;
     cache={movies,vectors,norms,manifest,dim};
@@ -1395,13 +1381,10 @@ async function loadCorpus(){
     return cache;
   })();
 
-  try{
-    return await fieldLoadPromise;
-  }catch(e){
-    fieldLoadPromise=null;
-    throw e;
-  }
+  try{return await fieldLoadPromise}
+  catch(e){fieldLoadPromise=null;throw e}
 }
+
 
 /* ═══════ COVER ═══════ */
 let pool=[],ci=0,flip=0,coverTimer=null;
@@ -1839,6 +1822,8 @@ voice('#revealVoiceBtn','#revealQuery');
 
     const h=decodeURIComponent(location.hash.replace(/^#/,''));
     if(h){
+      await whenBarFull();
+      await pause(260);
       stopOpeningCover();
       search(h);
       return;
