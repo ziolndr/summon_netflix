@@ -437,9 +437,9 @@ body.playing #projector{display:block}
   <div class="corner tr">
     <div class="depth" role="group" aria-label="How many titles to search">
       <span class="lbl depth-lbl">titles</span>
-      <button class="on" data-depth="surface" type="button">250</button>
+      <button data-depth="surface" type="button">250</button>
       <button data-depth="field" type="button">900</button>
-      <button data-depth="archive" type="button">all</button>
+      <button class="on" data-depth="archive" type="button">all</button>
     </div>
   </div>
 
@@ -548,9 +548,9 @@ const IMG='https://image.tmdb.org/t/p/';
 const TMDB_KEY='1616a31a4f3bbcb387e74cbe0ae3c7b6';
 const TMDB_BASE='https://api.themoviedb.org/3';
 const RETURN_COUNT=10, TMDB_MAX_PAGE=500;
-const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/compare';
+const ARBITER_URL='https://recast-reviver-outlook.ngrok-free.dev/v1/embed';
 const DEPTHS={surface:{limit:250,label:'250'},field:{limit:900,label:'900'},archive:{limit:Infinity,label:'all'}};
-const DEFAULT_DEPTH='surface';
+const DEFAULT_DEPTH='archive';
 const FORMAT_LABELS={film:'film',series:'series',podcast:'podcast',short:'short',game:'game',live:'live'};
 
 const CURATED_ENTERTAINMENT_FIELD=[{"title":"The Bill Simmons Podcast","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"now on Netflix","genres":["Sports","Culture","Conversation"],"overview":"Long-form sports and culture conversations, arguments, predictions, and deep dives with athletes, celebrities, and voices from The Ringer universe."},{"title":"Pardon My Take","year":"2026","type":"podcast","publisher":"Barstool Sports","availability":"now on Netflix","genres":["Sports","Comedy","Conversation"],"overview":"Irreverent sports talk built around fan culture, sharp commentary, recurring bits, big personalities, and the absurdity surrounding the games."},{"title":"Spittin' Chiclets","year":"2026","type":"podcast","publisher":"Barstool Sports","availability":"now on Netflix","genres":["Hockey","Sports","Storytelling"],"overview":"NHL analysis, hockey culture, locker-room stories, pop culture, and candid conversation with players and personalities."},{"title":"The Ryen Russillo Podcast","year":"2026","type":"podcast","publisher":"Barstool Sports","availability":"now on Netflix","genres":["Sports","Analysis","Interviews"],"overview":"Long-form sports analysis and conversations with athletes, media figures, and people shaping modern sports culture."},{"title":"The Zach Lowe Show","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"on Netflix","genres":["Basketball","NBA","Analysis"],"overview":"Detailed NBA analysis focused on strategy, roster construction, player fit, league trends, and the small tactical decisions that change games."},{"title":"The Rewatchables","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"on Netflix","genres":["Film","Culture","Conversation"],"overview":"A joyful, obsessive return to beloved movies: best scenes, performances, casting what-ifs, legacy, quotability, and why certain films stay alive in memory."},{"title":"The Big Picture","year":"2026","type":"podcast","publisher":"The Ringer / Spotify","availability":"on Netflix","genres":["Film","Industry","Criticism"],"overview":"Movies, filmmakers, awards, the business of cinema, and wide-ranging conversations about how films are made, received, and remembered."},{"title":"Dissect","year":"2026","type":"podcast","publisher":"Spotify","availability":"on Netflix","genres":["Music","Analysis","Storytelling"],"overview":"Long-form analysis of major albums and songs, tracing lyrics, themes, production choices, symbolism, and cultural context piece by piece."},{"title":"Conspiracy Theories","year":"2026","type":"podcast","publisher":"Spotify","availability":"on Netflix","genres":["Mystery","History","Psychology"],"overview":"A guided investigation of famous conspiracy theories, separating documented history, plausible questions, hidden incentives, and mythology."},{"title":"Serial Killers","year":"2026","type":"podcast","publisher":"Spotify","availability":"on Netflix","genres":["True Crime","Psychology","History"],"overview":"True-crime stories examining notorious killers, investigative failures, psychology, victims, and the systems surrounding major cases."},{"title":"My Favorite Murder","year":"2026","type":"podcast","publisher":"iHeartMedia","availability":"on Netflix","genres":["True Crime","Comedy","Conversation"],"overview":"True crime told through candid conversation, dark humor, personal reactions, and the strange details that make cases impossible to forget."},{"title":"The Breakfast Club","year":"2026","type":"podcast","publisher":"iHeartMedia","availability":"on Netflix","genres":["Music","Culture","Interviews"],"overview":"Unfiltered interviews and conversation spanning music, celebrity, politics, internet culture, controversy, and the personalities driving the moment."},{"title":"The Pete Davidson Show","year":"2026","type":"podcast","publisher":"Netflix","availability":"now on Netflix","genres":["Comedy","Conversation","Celebrity"],"overview":"Candid, no-holds-barred conversations with Pete Davidson and friends, mostly from his garage, with the looseness of hanging out after midnight."},{"title":"BEEF: The Official Podcast","year":"2026","type":"podcast","publisher":"Netflix","availability":"now on Netflix","genres":["Behind the Scenes","Drama","Creative Process"],"overview":"Creator Lee Sung Jin and the cast unpack BEEF Season 2, creative decisions, performance, rivalry, music, and how the story was built."},{"title":"Bridgerton: The Official Podcast","year":"2026","type":"podcast","publisher":"Netflix / Shondaland","availability":"now on Netflix","genres":["Romance","Behind the Scenes","Drama"],"overview":"A companion journey through Bridgerton Season 4 with cast and creators discussing love, heartbreak, friendship, performance, and the world behind the ton."},{"title":"The Rest Is Football","year":"2026","type":"podcast","publisher":"Goalhanger","availability":"daily during the 2026 tournament","genres":["Football","World Cup","Analysis"],"overview":"Gary Lineker, Alan Shearer, and Micah Richards deliver daily world football analysis, big-match reactions, interviews, honesty, and humor."},{"title":"On Purpose with Jay Shetty","year":"2026","type":"podcast","publisher":"Netflix / Spotify","availability":"2026 on Netflix","genres":["Personal Growth","Relationships","Conversation"],"overview":"Deep conversations about grief, anxiety, love, identity, healing, purpose, and the hardest truths people carry into their lives."},{"title":"We're Back! with Brian Williams","year":"2026","type":"podcast","publisher":"Netflix","availability":"announced for 2026","genres":["Culture","Interviews","Ideas"],"overview":"Unhurried conversations with actors, writers, musicians, athletes, journalists, scientists, and consequential people shaping culture."},{"title":"FIFA World Cup: Launch Edition","year":"2026","type":"game","publisher":"Netflix Games / Delphi Interactive","availability":"play now","genres":["Football","Sports","Multiplayer"],"overview":"A reimagined football simulation built for instant play on TV, with the phone as controller, featuring the drama and emotion of the 2026 World Cup."},{"title":"Boggle Party","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Words","Party","Puzzle"],"overview":"A fast social word game for one to eight players where phones become controllers and everyone races to find the best words on the shared TV grid."},{"title":"LEGO Party!","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Party","Family","Minigames"],"overview":"A competitive collection of playful LEGO minigames, board-game chaos, customization, and living-room rivalry for friends and families."},{"title":"Party Crashers: Fool Your Friends","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Social Deduction","Party","Comedy"],"overview":"A bluffing game where one player does not know the secret word and must fake their way through clues without being exposed as the party crasher."},{"title":"Pictionary: Game Night","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Drawing","Party","Family"],"overview":"Draw on a phone, watch the image appear on the TV, and race against the clock as friends try to decipher increasingly questionable masterpieces."},{"title":"Tetris Time Warp","year":"2026","type":"game","publisher":"Netflix Games","availability":"play now","genres":["Puzzle","Arcade","Multiplayer"],"overview":"Classic Tetris with time-warps into historic versions of the game, each with altered rules, retro constraints, and competitive living-room play."},{"title":"Overcooked! All You Can Eat","year":"2026","type":"game","publisher":"Netflix Games","availability":"play on TV","genres":["Co-op","Party","Chaos"],"overview":"A frantic cooperative cooking game where communication collapses, kitchens move, orders pile up, and friendship is tested under ridiculous pressure."},{"title":"Jackbox Party Pack","year":"2026","type":"game","publisher":"Netflix Games","availability":"play on TV","genres":["Party","Comedy","Trivia"],"overview":"A living-room collection of social games built around jokes, drawing, trivia, bluffing, and group chemistry, with phones used as controllers."},{"title":"Red Dead Redemption","year":"2026","type":"game","publisher":"Netflix Games","availability":"on mobile","genres":["Western","Open World","Story"],"overview":"A sprawling western about violence, loyalty, fading myths, and a man trying to survive as the frontier world that made him begins to disappear."},{"title":"Netflix Puzzled: Scattergories Daily","year":"2026","type":"game","publisher":"Netflix Puzzled","availability":"play daily","genres":["Word Game","Daily","Puzzle"],"overview":"A quick daily word challenge built around categories, speed, originality, and the pressure to find answers nobody else would think of."},{"title":"Unhinged","year":"2026","type":"game","publisher":"Netflix Games","availability":"play on TV","genres":["Horror","Interactive","Motion"],"overview":"A motion-controlled horror experience where real-world phone movements guide a character's flashlight through darkness, uncertainty, and whatever is waiting there."},{"title":"Dead Man's Party: A Knives Out Game","year":"2026","type":"game","publisher":"Netflix Games","availability":"announced","genres":["Mystery","Social Deduction","Party"],"overview":"A social murder mystery inspired by Knives Out, where Benoit Blanc is investigating and the room itself becomes part of the case."},{"title":"Architectural Digest: Open Door","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Design","Architecture","Homes"],"overview":"Short-form access inside remarkable celebrity homes, with architecture, objects, taste, memory, and the private worlds people build around themselves."},{"title":"Vanity Fair: Lie Detector Test","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Celebrity","Interviews","Comedy"],"overview":"Celebrities answer uncomfortable, playful, and revealing questions while wired to a lie detector, turning tension into confession and comedy."},{"title":"Vogue: Fashion and Culture Shorts","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Fashion","Celebrity","Lifestyle"],"overview":"Fast-moving interviews through personal spaces, revealing taste, routine, ambition, style, memories, and unexpected details in a single continuous encounter."},{"title":"WIRED: Tech and Internet Culture Shorts","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Technology","Celebrity","Internet Culture"],"overview":"Public figures answer the internet's most searched questions about themselves, moving from curiosity and myth to strange facts and self-explanation."},{"title":"Bon Appétit: Kitchen and Food Stories","year":"2026","type":"short","publisher":"Condé Nast","availability":"arriving Aug 3","genres":["Food","Cooking","Craft"],"overview":"Short culinary stories about technique, obsession, ingredients, restaurant culture, experimentation, and the craft behind food people cannot stop thinking about."},{"title":"BuzzFeed Studios: Internet Culture Shorts","year":"2026","type":"short","publisher":"BuzzFeed Studios","availability":"arriving Aug 3","genres":["Internet Culture","Comedy","Food"],"overview":"Short-form internet-native entertainment spanning food, identity, experiments, comedy, social behavior, and the cultural questions people share and argue about."},{"title":"Eater: Food, Restaurants and Obsession","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Food","Restaurants","Travel"],"overview":"Short documentaries and field pieces about restaurants, hidden kitchens, culinary craft, regional obsession, and the people behind unforgettable food."},{"title":"Rolling Stone: Music and Culture","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Music","Culture","Artists"],"overview":"Artists, songs, scenes, performances, and cultural moments explored through short-form music journalism and direct conversations."},{"title":"Billboard: Music Interviews and Performances","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Music","Performance","Pop Culture"],"overview":"Short-form interviews, performances, chart stories, and conversations with artists driving the sound and mood of the current moment."},{"title":"The Hollywood Reporter: Creative Roundtables","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Film","Television","Creative Process"],"overview":"Actors, directors, writers, and craftspeople discuss performance, ambition, failure, process, pressure, and what actually happens behind finished work."},{"title":"Variety: Actors, Filmmakers and Industry Conversations","year":"2026","type":"short","publisher":"Penske Media","availability":"arriving Aug 3","genres":["Film","Television","Interviews"],"overview":"Direct conversations across cinema and television about craft, careers, collaboration, difficult choices, and the business around storytelling."},{"title":"People: Human Stories and Celebrity Profiles","year":"2026","type":"short","publisher":"People Inc.","availability":"arriving Aug 3","genres":["People","Celebrity","Human Interest"],"overview":"Short human-interest stories and profiles centered on relationships, transformation, celebrity, resilience, and the personal lives behind public figures."},{"title":"Tastemade: Food, Travel and Beautiful Places","year":"2026","type":"short","publisher":"Tastemade","availability":"arriving Aug 3","genres":["Travel","Food","Lifestyle"],"overview":"Visually driven short-form stories about where to go, what to eat, how places feel, and the small details that make travel worth remembering."},{"title":"WWE Raw","year":"2026","type":"live","publisher":"WWE / Netflix","availability":"live weekly","genres":["Wrestling","Sports Entertainment","Drama"],"overview":"A weekly live collision of athleticism, rivalry, spectacle, betrayal, crowd energy, and serialized drama where the outcome still unfolds in real time."},{"title":"2026 T-Mobile Home Run Derby","year":"2026","type":"live","publisher":"MLB / Netflix","availability":"live July 13","genres":["Baseball","Competition","Live Sports"],"overview":"Baseball's top sluggers attack the fences in Philadelphia in a live skills competition built around pressure, power, rhythm, and one swing changing everything."},{"title":"MLB at Field of Dreams 2026","year":"2026","type":"live","publisher":"MLB / Netflix","availability":"live Aug 13","genres":["Baseball","Nostalgia","Live Sports"],"overview":"The Minnesota Twins and Philadelphia Phillies play live from the iconic Field of Dreams site in Iowa, blending major-league competition with cinematic mythology."},{"title":"NFL on Netflix: Rams vs. 49ers in Australia","year":"2026","type":"live","publisher":"NFL / Netflix","availability":"live Sept 10","genres":["Football","Rivalry","Live Sports"],"overview":"The NFL's first regular-season game in Australia: divisional rivals Los Angeles and San Francisco meet live at the Melbourne Cricket Ground."},{"title":"NFL Thanksgiving Eve on Netflix","year":"2026","type":"live","publisher":"NFL / Netflix","availability":"live Nov 25","genres":["Football","Holiday","Live Sports"],"overview":"The NFL's first Thanksgiving Eve game brings the Packers and Rams together live under holiday pressure with an audience gathering in real time."},{"title":"NFL Christmas Day on Netflix","year":"2026","type":"live","publisher":"NFL / Netflix","availability":"live Dec 25","genres":["Football","Holiday","Live Sports"],"overview":"Christmas Day football becomes a global live event, with major matchups, family rituals, rivalry, and the unpredictability of games that have not been written yet."},{"title":"FIFA Women's World Cup 2027","year":"2027","type":"live","publisher":"FIFA / Netflix","availability":"announced","genres":["Football","World Cup","Live Sports"],"overview":"The world's biggest women's football tournament, live on Netflix in the United States and Canada, where national identity, pressure, and history collide."}];
@@ -914,26 +914,28 @@ function candidate(m){
 }
 const depthCfg=(d=searchDepth)=>DEPTHS[d]||DEPTHS[DEFAULT_DEPTH];
 const depthTarget=(d=searchDepth)=>depthCfg(d).limit;
-const depthCandidates=(c,d=searchDepth)=>{const l=depthCfg(d).limit;return Number.isFinite(l)?c.candidates.slice(0,l):c.candidates.slice()};
+const depthCount=(c,d=searchDepth)=>{
+  const l=depthCfg(d).limit;
+  const total=c?.movies?.length||0;
+  return Number.isFinite(l)?Math.min(l,total):total;
+};
 function statusLine(p){
-  const loaded=cache?.movies?.length||cs.movies.length||0;
+  const loaded=cache?.movies?.length||0;
   const l=depthCfg().limit;
-  return `${p} · ${Number.isFinite(l)?Math.min(l,loaded||l):loaded} titles`;
+  return `${p} · ${Number.isFinite(l)?Math.min(l,loaded||l):loaded.toLocaleString()} titles`;
 }
 const setStatus=t=>{$('#status').textContent=t};
 function toast(t){const el=document.createElement('div');el.className='toast';el.textContent=t;document.body.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},1600)}
 const show=id=>$$('.plate').forEach(p=>p.classList.toggle('on',p.id===id));
 
-/* ═══════ CORPUS ═══════ */
-let genreP=null;
-function genreMaps(){
-  if(genreP)return genreP;
-  genreP=Promise.all([
-    fetch(`${TMDB_BASE}/genre/movie/list?api_key=${TMDB_KEY}&language=en-US`).then(r=>r.json()).catch(()=>({genres:[]})),
-    fetch(`${TMDB_BASE}/genre/tv/list?api_key=${TMDB_KEY}&language=en-US`).then(r=>r.json()).catch(()=>({genres:[]}))
-  ]).then(([a,b])=>{const movie={},tv={};(a.genres||[]).forEach(g=>movie[g.id]=g.name);(b.genres||[]).forEach(g=>tv[g.id]=g.name);return{movie,tv}});
-  return genreP;
-}
+/* ═══════ MASSIVE PRE-EMBEDDED FIELD ═══════ */
+const FIELD_FILES={
+  manifest:'./SUMMON_field_manifest.json',
+  metadata:'./SUMMON_field_metadata.json',
+  vectors:'./SUMMON_field_vectors.f32',
+  norms:'./SUMMON_field_norms.f32'
+};
+let fieldLoadPromise=null;
 
 function contentUrl(m){
   if(m?.externalUrl)return m.externalUrl;
@@ -945,76 +947,56 @@ function contentUrl(m){
   return `https://www.google.com/search?q=${q}`;
 }
 
-function discover(kind,page){
-  const p=new URLSearchParams({
-    api_key:TMDB_KEY,
-    language:'en-US',
-    sort_by:'popularity.desc',
-    page:String(Math.max(1,Math.min(TMDB_MAX_PAGE,page))),
-    include_adult:'false',
-    include_video:'false'
-  });
-  return fetch(`${TMDB_BASE}/discover/${kind}?${p}`).then(r=>{if(!r.ok)throw new Error('tmdb');return r.json()});
+async function required(url,kind='json'){
+  const r=await fetch(url,{cache:'no-store'});
+  if(!r.ok)throw new Error(`${url} · ${r.status}`);
+  return kind==='buffer'?r.arrayBuffer():r.json();
 }
-const toFilm=(s,g)=>(!s.title||!s.poster_path)?null:{title:s.title.trim(),year:String(s.release_date||'').slice(0,4),type:'film',tmdbKind:'movie',genres:(s.genre_ids||[]).map(i=>g[i]).filter(Boolean),posterPath:norm(s.poster_path),backdropPath:norm(s.backdrop_path),overview:(s.overview||'').trim()||s.title,tmdbId:s.id,externalUrl:`https://www.justwatch.com/us/search?q=${encodeURIComponent(s.title)}`};
-function toSeries(s,g){
-  const t=(s.name||s.original_name||'').trim();
-  if(!t||!s.poster_path)return null;
-  return {title:t,year:String(s.first_air_date||'').slice(0,4),type:'series',tmdbKind:'tv',genres:(s.genre_ids||[]).map(i=>g[i]).filter(Boolean),posterPath:norm(s.poster_path),backdropPath:norm(s.backdrop_path),overview:(s.overview||'').trim()||t,tmdbId:s.id,externalUrl:`https://www.justwatch.com/us/search?q=${encodeURIComponent(t)}`};
-}
-function build(movies){const candidates=movies.map(candidate);const map=new Map();candidates.forEach((c,i)=>map.set(c,movies[i]));cache={movies,candidates,map};return cache}
-function ingest(r){
-  if(!r?.title)return false;
-  const k=`${r.type}:${r.title.toLowerCase()}:${r.year||''}`;
-  if(cs.seen.has(k))return false;
-  cs.seen.add(k);cs.movies.push(r);return true;
-}
-function curated(){
-  if(cs.curated)return;
-  [...CURATED_ENTERTAINMENT_FIELD,...UNIVERSAL_GAME_FIELD].forEach(r=>{
-    const item={...r,genres:[...(r.genres||[])]};
-    item.externalUrl=contentUrl(item);
-    ingest(item);
-  });
-  cs.curated=true;build(cs.movies);
-  resolveAllArt();
-}
-function ingestPage(d,g,fn){let n=0;(d?.results||[]).forEach(s=>{const r=fn(s,g);if(r&&ingest(r))n++});if(n)build(cs.movies);return n}
 
-async function loadCorpus(target=DEPTHS.surface.limit){
-  const want=Number.isFinite(target)?target:Infinity;
-  curated();
-  if(cache&&(cs.complete||cache.movies.length>=want))return cache;
-  while(corpusLock)await corpusLock;
-  if(cache&&(cs.complete||cache.movies.length>=want))return cache;
-  corpusLock=(async()=>{
-    if(!cs.genreMaps)cs.genreMaps=await genreMaps();
-    const gm=cs.genreMaps.movie, gt=cs.genreMaps.tv;
-    if(!cs.movieTotal){
-      const [f,t]=await Promise.all([discover('movie',1),discover('tv',1)]);
-      cs.movieTotal=Math.min(TMDB_MAX_PAGE,f.total_pages||1);
-      cs.tvTotal=Math.min(TMDB_MAX_PAGE,t.total_pages||1);
-      cs.moviePage=2;cs.tvPage=2;
-      ingestPage(f,gm,toFilm);ingestPage(t,gt,toSeries);
-      paintCover();
-    }
-    while(!cs.complete&&cs.movies.length<want){
-      const jobs=[];
-      if(cs.moviePage<=cs.movieTotal){const p=cs.moviePage++;jobs.push(discover('movie',p).then(d=>ingestPage(d,gm,toFilm)).catch(()=>{}))}
-      if(cs.tvPage<=cs.tvTotal){const p=cs.tvPage++;jobs.push(discover('tv',p).then(d=>ingestPage(d,gt,toSeries)).catch(()=>{}))}
-      if(!jobs.length){cs.complete=true;break}
-      await Promise.all(jobs);
-      if(!silentLoad)setStatus(statusLine('loading'));
-      await new Promise(requestAnimationFrame);
-    }
-    if(cs.moviePage>cs.movieTotal&&cs.tvPage>cs.tvTotal)cs.complete=true;
-    if(!cache)build(cs.movies);
-    if(!cache.movies.length)throw new Error('empty corpus');
+async function loadCorpus(){
+  if(cache?.vectors&&cache?.norms)return cache;
+  if(fieldLoadPromise)return fieldLoadPromise;
+
+  fieldLoadPromise=(async()=>{
+    setStatus('opening massive field');
+
+    const manifest=await required(FIELD_FILES.manifest);
+    const metadataFile=manifest.metadata_file||FIELD_FILES.metadata;
+    const vectorsFile=manifest.vectors_file||FIELD_FILES.vectors;
+    const normsFile=manifest.norms_file||FIELD_FILES.norms;
+
+    const [movies,vectorBuffer,normBuffer]=await Promise.all([
+      required(`./${metadataFile.replace(/^\.\//,'')}`),
+      required(`./${vectorsFile.replace(/^\.\//,'')}`,'buffer'),
+      required(`./${normsFile.replace(/^\.\//,'')}`,'buffer')
+    ]);
+
+    if(!Array.isArray(movies))throw new Error('metadata is not an array');
+
+    const vectors=new Float32Array(vectorBuffer);
+    const norms=new Float32Array(normBuffer);
+    const dim=Number(manifest.dim)||72;
+    const count=movies.length;
+
+    if(Number(manifest.count)!==count)throw new Error(`manifest count ${manifest.count} != metadata ${count}`);
+    if(vectors.length!==count*dim)throw new Error(`vector length ${vectors.length} != ${count*dim}`);
+    if(norms.length!==count)throw new Error(`norm length ${norms.length} != ${count}`);
+
+    cs.movies=movies;
+    cs.complete=true;
+    cache={movies,vectors,norms,manifest,dim};
+
     paintCover();
+    setStatus(statusLine('ready'));
     return cache;
   })();
-  try{await corpusLock}finally{corpusLock=null}
-  return cache;
+
+  try{
+    return await fieldLoadPromise;
+  }catch(e){
+    fieldLoadPromise=null;
+    throw e;
+  }
 }
 
 /* ═══════ COVER ═══════ */
@@ -1068,24 +1050,6 @@ function startLeader(q){
 function stopLeader(){clearInterval(tickTimer);clearInterval(ambTimer);document.body.classList.remove('locked','launch')}
 
 /* ═══════ ARBITER ═══════ */
-const rows=d=>Array.isArray(d?.all)?d.all:Array.isArray(d?.top)?d.top:Array.isArray(d)?d:[];
-const rText=r=>Array.isArray(r)?r[0]:(r?.text??r?.candidate??'');
-const rScore=r=>Number(Array.isArray(r)?r[1]:(r?.score??0));
-const rIdx=r=>{const v=Array.isArray(r)?r[2]:(r?.index??r?.idx);const n=Number(v);return Number.isInteger(n)&&n>=0?n:null};
-function matchRow(r,c){
-  const i=rIdx(r);
-  if(i!==null&&c.movies[i])return c.movies[i];
-  const t=String(rText(r)||'').trim();
-  if(!t)return null;
-  const d=c.map.get(t);
-  if(d)return d;
-  const n=t.replace(/\s+/g,' ');
-  for(const cand of c.candidates){
-    const cn=cand.trim().replace(/\s+/g,' ');
-    if(cn===n||cn.startsWith(n)||n.startsWith(cn.slice(0,180)))return c.map.get(cand)||null;
-  }
-  return null;
-}
 async function arbiter(payload,attempts=3){
   let last;
   for(let i=0;i<attempts;i++){
@@ -1098,12 +1062,56 @@ async function arbiter(payload,attempts=3){
   }
   throw last;
 }
-const mapRows=(rs,c)=>rs.map(r=>{const m=matchRow(r,c);return m?{...m,score:rScore(r)}:null}).filter(Boolean);
 
-async function measure(q,corpus,cands){
-  setState(`measuring ${cands.length} titles`);
-  const d=await arbiter({query:q,candidates:cands,use_freq:true,top_k:RETURN_COUNT});
-  return mapRows(rows(d),corpus).sort((a,b)=>b.score-a.score).slice(0,RETURN_COUNT);
+function embedRows(d){
+  if(Array.isArray(d?.vectors))return d.vectors;
+  if(Array.isArray(d?.embeddings))return d.embeddings;
+  if(Array.isArray(d))return d;
+  throw new Error('unrecognized embed response');
+}
+
+function topKField(q,corpus,count,k=RETURN_COUNT){
+  const dim=corpus.dim;
+  const qv=Float32Array.from(q);
+  let qNormSq=0;
+  for(let j=0;j<dim;j++)qNormSq+=qv[j]*qv[j];
+  const qNorm=Math.sqrt(qNormSq)||1;
+
+  const top=[];
+  const vectors=corpus.vectors;
+  const norms=corpus.norms;
+
+  for(let i=0;i<count;i++){
+    const base=i*dim;
+    let dot=0;
+    for(let j=0;j<dim;j++)dot+=qv[j]*vectors[base+j];
+    const score=dot/(qNorm*(norms[i]||1));
+
+    if(top.length<k){
+      let at=top.length;
+      while(at>0&&score>top[at-1].score)at--;
+      top.splice(at,0,{index:i,score});
+    }else if(score>top[top.length-1].score){
+      let at=top.length-1;
+      while(at>0&&score>top[at-1].score)at--;
+      top.splice(at,0,{index:i,score});
+      top.length=k;
+    }
+  }
+
+  return top;
+}
+
+async function measure(q,corpus,count){
+  setState(`measuring ${count.toLocaleString()} titles`);
+
+  const useFreq=corpus.manifest.use_freq!==false;
+  const embedded=await arbiter({texts:[q],use_freq:useFreq});
+  const qVector=embedRows(embedded)[0];
+  if(!qVector||qVector.length!==corpus.dim)throw new Error('query embedding dimension mismatch');
+
+  const measured=topKField(qVector,corpus,count,RETURN_COUNT);
+  return measured.map(x=>({...corpus.movies[x.index],score:x.score}));
 }
 
 /* ═══════ SEARCH ═══════ */
@@ -1121,16 +1129,21 @@ async function search(text){
     try{corpus=await loadCorpus(depthTarget())}
     catch(e){console.error(e);setState('the field would not open');await pause(900);toast('field unavailable — reload');show('landing');return}
 
-    const cands=depthCandidates(corpus);
-    setState(`measuring ${cands.length} titles`);
-    await pause(280);
+    const count=depthCount(corpus);
+    setState(`measuring ${count.toLocaleString()} titles`);
+    await pause(120);
 
-    try{results=await measure(q,corpus,cands)}
+    try{results=await measure(q,corpus,count)}
     catch(e){console.error(e);setState('the engine did not answer');await pause(900);toast('engine unreachable');show('landing');return}
 
     if(!results.length){setState('nothing came close');await pause(1000);show('landing');return}
 
     active=0;
+    results.forEach(m=>{
+      if(!m.posterPath&&!m.backdropPath&&!m.imageUrl){
+        resolveArt(m).then(ok=>{if(ok&&$('#reveal').classList.contains('on'))render()}).catch(()=>{});
+      }
+    });
     render();
     Promise.all(results.map(hydrateProviders)).then(()=>{
       if($('#reveal').classList.contains('on'))render();
@@ -1370,14 +1383,7 @@ document.addEventListener('keydown',e=>{
 $$('.depth button').forEach(b=>b.onclick=async()=>{
   searchDepth=b.dataset.depth;
   $$('.depth button').forEach(x=>x.classList.toggle('on',x===b));
-  const target=depthTarget();
-  const loaded=cache?.movies?.length||cs.movies.length||0;
-  const needs=Number.isFinite(target)?loaded<target:!cs.complete;
-  if(needs)b.classList.add('loading');
-  setStatus(statusLine('loading'));
-  try{await loadCorpus(target);setStatus(statusLine('ready'))}
-  catch(e){setStatus('field unavailable')}
-  finally{b.classList.remove('loading')}
+  setStatus(statusLine('ready'));
 });
 
 /* auto-typed example queries cycle through the input placeholder */
@@ -1422,20 +1428,17 @@ voice('#revealVoiceBtn','#revealQuery');
 (async()=>{
   try{
     rollStart();
-    setStatus(statusLine('loading'));
-    await loadCorpus(depthTarget(DEFAULT_DEPTH));
+    setStatus('opening massive field');
+    await loadCorpus();
     setStatus(statusLine('ready'));
+
     const h=decodeURIComponent(location.hash.replace(/^#/,''));
     if(h)search(h);
-    // pre-warm deeper + everything so switching tiers is instant
-    const idle=window.requestIdleCallback||(fn=>setTimeout(()=>fn(),1400));
-    idle(async()=>{
-      silentLoad=true;
-      try{await loadCorpus(depthTarget('field'));await loadCorpus(depthTarget('archive'))}
-      catch(e){}
-      finally{silentLoad=false;setStatus(statusLine('ready'))}
-    });
-  }catch(e){console.error(e);setStatus('field unavailable — reload')}
+  }catch(e){
+    console.error(e);
+    setStatus('massive field unavailable');
+    toast('place the manifest, metadata, vectors, and norms beside this HTML');
+  }
 })();
 </script>
 </body>
