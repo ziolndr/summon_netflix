@@ -258,6 +258,7 @@ body.locked .shuttle::after{animation:none;left:0;width:100%;transition:width .5
 .synopsis:empty{display:none}
 .actions{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
 .actions button{padding:11px 15px;border:1px solid var(--hair);font-size:var(--label);letter-spacing:.18em;text-transform:uppercase;color:var(--white)}
+.actions button:not(.solid){background:rgba(10,10,9,.44);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .actions button:hover{border-color:var(--white)}
 .actions button.solid{background:var(--accent);color:#fff;border-color:var(--accent)}
 .actions button.solid:hover{background:#ff1a25;box-shadow:0 0 24px var(--accent-glow)}
@@ -364,10 +365,11 @@ body.playing #projector{display:block}
   #revealQuery{font-size:clamp(16px,4.7vw,21px);line-height:1.22;min-height:1.22em;max-height:3.9em}
   .stage{gap:14px}
   .synopsis{max-width:34ch;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;max-height:7.1em}
-  .actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:18px}
+  .actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:18px;margin-bottom:14px}
   .actions button{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center}
-  .deck{margin-top:4px}
-  .deck-head{margin-bottom:8px}
+  .actions button:not(.solid){background:rgba(10,10,9,.66)}
+  .deck{margin-top:10px}
+  .deck-head{margin-bottom:10px}
   .deck-strip{padding-right:16px;padding-bottom:6px}
 }
 @media(max-width:700px){
