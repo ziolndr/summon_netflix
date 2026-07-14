@@ -120,8 +120,6 @@ button.mark:hover .mark-word{opacity:.7}
 .formats{margin-top:10px;font-family:var(--mono);font-size:var(--label);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
 
 /* ═══ PROOF — full-bleed film, the summon overlaid, the score. that's all. ═══ */
-.summon-echo{display:block;font-family:var(--serif);font-style:italic;font-size:clamp(15px,1.4vw,20px);line-height:1.25;color:var(--dim);margin-bottom:12px;max-width:44ch;text-wrap:balance}
-.summon-echo:empty{display:none}
 @media (max-width:720px){
   #landing .head{width:auto;left:var(--pad);right:var(--pad)}
 }
@@ -271,7 +269,7 @@ body.locked .shuttle::after{animation:none;left:0;width:100%;transition:width .5
 /* deck */
 .deck{align-self:end}
 .deck-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
-.deck-strip{display:flex;gap:10px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding-bottom:2px}
+.deck-strip{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none;padding-bottom:8px;min-width:0;max-width:100%;touch-action:pan-x;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .deck-strip::-webkit-scrollbar{display:none}
 .tile{flex:0 0 auto;width:clamp(74px,5.8vw,96px);text-align:left;opacity:.5;transition:opacity .2s ease}
 .tile:hover{opacity:.85}
@@ -315,7 +313,8 @@ body.playing #projector{display:block}
   .field-col:nth-child(n+2){display:none}
   .field-col span{text-align:center}
   .work .qt{font-size:clamp(26px,8vw,44px)}
-  #revealFrame{gap:14px}
+  #revealFrame{gap:14px;grid-template-rows:auto auto auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding-bottom:calc(var(--pad) + env(safe-area-inset-bottom))}
+  #reveal{overflow:hidden}
   .bar{grid-template-columns:auto 1fr;grid-template-areas:'mark nav' 'q q';row-gap:12px}
   .bar>.mark{grid-area:mark}
   .bar>.nav{grid-area:nav}
@@ -324,7 +323,10 @@ body.playing #projector{display:block}
   #card{width:min(38vw,150px);justify-self:end;order:-1}
   #title{font-size:clamp(34px,10vw,56px)}
   .meta span:nth-child(n+4){display:none}
-  .tile{width:64px}
+  .deck{width:100%;min-width:0;padding-bottom:4px}
+  .deck-head{position:relative;z-index:2;margin-bottom:10px}
+  .deck-strip{width:100%;padding-right:42px;scroll-snap-type:x proximity}
+  .tile{width:74px;scroll-snap-align:start}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none !important;transition-duration:.01ms !important}}
 /* ── mobile landing: stop the top-right + credits overlap ── */
@@ -436,7 +438,6 @@ body.playing #projector{display:block}
 
     <div class="stage">
       <div class="info">
-        <p class="summon-echo" id="summonEcho"></p>
         <span class="lbl eyebrow"><b id="format">film</b> · resonance <b id="score">0.000</b></span>
         <h1 id="title">Title</h1>
         <div class="meta" id="meta"></div>
@@ -1015,7 +1016,6 @@ function render(){
   $('#cardImg').src=square?m.imageUrl:art;
   $('#cardImg').alt=m.title;
 
-  {const se=$('#summonEcho');if(se)se.textContent=currentQuery||''}
   $('#title').textContent=m.title;
   $('#format').textContent=fmt(m);
   $('#score').textContent=Number(m.score).toFixed(3);
@@ -1043,8 +1043,8 @@ function renderDeck(){
       <span class="cap">${esc(r.title)}</span>
       <span class="sc">${Number(r.score).toFixed(3)}</span>
     </button>`).join('');
-  $$('.tile').forEach(t=>t.onclick=()=>{active=+t.dataset.i;closeProjector();render()});
-  const on=$('.tile.on');
+  $$('#deck .tile').forEach(t=>t.onclick=()=>{active=+t.dataset.i;closeProjector();render()});
+  const on=$('#deck .tile.on');
   if(on)on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
 }
 function step(d,{play=false}={}){
@@ -1069,8 +1069,24 @@ function bindInput(el,fn){
 }
 bindInput($('#query'),()=>search($('#query').value));
 $('#query').addEventListener('focus',()=>{
-  $('#query').setAttribute('placeholder','');
-  resetPlaceholderHeight($('#query'));
+  const q=$('#query');
+  const visibleExample=(q.getAttribute('placeholder')||'').replace(/▏$/,'').trim();
+
+  // A rotating example becomes real input the instant the field is entered.
+  // No extra button or UI: submit it as-is, or start typing to replace the selection.
+  if(!q.value && visibleExample){
+    q.value=visibleExample;
+    q.setAttribute('placeholder','');
+    resetPlaceholderHeight(q);
+    autoResize(q);
+    requestAnimationFrame(()=>{
+      try{q.setSelectionRange(0,q.value.length)}catch(e){}
+    });
+    return;
+  }
+
+  q.setAttribute('placeholder','');
+  resetPlaceholderHeight(q);
 });
 
 bindInput($('#revealQuery'),()=>search($('#revealQuery').value));
