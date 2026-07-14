@@ -190,7 +190,7 @@ body.launch #leader{animation:fadeOut .5s ease forwards}
 .work .qt{
   font-family:var(--serif);font-size:clamp(30px,4.4vw,80px);line-height:.94;letter-spacing:-.025em;
   max-width:20ch;margin:16px auto 0;text-wrap:balance;
-  text-shadow:0 4px 34px rgba(0,0,0,.82),0 1px 5px rgba(0,0,0,.55);
+  text-shadow:none;
 }
 body.locked .work{opacity:0;transform:translate(0,-54%);transition:opacity .6s ease,transform .6s ease}
 
@@ -258,7 +258,6 @@ body.locked .shuttle::after{animation:none;left:0;width:100%;transition:width .5
 .synopsis:empty{display:none}
 .actions{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
 .actions button{padding:11px 15px;border:1px solid var(--hair);font-size:var(--label);letter-spacing:.18em;text-transform:uppercase;color:var(--white)}
-.actions button:not(.solid){background:rgba(10,10,9,.44);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .actions button:hover{border-color:var(--white)}
 .actions button.solid{background:var(--accent);color:#fff;border-color:var(--accent)}
 .actions button.solid:hover{background:#ff1a25;box-shadow:0 0 24px var(--accent-glow)}
@@ -367,7 +366,6 @@ body.playing #projector{display:block}
   .synopsis{max-width:34ch;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;max-height:7.1em}
   .actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:18px;margin-bottom:14px}
   .actions button{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center}
-  .actions button:not(.solid){background:rgba(10,10,9,.66)}
   .deck{margin-top:10px}
   .deck-head{margin-bottom:10px}
   .deck-strip{padding-right:16px;padding-bottom:6px}
@@ -380,6 +378,49 @@ body.playing #projector{display:block}
   #revealQuery{font-size:15px;line-height:1.2;max-height:4.2em}
   .summon-bar .icon,.summon-bar .send{width:34px;height:34px}
   .nav .arrow{width:32px;height:32px}
+}
+
+
+@media(max-width:1000px){
+  #revealFrame{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    padding-bottom:calc(var(--pad) + env(safe-area-inset-bottom));
+  }
+  .bar{flex:0 0 auto}
+  .stage{
+    display:block;
+    flex:0 0 auto;
+    min-height:auto;
+    overflow:visible;
+  }
+  .info{
+    width:100%;
+    max-width:none;
+  }
+  .actions{
+    margin-top:18px;
+    margin-bottom:0;
+  }
+  .deck{
+    flex:0 0 auto;
+    width:100%;
+    min-width:0;
+    margin-top:22px;
+    padding-bottom:4px;
+    position:relative;
+    z-index:1;
+  }
+  .deck-head{
+    position:static;
+    z-index:auto;
+    margin-bottom:10px;
+  }
 }
 
 </style>
@@ -1143,8 +1184,14 @@ function renderDeck(){
       <span class="sc">${Number(r.score).toFixed(3)}</span>
     </button>`).join('');
   $$('#deck .tile').forEach(t=>t.onclick=()=>{active=+t.dataset.i;closeProjector();render()});
+  const deck=$('#deck');
   const on=$('#deck .tile.on');
-  if(on)on.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  if(on&&deck){
+    requestAnimationFrame(()=>{
+      const left=on.offsetLeft-(deck.clientWidth-on.offsetWidth)/2;
+      deck.scrollTo({left:Math.max(0,left),behavior:'smooth'});
+    });
+  }
 }
 function step(d,{play=false}={}){
   if(!results.length)return;
