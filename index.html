@@ -1330,6 +1330,51 @@ function stopOpeningCover(){
   }
 }
 
+async function primeLoadingCovers(){
+  try{
+    const page=1+Math.floor(Math.random()*5);
+    const params=new URLSearchParams({
+      api_key:TMDB_KEY,
+      language:'en-US',
+      sort_by:'popularity.desc',
+      page:String(page),
+      include_adult:'false'
+    });
+
+    const [movies,tv]=await Promise.all([
+      fetch(`${TMDB_BASE}/discover/movie?${params}`).then(r=>r.ok?r.json():null),
+      fetch(`${TMDB_BASE}/discover/tv?${params}`).then(r=>r.ok?r.json():null)
+    ]);
+
+    const preview=[
+      ...((movies?.results)||[]).map(x=>({
+        title:x.title,
+        type:'film',
+        tmdbId:x.id,
+        tmdbKind:'movie',
+        backdropPath:x.backdrop_path||'',
+        posterPath:x.poster_path||''
+      })),
+      ...((tv?.results)||[]).map(x=>({
+        title:x.name,
+        type:'series',
+        tmdbId:x.id,
+        tmdbKind:'tv',
+        backdropPath:x.backdrop_path||'',
+        posterPath:x.poster_path||''
+      }))
+    ].filter(x=>x.backdropPath);
+
+    if(preview.length){
+      openingPool=preview;
+      openingArtBag=[];
+      paintOpeningCover();
+    }
+  }catch(e){
+    console.warn('loading cover preview unavailable',e);
+  }
+}
+
 function currentOpeningImageSrc(){
   const on=$('#opening .canvas img.on');
   return on?.currentSrc||on?.src||'';
@@ -1955,6 +2000,7 @@ voice('#revealVoiceBtn','#revealQuery');
     // Hold the user on a deliberate cinematic loading gate. Artwork cycles
     // while the full field loads; the homepage does not appear half-ready.
     startOpeningCover();
+    primeLoadingCovers();
 
     await loadCorpus();
     setStatus(statusLine('ready'));
