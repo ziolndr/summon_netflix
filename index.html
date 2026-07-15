@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0A0A09">
 <title>SUMMON — summon anything by resonance</title>
-<meta name="description" content="Summon anything by resonance. A universal intent engine for films, series, podcasts, shorts, games, and live entertainment.">
+<meta name="description" content="Summon anything by resonance. A universal resonance field for films, series, games, books, music, podcasts, shorts, and live entertainment.">
 <link rel="icon" href="./summon-favicon.svg" type="image/svg+xml">
 <link rel="icon" href="./summon-favicon.ico" sizes="any">
 <link rel="icon" href="./summon-favicon-32.png" sizes="32x32" type="image/png">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SUMMON">
 <meta property="og:title" content="SUMMON — summon anything by resonance">
-<meta property="og:description" content="A universal intent engine for entertainment. Films, series, podcasts, shorts, games, and live — ranked by resonance.">
+<meta property="og:description" content="A universal resonance field for films, series, games, books, music, podcasts, shorts, and live — ranked by resonance.">
 <meta property="og:image" content="./summon-og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -555,6 +555,134 @@ body.playing #projector{display:block}
   #reveal.live-swap #revealCanvas,
   #reveal.live-swap .stage,
   #reveal.live-swap .deck-strip{animation:none!important}
+}
+
+
+/* ═══════ CINEMATIC THOUGHT SURFACE ═══════
+   No search box. No categories. The thought itself is the interface.
+   The ranked field remains clear and docked beneath the winner. */
+
+/* Landing: keep the field visible, remove conventional search chrome. */
+#landing{cursor:text}
+#landing .title,
+#landing .formats{display:none!important}
+#landing .head{
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:clamp(96px,18vh,220px)!important;
+  width:min(82vw,1180px)!important;
+  height:auto!important;
+  transform:translateX(-50%);
+}
+#landing #searchForm{
+  position:relative!important;
+  inset:auto!important;
+  width:100%;
+}
+#landing .line{
+  position:relative;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  gap:0!important;
+  align-items:flex-start!important;
+}
+#landing #query{
+  width:100%;
+  min-height:1.08em;
+  max-height:5.5em;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  font-family:var(--serif);
+  font-size:clamp(34px,5.4vw,88px)!important;
+  line-height:.98!important;
+  letter-spacing:-.025em;
+  color:var(--white);
+  caret-color:var(--white);
+  text-shadow:0 3px 34px rgba(0,0,0,.72);
+}
+#landing #query::placeholder{
+  color:rgba(246,244,239,.96)!important;
+  opacity:1!important;
+}
+#landing .icon,
+#landing .send{display:none!important}
+
+/* Quietly charged, not sterile: preserve the moving field and protect the thought. */
+#landing .canvas::after{
+  background:
+    radial-gradient(90% 44% at 50% 74%,rgba(10,10,9,.04) 0%,rgba(10,10,9,.34) 56%,rgba(10,10,9,.72) 100%),
+    linear-gradient(180deg,rgba(10,10,9,.22) 0%,rgba(10,10,9,0) 32%,rgba(10,10,9,.12) 55%,rgba(10,10,9,.90) 100%)!important;
+}
+
+/* Reveal: the thought floats. No underline, no box, no search controls. */
+#reveal .bar{
+  grid-template-columns:1fr minmax(320px,50vw) 1fr;
+  align-items:start;
+}
+#reveal .summon-bar .lbl{display:none!important}
+#reveal .summon-bar form{
+  border:0!important;
+  padding:0!important;
+  gap:0!important;
+  align-items:flex-start!important;
+}
+#reveal #revealQuery{
+  width:100%;
+  height:auto;
+  min-height:1.06em;
+  max-height:4.1em;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  font-family:var(--serif);
+  font-size:clamp(22px,2.55vw,42px)!important;
+  line-height:1.03!important;
+  letter-spacing:-.018em;
+  color:var(--white);
+  caret-color:var(--white);
+  text-shadow:0 2px 28px rgba(0,0,0,.72);
+}
+#reveal .summon-bar .icon,
+#reveal .summon-bar .send{display:none!important}
+
+/* The alternatives stay exactly as the existing clear, docked ranked field. */
+#reveal .deck{
+  align-self:end;
+  position:relative;
+  z-index:8;
+}
+
+/* The winning result remains the visual focus without suppressing the field. */
+#reveal .stage{position:relative;z-index:7}
+
+@media(max-width:1000px){
+  #landing .head{
+    left:var(--pad)!important;
+    right:var(--pad)!important;
+    bottom:clamp(92px,16vh,150px)!important;
+    width:auto!important;
+    transform:none!important;
+  }
+  #landing #query{
+    font-size:clamp(34px,9vw,64px)!important;
+    max-height:5.8em;
+  }
+  #reveal .bar{
+    grid-template-columns:auto 1fr!important;
+    grid-template-areas:'mark nav' 'q q'!important;
+    row-gap:18px!important;
+  }
+  #reveal .summon-bar{grid-area:q!important}
+  #reveal #revealQuery{font-size:clamp(24px,6vw,38px)!important}
+}
+
+@media(max-width:560px){
+  #landing .head{bottom:clamp(84px,15vh,124px)!important}
+  #landing #query{font-size:clamp(30px,10.5vw,50px)!important;line-height:1.02!important}
+  #reveal #revealQuery{font-size:clamp(22px,7vw,32px)!important}
 }
 
 </style>
@@ -1231,12 +1359,39 @@ async function required(url,kind='json',progressKey=url,expectedTotal=0,track=tr
 
 
 const OPENING_THOUGHTS=[
+  // Live-resonance sequences: the thought visibly evolves instead of appearing
+  // as one finished search. This mirrors the actual interaction mode.
+  [
+    "Lost somewhere",
+    "Lost somewhere in between",
+    "Lost somewhere in between heaven",
+    "Lost somewhere in between heaven and hell"
+  ],
+  [
+    "something beautiful",
+    "something beautiful and terrifying",
+    "something beautiful and terrifying where nobody knows they are already dead"
+  ],
+  [
+    "I want to disappear",
+    "I want to disappear somewhere beautiful",
+    "I want to disappear somewhere beautiful and never come back"
+  ],
+  [
+    "a movie about being alone",
+    "a movie about being alone by choice",
+    "a movie about being alone by choice and regretting it"
+  ],
+
+  "Start typing. Watch the field move with the thought.",
+  "Every added word can change what rises.",
+  "The field answers before the thought is finished.",
   "See your favorite films in a whole new light.",
-  "Find films, shows, and games that resonate with your intent.",
+  "Find films, shows, games, books, and music that resonate with your intent.",
   "Wondered what films would feel like heartbreak and victory at the same time? Now you can.",
   "As the president, what should you watch to end the war? Now you can ask.",
   "SUMMON hears not just what you say, but what you mean.",
-  "Across Netflix, Apple TV+, Prime Video, Max, Disney+, games, and more.",
+  "Across Netflix, Apple TV+, Prime Video, Max, Disney+, games, books, music, and more.",
   "Find the film you can feel but have never been able to name.",
   "Search for a contradiction: something beautiful and terrifying at once.",
   "Find what resonates with the exact moment you are in.",
@@ -1257,23 +1412,32 @@ const OPENING_THOUGHTS=[
   "Find something that feels like remembering a life that was never yours.",
   "Ask what grief looks like when it becomes beautiful.",
   "Find the story hiding inside the question you have not asked yet.",
-  "Search across 200,137 titles by resonance.",
+  "Search across the field by resonance.",
   "One intent. An entire field.",
   "Find something for the person you are becoming, not the person you were.",
   "Ask the impossible thing."
 ];
 
 let openingThoughtBag=[];
-let openingLastThought='';
+let openingLastThoughtKey='';
 let openingThoughtRun=0;
 
+const openingThoughtKey=thought=>Array.isArray(thought)?thought.join(' → '):String(thought||'');
+
 function refillOpeningThoughtBag(){
-  const bag=[...new Set(OPENING_THOUGHTS)];
+  const seen=new Set();
+  const bag=[];
+  for(const thought of OPENING_THOUGHTS){
+    const key=openingThoughtKey(thought);
+    if(!key||seen.has(key))continue;
+    seen.add(key);
+    bag.push(thought);
+  }
   for(let i=bag.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
     [bag[i],bag[j]]=[bag[j],bag[i]];
   }
-  if(bag.length>1&&bag[0]===openingLastThought){
+  if(bag.length>1&&openingThoughtKey(bag[0])===openingLastThoughtKey){
     [bag[0],bag[1]]=[bag[1],bag[0]];
   }
   openingThoughtBag=bag;
@@ -1282,8 +1446,34 @@ function refillOpeningThoughtBag(){
 function nextOpeningThought(){
   if(!openingThoughtBag.length)refillOpeningThoughtBag();
   const thought=openingThoughtBag.shift()||'';
-  openingLastThought=thought;
+  openingLastThoughtKey=openingThoughtKey(thought);
   return thought;
+}
+
+function openingTypingDelay(ch,baseDelay){
+  let delay=baseDelay;
+  if(/[.!?]/.test(ch))delay+=170;
+  else if(/[,;:]/.test(ch))delay+=72;
+  return delay;
+}
+
+async function typeOpeningText(el,fromText,toText,run,baseDelay){
+  let current=String(fromText||'');
+  const target=String(toText||'');
+
+  // Evolution sequences normally extend the current phrase. Fall back to a
+  // clean retype if a future sequence ever changes direction instead.
+  if(!target.startsWith(current)){
+    current='';
+    el.textContent='';
+  }
+
+  for(let i=current.length;i<target.length;i++){
+    if(run!==openingThoughtRun)return false;
+    el.textContent=target.slice(0,i+1);
+    await pause(openingTypingDelay(target[i],baseDelay));
+  }
+  return true;
 }
 
 function paintOpeningThought(){
@@ -1291,12 +1481,13 @@ function paintOpeningThought(){
   if(!el)return;
 
   const next=nextOpeningThought();
+  const stages=(Array.isArray(next)?next:[next]).filter(Boolean);
+  if(!stages.length)return;
+
   const run=++openingThoughtRun;
   const hadText=Boolean(el.textContent.trim());
 
-  // Let the previous thought actually finish fading before it is cleared.
-  // The old version cleared after 180ms while the CSS fade still had 240ms
-  // left, which made every cycle feel like a hard cut.
+  // Let the previous thought fully fade before the next one begins.
   if(hadText){
     el.classList.remove('on');
     el.classList.add('out');
@@ -1308,29 +1499,45 @@ function paintOpeningThought(){
     el.textContent='';
     el.classList.remove('out');
 
-    // A small breath between thoughts keeps the image/text rhythm cinematic
-    // instead of making the next line attack immediately after the last one.
+    // A small breath between thoughts keeps the image/text rhythm cinematic.
     await pause(hadText?180:60);
     if(run!==openingThoughtRun)return;
 
     requestAnimationFrame(()=>el.classList.add('on'));
 
-    // Human-paced typing. Long thoughts can speed up a little, but never to
-    // the frantic 18ms floor of the previous version.
-    const typeWindow=4200;
-    const baseDelay=Math.max(34,Math.min(62,Math.floor(typeWindow/Math.max(1,next.length))));
-
-    for(let i=0;i<next.length;i++){
-      if(run!==openingThoughtRun)return;
-      el.textContent=next.slice(0,i+1);
-
-      let delay=baseDelay;
-      const ch=next[i];
-      if(/[.!?]/.test(ch))delay+=170;
-      else if (/[,;:]/.test(ch))delay+=72;
-
-      await pause(delay);
+    if(stages.length===1){
+      const text=stages[0];
+      const typeWindow=4200;
+      const baseDelay=Math.max(34,Math.min(62,Math.floor(typeWindow/Math.max(1,text.length))));
+      await typeOpeningText(el,'',text,run,baseDelay);
+      return;
     }
+
+    // Live-resonance demo: type a thought, pause, then keep extending it.
+    // The line never clears between stages, so people can literally watch the
+    // meaning change in the same way the ranked field changes while typing.
+    const finalText=stages[stages.length-1];
+    const addedChars=stages.reduce((sum,text,i)=>{
+      const prev=i?stages[i-1]:'';
+      return sum+Math.max(0,text.length-(text.startsWith(prev)?prev.length:0));
+    },0);
+    const baseDelay=Math.max(28,Math.min(46,Math.floor(3400/Math.max(1,addedChars))));
+
+    let current='';
+    for(let i=0;i<stages.length;i++){
+      const target=stages[i];
+      const ok=await typeOpeningText(el,current,target,run,baseDelay);
+      if(!ok||run!==openingThoughtRun)return;
+      current=target;
+
+      if(i<stages.length-1){
+        await pause(i===0?520:430);
+        if(run!==openingThoughtRun)return;
+      }
+    }
+
+    // Keep the complete evolved thought visible until the normal cover cycle.
+    el.textContent=finalText;
   },hadText?760:120);
 }
 
@@ -2275,6 +2482,52 @@ function voice(btnSel,targetSel){
 }
 voice('#voiceBtn','#query');
 voice('#revealVoiceBtn','#revealQuery');
+
+
+/* ═══════ TYPE ANYWHERE — the surface itself is the input ═══════ */
+function activeThoughtInput(){
+  if($('#landing')?.classList.contains('on')) return $('#query');
+  if($('#reveal')?.classList.contains('on')) return $('#revealQuery');
+  return null;
+}
+
+function focusThoughtSurface(el,{replaceExample=false}={}){
+  if(!el)return;
+  if(el===$('#query')&&replaceExample&&!el.value){
+    // Clicking the cinematic surface should begin a new thought, not force the demo phrase into it.
+    rollStop();
+    el.setAttribute('placeholder','');
+    resetPlaceholderHeight(el);
+  }
+  try{el.focus({preventScroll:true})}catch(e){el.focus()}
+  try{el.setSelectionRange(el.value.length,el.value.length)}catch(e){}
+}
+
+$('#landing')?.addEventListener('pointerdown',e=>{
+  if(e.target.closest('button,a'))return;
+  const q=$('#query');
+  if(e.target!==q)focusThoughtSurface(q,{replaceExample:true});
+});
+
+// Printable keys can enter the field from anywhere on the active cinematic surface.
+document.addEventListener('keydown',e=>{
+  if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key.length!==1)return;
+  const el=activeThoughtInput();
+  if(!el||document.activeElement===el)return;
+  if(e.target&&['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+
+  e.preventDefault();
+  if(el===$('#query')){
+    rollStop();
+    el.setAttribute('placeholder','');
+    resetPlaceholderHeight(el);
+  }
+  el.value=(el.value||'')+e.key;
+  focusThoughtSurface(el);
+  autoResize(el);
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+});
 
 /* ═══════ INIT ═══════ */
 (async()=>{
