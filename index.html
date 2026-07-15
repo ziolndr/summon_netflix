@@ -145,7 +145,7 @@ button.mark{cursor:pointer}
   text-wrap:balance;
   text-shadow:0 2px 22px rgba(0,0,0,.56);
   opacity:0;
-  transition:opacity .42s ease,transform .42s ease;
+  transition:opacity .72s cubic-bezier(.22,.8,.22,1),transform .72s cubic-bezier(.22,.8,.22,1);
   pointer-events:none;
 }
 .opening-thought.on{
@@ -154,7 +154,7 @@ button.mark{cursor:pointer}
 }
 .opening-thought.out{
   opacity:0;
-  transform:translateX(-50%) translateY(6px);
+  transform:translateX(-50%) translateY(3px);
 }
 .opening-status{
   position:absolute;z-index:7;left:var(--pad);right:var(--pad);bottom:var(--pad);
@@ -1247,22 +1247,33 @@ function paintOpeningThought(){
 
   const next=nextOpeningThought();
   const run=++openingThoughtRun;
+  const hadText=Boolean(el.textContent.trim());
 
-  el.classList.remove('on');
-  el.classList.add('out');
+  // Let the previous thought actually finish fading before it is cleared.
+  // The old version cleared after 180ms while the CSS fade still had 240ms
+  // left, which made every cycle feel like a hard cut.
+  if(hadText){
+    el.classList.remove('on');
+    el.classList.add('out');
+  }
 
   setTimeout(async()=>{
     if(run!==openingThoughtRun)return;
 
     el.textContent='';
     el.classList.remove('out');
+
+    // A small breath between thoughts keeps the image/text rhythm cinematic
+    // instead of making the next line attack immediately after the last one.
+    await pause(hadText?180:60);
+    if(run!==openingThoughtRun)return;
+
     requestAnimationFrame(()=>el.classList.add('on'));
 
-    // Type each loading-screen example into view rather than dropping in a
-    // completed block of text. Long thoughts automatically type faster so
-    // the full line still lands before the next artwork change.
-    const typeWindow=2400;
-    const baseDelay=Math.max(18,Math.min(42,Math.floor(typeWindow/Math.max(1,next.length))));
+    // Human-paced typing. Long thoughts can speed up a little, but never to
+    // the frantic 18ms floor of the previous version.
+    const typeWindow=4200;
+    const baseDelay=Math.max(34,Math.min(62,Math.floor(typeWindow/Math.max(1,next.length))));
 
     for(let i=0;i<next.length;i++){
       if(run!==openingThoughtRun)return;
@@ -1270,12 +1281,12 @@ function paintOpeningThought(){
 
       let delay=baseDelay;
       const ch=next[i];
-      if(/[.!?]/.test(ch))delay+=105;
-      else if (/[,;:]/.test(ch))delay+=48;
+      if(/[.!?]/.test(ch))delay+=170;
+      else if (/[,;:]/.test(ch))delay+=72;
 
       await pause(delay);
     }
-  },180);
+  },hadText?760:120);
 }
 
 let openingPool=[],openingFlip=0,openingTimer=null,openingLastId=null;
@@ -1351,7 +1362,7 @@ function startOpeningCover(){
   openingArtBag=[];
   openingThoughtBag=[];
   paintOpeningCover();
-  openingTimer=setInterval(paintOpeningCover,3600);
+  openingTimer=setInterval(paintOpeningCover,6800);
 }
 
 function stopOpeningCover(){
