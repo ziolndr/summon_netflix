@@ -685,6 +685,40 @@ body.playing #projector{display:block}
   #reveal #revealQuery{font-size:clamp(22px,7vw,32px)!important}
 }
 
+
+
+/* ═══════ REVEAL HEADER — no black bar ═══════
+   Keep the thought and controls floating directly on the cinematic image. */
+#reveal .bar{
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+#reveal .bar::before,
+#reveal .bar::after{display:none!important;content:none!important}
+
+/* Remove the dark top-band treatment that made the reveal header read as a black menu bar. */
+#revealCanvas::after{
+  background:
+    linear-gradient(180deg,
+      rgba(8,8,7,.04) 0%,
+      rgba(8,8,7,0) 30%,
+      rgba(8,8,7,.18) 58%,
+      rgba(8,8,7,.96) 100%),
+    linear-gradient(90deg,
+      rgba(8,8,7,.48) 0%,
+      rgba(8,8,7,.02) 52%,
+      rgba(8,8,7,.24) 100%)!important;
+}
+
+#reveal .mark-word,
+#reveal #revealQuery,
+#reveal .nav{
+  text-shadow:0 2px 28px rgba(0,0,0,.78);
+}
+
 </style>
 </head>
 <body>
@@ -2229,7 +2263,10 @@ function liveInputValue(source){
 }
 
 function queueLiveResonance(text,source='reveal',{immediate=false,commit=false}={}){
-  const q=(text||'').trim();
+  // Preserve the exact text the person typed, including trailing spaces.
+  // Only the measurement text is trimmed; the editable thought must never be normalized by a live result.
+  const raw=String(text||'');
+  const q=raw.trim();
   const generation=++liveGeneration;
   clearTimeout(liveTimer);
 
@@ -2238,7 +2275,7 @@ function queueLiveResonance(text,source='reveal',{immediate=false,commit=false}=
     return;
   }
 
-  livePending={q,source,generation,commit};
+  livePending={q,raw,source,generation,commit};
   liveTimer=setTimeout(pumpLiveResonance,immediate?0:LIVE_RESONANCE_DEBOUNCE);
 }
 
@@ -2266,7 +2303,7 @@ function scheduleLiveArt(generation){
   },850);
 }
 
-function commitLiveResults(next,q,source,generation,commit){
+function commitLiveResults(next,q,raw,source,generation,commit){
   if(generation!==liveGeneration)return;
   if(liveInputValue(source)!==q)return;
   if(!next?.length)return;
@@ -2281,8 +2318,19 @@ function commitLiveResults(next,q,source,generation,commit){
 
   const landingInput=$('#query');
   const revealInput=$('#revealQuery');
-  if(landingInput&&landingInput.value!==q)landingInput.value=q;
-  if(revealInput&&revealInput.value!==q)revealInput.value=q;
+  const sourceInput=source==='landing'?landingInput:revealInput;
+  // Read the current exact editor value at commit time. Generation checks above guarantee
+  // it belongs to this thought; importantly, it may end in a space while the next word is forming.
+  const exactText=sourceInput?.value ?? raw ?? q;
+
+  // Never write back into the active editor. Doing so used to replace "word " with "word"
+  // when a live measurement returned, swallowing the space immediately before the next letter.
+  // Only synchronize the hidden counterpart used when moving between landing and reveal.
+  if(source==='landing'){
+    if(revealInput&&revealInput.value!==exactText)revealInput.value=exactText;
+  }else{
+    if(landingInput&&landingInput.value!==exactText)landingInput.value=exactText;
+  }
 
   if(!$('#reveal').classList.contains('on')){
     rollStop();
@@ -2318,7 +2366,7 @@ async function pumpLiveResonance(){
     if(job.generation!==liveGeneration)return;
     const count=fieldCount(corpus);
     const next=await measure(job.q,corpus,count);
-    commitLiveResults(next,job.q,job.source,job.generation,job.commit);
+    commitLiveResults(next,job.q,job.raw,job.source,job.generation,job.commit);
   }catch(e){
     console.error('live resonance failed',e);
   }finally{
