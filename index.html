@@ -522,6 +522,41 @@ body.playing #projector{display:block}
   .opening-meta{align-items:flex-end}
 }
 
+
+
+/* ═══════ LIVE RESONANCE — the field answers while the thought is still forming ═══════ */
+#revealCanvas,
+#reveal .stage,
+#reveal .deck-strip{
+  will-change:opacity,transform,filter;
+}
+#reveal.live-swap #revealCanvas{
+  animation:liveCanvasResolve .48s cubic-bezier(.22,.8,.22,1) both;
+}
+#reveal.live-swap .stage{
+  animation:liveStageResolve .34s cubic-bezier(.22,.8,.22,1) both;
+}
+#reveal.live-swap .deck-strip{
+  animation:liveDeckResolve .42s cubic-bezier(.22,.8,.22,1) both;
+}
+@keyframes liveCanvasResolve{
+  from{opacity:.76;filter:saturate(.9) brightness(.9)}
+  to{opacity:1;filter:none}
+}
+@keyframes liveStageResolve{
+  from{opacity:.72;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes liveDeckResolve{
+  from{opacity:.72;transform:translateY(4px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  #reveal.live-swap #revealCanvas,
+  #reveal.live-swap .stage,
+  #reveal.live-swap .deck-strip{animation:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -912,6 +947,16 @@ window.addEventListener('load',()=>{
 
 /* ═══════ STATE ═══════ */
 let cache=null, results=[], active=0, currentQuery='', corpusLock=null, silentLoad=false;
+
+/* live resonance state: debounce input, serialize /v1/embed calls, discard stale answers */
+const LIVE_RESONANCE_DEBOUNCE=170;
+const LIVE_RESONANCE_MIN_CHARS=4;
+let liveTimer=null;
+let liveGeneration=0;
+let liveInFlight=false;
+let livePending=null;
+let liveSwapTimer=null;
+let liveArtTimer=null;
 const cs={genreMaps:null,movieTotal:0,tvTotal:0,moviePage:1,tvPage:1,movies:[],seen:new Set(),curated:false,complete:false};
 
 const $=s=>document.querySelector(s);
@@ -1732,6 +1777,7 @@ async function measure(q,corpus,count){
 async function search(text){
   const q=(text||'').trim();
   if(!q)return;
+  cancelLiveResonance();
   rollStop();
   currentQuery=q;
   $('#query').value=q;$('#revealQuery').value=q;
@@ -1876,17 +1922,73 @@ function render(){
   renderDeck();
   autoResize($('#revealQuery'));
 }
+function resultKey(r){
+  return [r?.type||'',r?.sourceId||r?.tmdbId||r?.externalUrl||'',r?.title||'',r?.year||''].join('|');
+}
 function renderDeck(){
-  $('#deck').innerHTML=results.map((r,i)=>`
-    <button type="button" class="tile ${i===active?'on':''}" data-i="${i}" aria-current="${i===active}">
-      <span class="shot"><img src="${poster(r,'w342')}" alt="" loading="lazy" decoding="async"><span class="n">${String(i+1).padStart(2,'0')}</span></span>
-      <span class="cap">${esc(r.title)}</span>
-      <span class="sc">${Number(r.score).toFixed(3)}</span>
-    </button>`).join('');
-  $$('#deck .tile').forEach(t=>t.onclick=()=>{active=+t.dataset.i;closeProjector();render()});
   const deck=$('#deck');
+  if(!deck)return;
+
+  const old=new Map();
+  [...deck.children].forEach(tile=>{
+    const key=tile.dataset.key||'';
+    if(key)old.set(key,{tile,rect:tile.getBoundingClientRect()});
+  });
+
+  const frag=document.createDocumentFragment();
+  results.forEach((r,i)=>{
+    const key=resultKey(r);
+    const prior=old.get(key);
+    const tile=prior?.tile||document.createElement('button');
+    tile.type='button';
+    tile.className=`tile ${i===active?'on':''}`;
+    tile.dataset.i=String(i);
+    tile.dataset.key=key;
+    tile.setAttribute('aria-current',String(i===active));
+
+    if(!prior){
+      tile.innerHTML=`
+        <span class="shot"><img alt="" loading="lazy" decoding="async"><span class="n"></span></span>
+        <span class="cap"></span>
+        <span class="sc"></span>`;
+    }
+
+    const im=tile.querySelector('img');
+    const src=poster(r,'w342');
+    if(im&&im.src!==src)im.src=src;
+    const n=tile.querySelector('.n');if(n)n.textContent=String(i+1).padStart(2,'0');
+    const cap=tile.querySelector('.cap');if(cap)cap.textContent=r.title||'';
+    const sc=tile.querySelector('.sc');if(sc)sc.textContent=Number(r.score).toFixed(3);
+    tile.onclick=()=>{active=+tile.dataset.i;closeProjector();render()};
+    frag.appendChild(tile);
+  });
+
+  deck.replaceChildren(frag);
+
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    [...deck.children].forEach(tile=>{
+      const prior=old.get(tile.dataset.key||'');
+      const now=tile.getBoundingClientRect();
+      if(prior){
+        const dx=prior.rect.left-now.left;
+        const dy=prior.rect.top-now.top;
+        if(Math.abs(dx)>.5||Math.abs(dy)>.5){
+          tile.animate([
+            {transform:`translate(${dx}px,${dy}px)`,opacity:.68},
+            {transform:'translate(0,0)',opacity:tile.classList.contains('on')?1:.5}
+          ],{duration:390,easing:'cubic-bezier(.22,.8,.22,1)'});
+        }
+      }else{
+        tile.animate([
+          {transform:'translateY(8px) scale(.985)',opacity:0},
+          {transform:'translateY(0) scale(1)',opacity:tile.classList.contains('on')?1:.5}
+        ],{duration:330,easing:'cubic-bezier(.22,.8,.22,1)'});
+      }
+    });
+  }
+
   const on=$('#deck .tile.on');
-  if(on&&deck){
+  if(on){
     requestAnimationFrame(()=>{
       const left=on.offsetLeft-(deck.clientWidth-on.offsetWidth)/2;
       deck.scrollTo({left:Math.max(0,left),behavior:'smooth'});
@@ -1901,6 +2003,137 @@ function step(d,{play=false}={}){
   if(play)openProjector();
 }
 
+
+/* ═══════ LIVE RESONANCE ═══════
+   The precomputed field re-ranks while the user is still typing.
+   Only the current thought may commit; older /v1/embed answers are discarded. */
+function cancelLiveResonance(){
+  liveGeneration++;
+  clearTimeout(liveTimer);
+  clearTimeout(liveArtTimer);
+  liveTimer=null;
+  liveArtTimer=null;
+  livePending=null;
+}
+
+function liveInputValue(source){
+  const el=source==='landing'?$('#query'):$('#revealQuery');
+  return (el?.value||'').trim();
+}
+
+function queueLiveResonance(text,source='reveal',{immediate=false,commit=false}={}){
+  const q=(text||'').trim();
+  const generation=++liveGeneration;
+  clearTimeout(liveTimer);
+
+  if(q.length<LIVE_RESONANCE_MIN_CHARS){
+    livePending=null;
+    return;
+  }
+
+  livePending={q,source,generation,commit};
+  liveTimer=setTimeout(pumpLiveResonance,immediate?0:LIVE_RESONANCE_DEBOUNCE);
+}
+
+function animateLiveSwap(){
+  const reveal=$('#reveal');
+  if(!reveal?.classList.contains('on'))return;
+  reveal.classList.remove('live-swap');
+  void reveal.offsetWidth;
+  reveal.classList.add('live-swap');
+  clearTimeout(liveSwapTimer);
+  liveSwapTimer=setTimeout(()=>reveal.classList.remove('live-swap'),520);
+}
+
+function scheduleLiveArt(generation){
+  clearTimeout(liveArtTimer);
+  liveArtTimer=setTimeout(()=>{
+    if(generation!==liveGeneration)return;
+    const snapshot=[...results];
+    snapshot.forEach(m=>{
+      if(m.posterPath||m.backdropPath||m.imageUrl)return;
+      resolveArt(m).then(ok=>{
+        if(ok&&generation===liveGeneration&&$('#reveal').classList.contains('on')&&results.includes(m))render();
+      }).catch(()=>{});
+    });
+  },850);
+}
+
+function commitLiveResults(next,q,source,generation,commit){
+  if(generation!==liveGeneration)return;
+  if(liveInputValue(source)!==q)return;
+  if(!next?.length)return;
+
+  const wasLanding=$('#landing').classList.contains('on');
+  const landingHadFocus=document.activeElement===$('#query');
+
+  currentQuery=q;
+  results=next;
+  active=0;
+  closeProjector();
+
+  const landingInput=$('#query');
+  const revealInput=$('#revealQuery');
+  if(landingInput&&landingInput.value!==q)landingInput.value=q;
+  if(revealInput&&revealInput.value!==q)revealInput.value=q;
+
+  if(!$('#reveal').classList.contains('on')){
+    rollStop();
+    show('reveal');
+    render();
+  }else{
+    render();
+    animateLiveSwap();
+  }
+
+  requestAnimationFrame(()=>autoResize(revealInput));
+
+  if(wasLanding&&landingHadFocus&&revealInput){
+    requestAnimationFrame(()=>{
+      revealInput.focus({preventScroll:true});
+      try{revealInput.setSelectionRange(revealInput.value.length,revealInput.value.length)}catch(e){}
+      autoResize(revealInput);
+    });
+  }
+
+  if(commit)history.replaceState(null,'','#'+encodeURIComponent(q));
+  scheduleLiveArt(generation);
+}
+
+async function pumpLiveResonance(){
+  if(liveInFlight||!livePending)return;
+  const job=livePending;
+  livePending=null;
+  liveInFlight=true;
+
+  try{
+    const corpus=cache||await loadCorpus();
+    if(job.generation!==liveGeneration)return;
+    const count=fieldCount(corpus);
+    const next=await measure(job.q,corpus,count);
+    commitLiveResults(next,job.q,job.source,job.generation,job.commit);
+  }catch(e){
+    console.error('live resonance failed',e);
+  }finally{
+    liveInFlight=false;
+    if(livePending){
+      clearTimeout(liveTimer);
+      liveTimer=setTimeout(pumpLiveResonance,0);
+    }
+  }
+}
+
+function scheduleLiveFrom(el,source){
+  autoResize(el);
+  queueLiveResonance(el.value,source);
+}
+
+function commitLiveExact(el,source){
+  const q=(el?.value||'').trim();
+  if(!q)return;
+  queueLiveResonance(q,source,{immediate:true,commit:true});
+}
+
 /* ═══════ INPUT ═══════ */
 function autoResize(el){
   if(!el)return;
@@ -1909,11 +2142,16 @@ function autoResize(el){
   const max=parseFloat(getComputedStyle(el).maxHeight)||Infinity;
   el.style.height=Math.min(max,el.scrollHeight)+'px';
 }
-function bindInput(el,fn){
-  el.addEventListener('input',()=>autoResize(el));
-  el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fn()}});
+function bindInput(el,source){
+  el.addEventListener('input',()=>scheduleLiveFrom(el,source));
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      commitLiveExact(el,source);
+    }
+  });
 }
-bindInput($('#query'),()=>search($('#query').value));
+bindInput($('#query'),'landing');
 $('#query').addEventListener('focus',()=>{
   const q=$('#query');
   const visibleExample=(q.getAttribute('placeholder')||'').replace(/▏$/,'').trim();
@@ -1935,7 +2173,7 @@ $('#query').addEventListener('focus',()=>{
   resetPlaceholderHeight(q);
 });
 
-bindInput($('#revealQuery'),()=>search($('#revealQuery').value));
+bindInput($('#revealQuery'),'reveal');
 
 function landingSummonValue(){
   const q=$('#query');
@@ -1956,11 +2194,15 @@ function landingSummonValue(){
 $('#searchForm').addEventListener('submit',e=>{
   e.preventDefault();
   const value=landingSummonValue();
-  if(value)search(value);
+  if(value)commitLiveExact($('#query'),'landing');
 });
-$('#revealForm').addEventListener('submit',e=>{e.preventDefault();search($('#revealQuery').value)});
+$('#revealForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  commitLiveExact($('#revealQuery'),'reveal');
+});
 
 function goHomeAndReplay(){
+  cancelLiveResonance();
   closeProjector();
   rollStop();
   show('landing');
@@ -2025,7 +2267,7 @@ function voice(btnSel,targetSel){
       let interim='';
       for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i][0].transcript;e.results[i].isFinal?final+=x:interim+=x}
       const s=(final||interim).trim();
-      if(s){t.value=s;autoResize(t)}
+      if(s){t.value=s;autoResize(t);t.dispatchEvent(new Event('input',{bubbles:true}))}
     };
     rec.onend=rec.onerror=()=>btn.classList.remove('listening');
     rec.start();
